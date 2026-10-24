@@ -108,6 +108,13 @@ details[open]>summary{margin-bottom:6px}
 .sh{font-size:.95rem;margin:18px 0 6px;color:var(--accent)}
 .opt{font-weight:400;color:var(--muted)}
 .hcinfo{font-weight:600;margin:12px 0 0}
+.comp{border:1px solid var(--line);border-radius:12px;padding:8px 12px 10px;margin:10px 0 0;background:var(--input)}
+.comp.off{opacity:.6}
+.comp-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chk{display:flex;align-items:center;gap:10px;margin:0;font-weight:700;cursor:pointer;min-height:44px}
+.chk input{width:24px;height:24px;min-height:24px;padding:0;margin:0;accent-color:var(--accent);flex:none}
+.comp label.sm{font-size:.82rem;margin:6px 0 4px}
+.comp input[type=text]{background:var(--card)}
 .tag{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--text);margin-left:6px;vertical-align:1px}
 </style>
 </head>
@@ -125,7 +132,7 @@ details[open]>summary{margin-bottom:6px}
   </section>
 
   <section aria-label="Tableau de bord">
-    <div class="card banner hidden" id="priceBanner"><p>💶 Pour voir les économies en euros, renseigne tes deux prix de fioul (A et B) dans les Réglages. Les litres évités s'affichent déjà.</p><button class="btn primary block" type="button" id="btnGoSettings">Renseigner mes prix</button></div>
+    <div class="card banner hidden" id="priceBanner"><p>💶 Pour voir les économies en euros, renseigne au moins un prix (fioul ou gaz) dans les Réglages. Les quantités évitées s'affichent déjà.</p><button class="btn primary block" type="button" id="btnGoSettings">Renseigner mes prix</button></div>
     <div class="grid" id="stats"></div>
   </section>
 
@@ -171,15 +178,16 @@ details[open]>summary{margin-bottom:6px}
   <section class="card">
     <details id="settingsBox">
       <summary><h2>⚙️ Réglages</h2></summary>
-      <h3 class="sh">Prix du fioul (à comparer)</h3>
-      <p class="hint" style="margin-top:0">Aucun prix n'est pré-rempli : mets les deux prix que tu veux comparer (ex. ton prix actuel et un achat moins cher). Les litres évités ne dépendent pas du prix.</p>
-      <div class="settings-grid">
-        <div><label for="sLabelA">Nom du prix A <span class="opt">(facultatif)</span></label><input type="text" id="sLabelA" maxlength="40" placeholder="ex. Prix actuel"></div>
-        <div><label for="sPrixA">Prix fioul A (€/L)</label><input type="text" inputmode="decimal" id="sPrixA" placeholder="ex. 1,90"></div>
-        <div><label for="sLabelB">Nom du prix B <span class="opt">(facultatif)</span></label><input type="text" id="sLabelB" maxlength="40" placeholder="ex. Achat moins cher"></div>
-        <div><label for="sPrixB">Prix fioul B (€/L)</label><input type="text" inputmode="decimal" id="sPrixB" placeholder="ex. 1,40"></div>
+      <h3 class="sh">Comparaisons : fioul et gaz</h3>
+      <p class="hint" style="margin-top:0">Coche les comparaisons à afficher (au moins une, jusqu'à 8). Aucun prix n'est pré-rempli : fioul en €/L, gaz en €/kWh (le prix du kWh sur ta facture de gaz). Les quantités évitées ne dépendent pas du prix.</p>
+      <div id="compList"></div>
+      <div class="actions">
+        <button class="btn small" type="button" id="btnAddFioul">+ Ajouter un prix fioul</button>
+        <button class="btn small" type="button" id="btnAddGaz">+ Ajouter un prix gaz</button>
       </div>
+      <p class="hint">Après avoir ajouté, supprimé ou coché une comparaison, appuie sur « Enregistrer les réglages » en bas.</p>
       <p class="note" style="margin-top:8px">ℹ️ Pour info seulement (non pré-rempli) : prix moyen national du fioul 1,9308 €/L TTC au 16/10/2026 (ministère de la Transition écologique, livraison 2 000 à 4 999 L, publié le 22/10/2026, via <a href="https://www.comparonslenergie.com/chauffage/fioul/" target="_blank" rel="noopener">comparonslenergie.com</a>).</p>
+      <p class="note" style="margin-top:4px">ℹ️ Pour info seulement (non pré-rempli) : prix repère CRE du gaz pour un logement chauffé au gaz, octobre 2026, zone GRDF : 0,14557 €/kWh TTC en moyenne (0,13594 € à 0,16436 € selon la commune). Source : <a href="https://www.cre.fr/actualites/toute-lactualite/le-prix-repere-de-vente-de-gaz-augmente-de-63-ttc-au-1er-octobre-2026.html" target="_blank" rel="noopener">CRE</a> (vérifié le 24/10/2026). L'abonnement gaz n'est pas compté, comme pour l'électricité.</p>
 
       <h3 class="sh">Électricité</h3>
       <div class="seg" role="group" aria-label="Option tarifaire">
@@ -207,8 +215,10 @@ details[open]>summary{margin-bottom:6px}
       <div class="settings-grid">
         <div><label for="sCop">COP de la PAC</label><input type="text" inputmode="decimal" id="sCop"></div>
         <div><label for="sPci">PCI fioul (kWh/L)</label><input type="text" inputmode="decimal" id="sPci"></div>
-        <div><label for="sRend">Rendement chaudière (%)</label><input type="text" inputmode="decimal" id="sRend"></div>
+        <div><label for="sRend">Rendement chaudière fioul (%)</label><input type="text" inputmode="decimal" id="sRend"></div>
+        <div><label for="sRendGaz">Rendement chaudière gaz (%)</label><input type="text" inputmode="decimal" id="sRendGaz"></div>
       </div>
+      <p class="hint">Rendement gaz, repères : chaudière à condensation ≈ 95-100 % (sur PCI), chaudière classique ≈ 85-90 %. 90 % par défaut.</p>
       <div class="actions">
         <button class="btn primary" type="button" id="btnSaveSettings">Enregistrer les réglages</button>
         <button class="btn" type="button" id="btnResetSettings">Valeurs par défaut</button>
@@ -216,13 +226,15 @@ details[open]>summary{margin-bottom:6px}
       <div class="formula">
         <b>Calcul</b><br>
         Chaleur produite = kWh élec × COP<br>
-        Litres de fioul évités = chaleur ÷ (PCI × rendement)<br>
-        Fioul évité (€) = litres × prix fioul A ou B<br>
-        Économie nette = fioul évité − kWh élec × prix élec<br>
-        Écart A − B = litres × (prix A − prix B)
+        Litres de fioul évités = chaleur ÷ (PCI × rendement fioul)<br>
+        kWh de gaz évités = chaleur ÷ rendement gaz<br>
+        Fioul évité (€) = litres × prix fioul (€/L)<br>
+        Gaz évité (€) = kWh gaz × prix gaz (€/kWh)<br>
+        Économie nette = fioul ou gaz évité − kWh élec × prix élec<br>
+        Écart = différence entre deux comparaisons
         <div id="formulaEx" style="margin-top:6px"></div>
       </div>
-      <p class="note">COP 3, PCI 10 kWh/L et rendement 85 % : valeurs moyennes, à ajuster selon ta PAC et ta chaudière.</p>
+      <p class="note">COP 3, PCI 10 kWh/L, rendement fioul 85 % et gaz 90 % : valeurs moyennes, à ajuster selon ta PAC et ta chaudière. Les abonnements (électricité, gaz) ne sont pas comptés.</p>
     </details>
   </section>
 
@@ -242,9 +254,11 @@ details[open]>summary{margin-bottom:6px}
 (function(){
 'use strict';
 var KEY_DATA='pacFioul.entries.v1', KEY_SET='pacFioul.settings.v1', KEY_WELCOME='pacFioul.welcomeDone';
-// Prix fioul A/B volontairement vides : c'est l'utilisateur qui les saisit.
-var DEFAULTS={cop:3, pci:10, rend:85, prixA:null, prixB:null, labelA:'', labelB:'',
+// Comparaisons (fioul / gaz) : prix volontairement vides, c'est l'utilisateur qui les saisit.
+var DEFAULTS={cop:3, pci:10, rend:85, rendGaz:90,
+  comps:[{id:'f1',type:'fioul',label:'',prix:null,on:true},{id:'f2',type:'fioul',label:'',prix:null,on:true}],
   elecMode:'base', prixElec:0.2001, prixHP:null, prixHC:null, pctHC:null};
+var MAX_COMPS=8;
 var OLD_DEFAULT_FIOUL=1.9308, HC_SUGGEST=37.5;
 
 var $=function(id){return document.getElementById(id);};
@@ -252,19 +266,32 @@ function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}c
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){toast('Impossible d\'enregistrer (stockage indisponible)');}}
 function posNum(v){v=(v===null||v===''||v===undefined)?NaN:Number(v);return (isFinite(v)&&v>0)?v:null;}
 
-// Normalise des réglages (stockage local ou import) + migration de l'ancien prix unique
+// Normalise des réglages (stockage local ou import v1/v2/v3) + migrations
 function normalizeSettings(raw){
   var s=Object.assign({},DEFAULTS); raw=(raw&&typeof raw==='object')?raw:{};
-  ['cop','pci','rend','prixElec'].forEach(function(k){var v=posNum(raw[k]);if(v!==null)s[k]=v;});
+  ['cop','pci','rend','rendGaz','prixElec'].forEach(function(k){var v=posNum(raw[k]);if(v!==null)s[k]=v;});
   if('prixElec' in raw && raw.prixElec===null) s.prixElec=null;
-  ['prixA','prixB','prixHP','prixHC'].forEach(function(k){s[k]=posNum(raw[k]);});
+  ['prixHP','prixHC'].forEach(function(k){s[k]=posNum(raw[k]);});
   var p=Number(raw.pctHC); s.pctHC=(raw.pctHC!==null&&raw.pctHC!==''&&isFinite(p)&&p>=0&&p<=100)?p:null;
-  s.labelA=typeof raw.labelA==='string'?raw.labelA.slice(0,40):''; s.labelB=typeof raw.labelB==='string'?raw.labelB.slice(0,40):'';
   s.elecMode=raw.elecMode==='hphc'?'hphc':'base';
   if(s.rend>100) s.rend=DEFAULTS.rend;
-  // v1 : un seul "prixFioul" (défaut 1,9308). On le reprend en A seulement s'il avait été modifié.
-  var old=posNum(raw.prixFioul);
-  if(old!==null && s.prixA===null && !('prixA' in raw && raw.prixA!==undefined && raw.prixA!==null) && Math.abs(old-OLD_DEFAULT_FIOUL)>1e-9) s.prixA=old;
+  if(s.rendGaz>100) s.rendGaz=DEFAULTS.rendGaz;
+  var comps=null;
+  if(Array.isArray(raw.comps)){ // v3
+    comps=raw.comps.filter(function(c){return c&&(c.type==='fioul'||c.type==='gaz');}).slice(0,MAX_COMPS).map(function(c){
+      return {id:String(c.id||uid()),type:c.type,label:typeof c.label==='string'?c.label.slice(0,40):'',prix:posNum(c.prix),on:c.on!==false};});
+    if(!comps.length) comps=null;
+  }
+  if(!comps){ // v1/v2 : fioul A et B deviennent les deux premières comparaisons fioul
+    var pA=posNum(raw.prixA), pB=posNum(raw.prixB);
+    // v1 : un seul "prixFioul" (défaut 1,9308). On le reprend en A seulement s'il avait été modifié.
+    var old=posNum(raw.prixFioul);
+    if(old!==null && pA===null && Math.abs(old-OLD_DEFAULT_FIOUL)>1e-9) pA=old;
+    comps=[{id:'f1',type:'fioul',label:typeof raw.labelA==='string'?raw.labelA.slice(0,40):'',prix:pA,on:true},
+           {id:'f2',type:'fioul',label:typeof raw.labelB==='string'?raw.labelB.slice(0,40):'',prix:pB,on:true}];
+  }
+  var seen={};comps.forEach(function(c){if(seen[c.id])c.id=uid();seen[c.id]=1;});
+  s.comps=comps;
   return s;
 }
 
@@ -290,8 +317,9 @@ function parseIso(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
 function fDate(s){var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function nameA(){return settings.labelA.trim()||'Fioul A';}
-function nameB(){return settings.labelB.trim()||'Fioul B';}
+function defaultName(c,list){var n=0;(list||settings.comps).some(function(x){if(x.type===c.type)n++;return x.id===c.id;});return (c.type==='gaz'?'Gaz ':'Fioul ')+n;}
+function compName(c,list){return (c.label||'').trim()||defaultName(c,list);}
+function fKwhG(x){return fKwh(x).replace(' kWh',' kWh de gaz');}
 
 // ---------- calcul ----------
 function elecPrice(s){
@@ -306,14 +334,25 @@ function calc(kwh,s){
   s=s||settings;
   var chaleur=kwh*s.cop;
   var litres=chaleur/(s.pci*s.rend/100);
+  var kwhGaz=chaleur/(s.rendGaz/100);
   var pe=elecPrice(s), coutElec=pe===null?null:kwh*pe;
-  function side(prix){
-    if(prix===null||prix===undefined) return null;
-    var f=litres*prix; return {prix:prix,fioul:f,net:coutElec===null?null:f-coutElec};
-  }
-  var A=side(s.prixA), B=side(s.prixB);
-  var diff=(A&&B)?A.fioul-B.fioul:null; // = écart des économies nettes A − B (même coût élec)
-  return {kwh:kwh,chaleur:chaleur,litres:litres,coutElec:coutElec,A:A,B:B,diff:diff};
+  var sides=s.comps.filter(function(c){return c.on;}).map(function(c){
+    var qty=c.type==='gaz'?kwhGaz:litres, eur=c.prix===null?null:qty*c.prix;
+    return {id:c.id,type:c.type,name:compName(c,s.comps),prix:c.prix,qty:qty,eur:eur,net:(eur===null||coutElec===null)?null:eur-coutElec};
+  });
+  var hasFioul=sides.some(function(x){return x.type==='fioul';}), hasGaz=sides.some(function(x){return x.type==='gaz';});
+  // Écart : 2 prix -> premier − second ; plus de 2 -> le plus avantageux − le moins avantageux (même coût élec)
+  var pr=sides.filter(function(x){return x.eur!==null;}), diff=null;
+  if(pr.length===2) diff={hi:pr[0],lo:pr[1],v:pr[0].eur-pr[1].eur,max:false};
+  else if(pr.length>2){var so=pr.slice().sort(function(a,b){return b.eur-a.eur;});diff={hi:so[0],lo:so[so.length-1],v:so[0].eur-so[so.length-1].eur,max:true};}
+  return {kwh:kwh,chaleur:chaleur,litres:litres,kwhGaz:kwhGaz,coutElec:coutElec,sides:sides,hasFioul:hasFioul,hasGaz:hasGaz,diff:diff};
+}
+// Quantité principale affichée (graphiques, gros chiffre) : litres de fioul, ou kWh de gaz si seul le gaz est activé
+function volMain(c){return (c.hasGaz&&!c.hasFioul)?c.kwhGaz:c.litres;}
+function volUnit(c){return (c.hasGaz&&!c.hasFioul)?'kWh':'L';}
+function volText(c,sep){
+  var a=[];if(c.hasFioul||!c.hasGaz)a.push(fL(c.litres)+' de fioul évités');if(c.hasGaz)a.push(fKwhG(c.kwhGaz)+' évités');
+  return a.join(sep||' · ');
 }
 function resolved(){
   var arr=entries.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0);});
@@ -337,25 +376,32 @@ function prevIndexBefore(date,excludeId){
 function weekStart(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
 function sumRange(list,from,to){var k=0;list.forEach(function(e){if((!from||e.date>=from)&&(!to||e.date<=to))k+=e.kwh;});return k;}
 
-// ---------- blocs de comparaison A / B ----------
+// ---------- blocs de comparaison (fioul / gaz) ----------
 var MISSING='— renseigne le prix dans Réglages';
-function colHtml(name,side,c){
-  var h='<div class="col"><div class="ch">'+esc(name)+(side?' <span class="pr">'+nfN.format(side.prix)+' €/L</span>':'')+'</div>';
-  if(!side) return h+'<div class="missing">'+MISSING+'</div></div>';
-  h+='<div class="kv"><span>Fioul évité</span><b>'+fE(side.fioul)+'</b></div>';
+function colHtml(side){
+  var h='<div class="col"><div class="ch">'+(side.type==='gaz'?'🔵 ':'🛢️ ')+esc(side.name)+(side.prix!==null?' <span class="pr">'+nfN.format(side.prix)+(side.type==='gaz'?' €/kWh':' €/L')+'</span>':'')+'</div>';
+  if(side.prix===null) return h+'<div class="missing">'+MISSING+'</div></div>';
+  h+='<div class="kv"><span>'+(side.type==='gaz'?'Gaz évité':'Fioul évité')+'</span><b>'+fE(side.eur)+'</b></div>';
   if(side.net===null) h+='<div class="kv"><span>Éco. nette</span><span class="missing">— prix élec à renseigner</span></div>';
   else h+='<div class="kv"><span>Éco. nette</span><b class="'+(side.net<0?'neg':'net')+'">'+fE(side.net)+'</b></div>';
   return h+'</div>';
 }
+function diffText(c){
+  if(!c.diff) return '';
+  return (c.diff.max?'Écart max ':'Écart ')+esc(c.diff.hi.name)+' − '+esc(c.diff.lo.name)+' : <b>'+fSigned(c.diff.v)+'</b>';
+}
 function cmpHtml(c){
-  var h='<div class="cmp">'+colHtml(nameA(),c.A,c)+colHtml(nameB(),c.B,c)+'</div>';
-  h+='<div class="diff">'+(c.diff===null?'Écart A − B : —':'Écart '+esc(nameA())+' − '+esc(nameB())+' : <b>'+fSigned(c.diff)+'</b>')+
-     (c.coutElec===null?' · Coût élec : — prix élec à renseigner':' · Coût élec PAC : '+fE(c.coutElec))+'</div>';
-  return h;
+  if(!c.sides.length) return '<div class="diff">Aucune comparaison activée : coche-en une dans Réglages.</div>';
+  var h='<div class="cmp">'+c.sides.map(colHtml).join('')+'</div>';
+  var parts=[];
+  if(c.sides.length>1) parts.push(c.diff?diffText(c):'Écart : —');
+  parts.push(c.coutElec===null?'Coût élec : — prix élec à renseigner':'Coût élec PAC : '+fE(c.coutElec));
+  return h+'<div class="diff">'+parts.join(' · ')+'</div>';
 }
 function compactLine(c){
-  function one(n,s){return esc(n)+' : '+(!s?'— prix à renseigner':(s.net===null?fE(s.fioul)+' évités':'<b>'+fE(s.net)+'</b> nets'));}
-  return one(nameA(),c.A)+' · '+one(nameB(),c.B)+(c.diff!==null?' · écart '+fSigned(c.diff):'');
+  function one(s){return esc(s.name)+' : '+(s.prix===null?'— prix à renseigner':(s.net===null?fE(s.eur)+' évités':'<b>'+fE(s.net)+'</b> nets'));}
+  var a=c.sides.map(one); if(c.diff) a.push(diffText(c).replace(/^Écart/,'écart'));
+  return a.join(c.sides.length>2?'<br>':' · ');
 }
 
 // ---------- rendu ----------
@@ -365,10 +411,12 @@ function renderStats(list){
   var blocks=[['Cette semaine',ws,t],['Ce mois-ci',ms,t],['Cette année',ys,t],['Depuis le début',null,null]];
   $('stats').innerHTML=blocks.map(function(b){
     var c=calc(sumRange(list,b[1],b[2]));
-    return '<div class="stat"><h3>'+b[0]+'</h3><div class="big">'+fL(c.litres)+' <span class="unit">de fioul évités</span></div>'+
+    var big=(c.hasGaz&&!c.hasFioul)?fKwh(c.kwhGaz)+' <span class="unit">de gaz évités</span>':fL(c.litres)+' <span class="unit">de fioul évités</span>';
+    return '<div class="stat"><h3>'+b[0]+'</h3><div class="big">'+big+'</div>'+
+      (c.hasGaz&&c.hasFioul?'<div class="row">ou '+fKwhG(c.kwhGaz)+' évités</div>':'')+
       '<div class="row">'+fKwh(c.kwh)+' élec · '+nf0.format(c.chaleur)+' kWh de chaleur</div>'+cmpHtml(c)+'</div>';
   }).join('');
-  $('priceBanner').classList.toggle('hidden', settings.prixA!==null||settings.prixB!==null);
+  $('priceBanner').classList.toggle('hidden', settings.comps.some(function(x){return x.on&&x.prix!==null;}));
 }
 function renderList(list){
   var ul=$('list');
@@ -380,7 +428,7 @@ function renderList(list){
       : '';
     return '<li><div class="li-main"><div class="li-top"><span class="li-date">'+fDate(e.date)+
       (typeof e.index==='number'?'<span class="tag">index</span>':'')+'</span><span class="li-kwh">'+fKwh(e.kwh)+'</span></div>'+
-      '<div class="li-sub">'+fL(c.litres)+' de fioul évités</div>'+
+      '<div class="li-sub">'+volText(c)+'</div>'+
       '<div class="li-sub">'+compactLine(c)+'</div>'+
       (sub?'<div class="li-sub">'+esc(sub)+'</div>':'')+
       (e.note?'<div class="li-note">📝 '+esc(e.note)+'</div>':'')+
@@ -394,8 +442,11 @@ function renderWelcome(){
 }
 function renderFormula(){
   var c=calc(150), pe=elecPrice();
-  $('formulaEx').innerHTML='Exemple : 150 kWh × COP '+nfN.format(settings.cop)+' = '+nf0.format(c.chaleur)+' kWh de chaleur ÷ ('+nfN.format(settings.pci)+' × '+nfN.format(settings.rend)+' %) = <b>'+fL(c.litres)+'</b> de fioul évités'+
-    (pe===null?'':' · élec : 150 × '+nfN.format(pe)+' € = '+fE(c.coutElec))+cmpHtml(c);
+  var ex=[];
+  if(c.hasFioul||!c.hasGaz) ex.push('÷ ('+nfN.format(settings.pci)+' × '+nfN.format(settings.rend)+' %) = <b>'+fL(c.litres)+'</b> de fioul évités');
+  if(c.hasGaz) ex.push('÷ '+nfN.format(settings.rendGaz)+' % = <b>'+fKwhG(c.kwhGaz)+'</b> évités');
+  $('formulaEx').innerHTML='Exemple : 150 kWh × COP '+nfN.format(settings.cop)+' = '+nf0.format(c.chaleur)+' kWh de chaleur'+(ex.length>1?'<br>→ ':' ')+ex.join('<br>→ ')+
+    (pe===null?'':'<br>Élec : 150 × '+nfN.format(pe)+' € = '+fE(c.coutElec))+cmpHtml(c);
   var pm=$('elecAvg');
   if(settings.elecMode==='hphc'){pm.textContent=pe===null?'Prix moyen : renseigne HP, HC et % d\'heures creuses.':'Prix moyen pondéré utilisé : '+nfN.format(pe)+' €/kWh';}
 }
@@ -406,12 +457,17 @@ function readColors(){var cs=getComputedStyle(document.documentElement);['--acce
 function niceMax(v){if(v<=0)return 1;var p=Math.pow(10,Math.floor(Math.log10(v)));var n=v/p;var m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return m*p;}
 function svgEl(w,h,inner){return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Graphique" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">'+inner+'</svg>';}
 function txt(x,y,s,o){o=o||{};return '<text x="'+x+'" y="'+y+'" font-size="'+(o.size||11)+'" fill="'+(o.fill||COL['--muted'])+'" text-anchor="'+(o.anchor||'middle')+'">'+esc(s)+'</text>';}
+// Couleurs des courbes € (une par comparaison activée, 8 max)
+var SIDE_COLS=[function(){return COL['--accent2'];},function(){return COL['--accent3'];},function(){return '#2563eb';},function(){return '#db2777';},
+  function(){return '#ca8a04';},function(){return '#0891b2';},function(){return '#65a30d';},function(){return '#dc2626';}];
+var SIDE_DASH=['7 4','2 4','10 3 2 3','4 3','12 4','3 3 8 3','6 2 2 2','9 5'];
 var MONTHS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 
 function renderChart(list){
   readColors();
   var box=$('chart'); var W=Math.max(300,Math.round(box.clientWidth||600)); var H=Math.round(Math.min(320,Math.max(220,W*0.55)));
-  var c0=calc(1), hasA=!!(c0.A&&c0.A.net!==null), hasB=!!(c0.B&&c0.B.net!==null), hasE=hasA||hasB;
+  var c0=calc(1), U=volUnit(c0), eIdx=[];c0.sides.forEach(function(x,i){if(x.net!==null)eIdx.push(i);}); var hasE=eIdx.length>0;
+  function sideCol(i){return SIDE_COLS[i%SIDE_COLS.length]();} function sideDash(i){return SIDE_DASH[i%SIDE_DASH.length];}
   var L=46,R=(chartView==='cumul'&&hasE)?54:12,T=14,B=34, pw=W-L-R, ph=H-T-B;
   var leg=$('legend');
   if(!list.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,'Le graphique apparaîtra après ton premier relevé',{size:13}));leg.innerHTML='';return;}
@@ -423,32 +479,30 @@ function renderChart(list){
     return s;}
   var shortNum=function(v){return Math.abs(v)>=1000?nf1.format(v/1000)+'k':(Math.abs(v)<10&&v%1?nf1.format(v):nf0.format(v));};
   if(chartView==='cumul'){
-    var pts=[],cl=0,ca=0,cb=0,byDate={};
-    list.forEach(function(e){var c=calc(e.kwh);cl+=c.litres;if(hasA)ca+=c.A.net;if(hasB)cb+=c.B.net;byDate[e.date]={l:cl,a:ca,b:cb};});
-    Object.keys(byDate).sort().forEach(function(d){pts.push({d:d,t:parseIso(d).getTime(),l:byDate[d].l,a:byDate[d].a,b:byDate[d].b});});
+    var pts=[],cl=0,acc=c0.sides.map(function(){return 0;}),byDate={};
+    list.forEach(function(e){var c=calc(e.kwh);cl+=volMain(c);eIdx.forEach(function(i){acc[i]+=c.sides[i].net;});byDate[e.date]={l:cl,e:acc.slice()};});
+    Object.keys(byDate).sort().forEach(function(d){pts.push({d:d,t:parseIso(d).getTime(),l:byDate[d].l,e:byDate[d].e});});
     var t0=pts[0].t,t1=pts[pts.length-1].t; if(t1===t0){t0-=86400000*3;t1+=86400000*3;}
     var maxL=niceMax(Math.max.apply(null,pts.map(function(p){return p.l;})));
-    var eVals=[0];pts.forEach(function(p){if(hasA)eVals.push(p.a);if(hasB)eVals.push(p.b);});
+    var eVals=[0];pts.forEach(function(p){eIdx.forEach(function(i){eVals.push(p.e[i]);});});
     var maxE=niceMax(Math.max.apply(null,eVals)), minE=Math.min.apply(null,eVals); minE=minE<0?-niceMax(-minE):0; var spanE=maxE-minE||1;
     var X=function(t){return L+pw*(t-t0)/(t1-t0);}, YL=function(v){return T+ph-ph*v/maxL;}, YE=function(v){return T+ph-ph*(v-minE)/spanE;};
-    g+=gridY(maxL,function(v){return shortNum(v)+' L';},COL['--accent']);
+    g+=gridY(maxL,function(v){return shortNum(v)+' '+U;},COL['--accent']);
     if(hasE)for(var i=0;i<=4;i++){var v=minE+spanE*i/4;g+=txt(W-R+6,T+ph-ph*i/4+4,shortNum(Math.round(v))+' €',{anchor:'start'});}
     var nt=pts.length===1?1:4;
     for(var k=0;k<nt;k++){var tt=nt===1?pts[0].t:t0+(t1-t0)*k/(nt-1);var dd=new Date(tt);g+=txt(nt===1?X(tt):Math.min(Math.max(X(tt),L+22),W-R-22),H-12,pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+'/'+String(dd.getFullYear()).slice(2));}
     function path(fy){return pts.map(function(p,i){return (i?'L':'M')+X(p.t).toFixed(1)+' '+fy(p).toFixed(1);}).join('');}
     var pathL=path(function(p){return YL(p.l);});
+    var volLab=U==='kWh'?'kWh de gaz évités':'Litres évités';
     g+='<path d="'+pathL+'L'+X(pts[pts.length-1].t).toFixed(1)+' '+(T+ph)+'L'+X(pts[0].t).toFixed(1)+' '+(T+ph)+'Z" fill="'+COL['--accent']+'" opacity=".12"/>';
     g+='<path d="'+pathL+'" fill="none" stroke="'+COL['--accent']+'" stroke-width="2.5" stroke-linejoin="round"/>';
-    if(hasA)g+='<path d="'+path(function(p){return YE(p.a);})+'" fill="none" stroke="'+COL['--accent2']+'" stroke-width="2.5" stroke-dasharray="7 4" stroke-linejoin="round"/>';
-    if(hasB)g+='<path d="'+path(function(p){return YE(p.b);})+'" fill="none" stroke="'+COL['--accent3']+'" stroke-width="2.5" stroke-dasharray="2 4" stroke-linecap="round" stroke-linejoin="round"/>';
+    eIdx.forEach(function(i){g+='<path d="'+path(function(p){return YE(p.e[i]);})+'" fill="none" stroke="'+sideCol(i)+'" stroke-width="2.5" stroke-dasharray="'+sideDash(i)+'" stroke-linecap="round" stroke-linejoin="round"/>';});
     pts.forEach(function(p){var x=X(p.t).toFixed(1);
-      g+='<circle cx="'+x+'" cy="'+YL(p.l).toFixed(1)+'" r="3.5" fill="'+COL['--accent']+'"><title>'+fDate(p.d)+' : '+fL(p.l)+' cumulés</title></circle>';
-      if(hasA)g+='<circle cx="'+x+'" cy="'+YE(p.a).toFixed(1)+'" r="3" fill="'+COL['--accent2']+'"><title>'+fDate(p.d)+' · '+esc(nameA())+' : '+fE(p.a)+' cumulés</title></circle>';
-      if(hasB)g+='<circle cx="'+x+'" cy="'+YE(p.b).toFixed(1)+'" r="3" fill="'+COL['--accent3']+'"><title>'+fDate(p.d)+' · '+esc(nameB())+' : '+fE(p.b)+' cumulés</title></circle>';});
-    leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres évités (cumul, axe gauche)</span>'+
-      (hasA?'<span><i style="background:'+COL['--accent2']+'"></i>'+esc(nameA())+' : € nets cumulés (axe droit)</span>':'')+
-      (hasB?'<span><i style="background:'+COL['--accent3']+'"></i>'+esc(nameB())+' : € nets cumulés (axe droit)</span>':'')+
-      (hasE?'':'<span>Renseigne un prix de fioul (et d\'électricité) dans Réglages pour voir les courbes en €.</span>');
+      g+='<circle cx="'+x+'" cy="'+YL(p.l).toFixed(1)+'" r="3.5" fill="'+COL['--accent']+'"><title>'+fDate(p.d)+' : '+(U==='kWh'?fKwhG(p.l):fL(p.l))+' cumulés</title></circle>';
+      eIdx.forEach(function(i){g+='<circle cx="'+x+'" cy="'+YE(p.e[i]).toFixed(1)+'" r="3" fill="'+sideCol(i)+'"><title>'+fDate(p.d)+' · '+esc(c0.sides[i].name)+' : '+fE(p.e[i])+' cumulés</title></circle>';});});
+    leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>'+volLab+' (cumul, axe gauche)</span>'+
+      eIdx.map(function(i){return '<span><i style="background:'+sideCol(i)+'"></i>'+esc(c0.sides[i].name)+' : € nets cumulés (axe droit)</span>';}).join('')+
+      (hasE?'':'<span>Renseigne un prix de fioul ou de gaz (et d\'électricité) dans Réglages pour voir les courbes en €.</span>');
   } else {
     var groups={},order=[];
     function keyOf(d){var x=parseIso(d);
@@ -458,17 +512,17 @@ function renderChart(list){
     list.forEach(function(e){var o=keyOf(e.date);if(!groups[o.k]){groups[o.k]={lab:o.lab,kwh:0};order.push(o.k);}groups[o.k].kwh+=e.kwh;});
     order.sort(); var maxBars=chartView==='week'?Math.max(6,Math.floor(pw/34)):chartView==='month'?Math.max(6,Math.floor(pw/40)):20;
     if(order.length>maxBars)order=order.slice(-maxBars);
-    var data=order.map(function(k){var gg=groups[k];gg.c=calc(gg.kwh);gg.l=gg.c.litres;return gg;});
+    var data=order.map(function(k){var gg=groups[k];gg.c=calc(gg.kwh);gg.l=volMain(gg.c);return gg;});
     var mx=niceMax(Math.max.apply(null,data.map(function(d){return d.l;})));
-    g+=gridY(mx,function(v){return shortNum(v)+' L';});
+    g+=gridY(mx,function(v){return shortNum(v)+' '+U;});
     var slot=pw/data.length,bw=Math.min(56,slot*0.68), every=Math.ceil(data.length/8);
     data.forEach(function(d,i){var h=ph*d.l/mx,x=L+slot*i+(slot-bw)/2,y=T+ph-h;
-      var tip=d.lab+' : '+fL(d.l)+(d.c.A&&d.c.A.net!==null?' · '+nameA()+' '+fE(d.c.A.net):'')+(d.c.B&&d.c.B.net!==null?' · '+nameB()+' '+fE(d.c.B.net):'');
+      var tip=d.lab+' : '+volText(d.c)+d.c.sides.map(function(x){return x.net!==null?' · '+x.name+' '+fE(x.net):'';}).join('');
       g+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="5" fill="'+COL['--accent']+'"><title>'+esc(tip)+'</title></rect>';
       if(data.length<=12)g+=txt(x+bw/2,y-5,nf1.format(d.l),{size:10,fill:COL['--text']});
       if(i%every===0||i===data.length-1)g+=txt(x+bw/2,H-12,d.lab,{size:10});});
     var tot=calc(data.reduce(function(a,d){return a+d.kwh;},0));
-    leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres de fioul évités par '+(chartView==='week'?'semaine (lundi)':chartView==='month'?'mois':'année')+'</span><span>Total affiché : '+compactLine(tot)+'</span>';
+    leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>'+(U==='kWh'?'kWh de gaz évités par ':'Litres de fioul évités par ')+(chartView==='week'?'semaine (lundi)':chartView==='month'?'mois':'année')+'</span><span>Total affiché : '+compactLine(tot)+'</span>';
   }
   box.innerHTML=svgEl(W,H,g);
 }
@@ -503,7 +557,7 @@ function updatePreview(){
   }
   if(kwh<0){p.classList.add('warn');p.innerHTML='⚠️ Valeur négative.';return;}
   var c=calc(kwh);
-  p.innerHTML=head+'= '+nf0.format(c.chaleur)+' kWh de chaleur → <b>'+fL(c.litres)+'</b> de fioul évités'+cmpHtml(c);
+  p.innerHTML=head+'= '+nf0.format(c.chaleur)+' kWh de chaleur → <b>'+volText(c)+'</b>'+cmpHtml(c);
 }
 function resetForm(){
   editingId=null;$('form').reset();$('fDate').value=todayIso();
@@ -550,7 +604,7 @@ $('btnFirst').addEventListener('click',function(){
   entries.push({id:uid(),created:Date.now(),date:'2026-10-24',kwh:150,note:'Premier relevé'});
   save(KEY_DATA,entries);save(KEY_WELCOME,true);renderAll();toast('Premier relevé ajouté ✅');
 });
-$('btnGoSettings').addEventListener('click',function(){var d=$('settingsBox');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){$('sPrixA').focus();},350);});
+$('btnGoSettings').addEventListener('click',function(){var d=$('settingsBox');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){var i=document.querySelector('#compList .cPrix');if(i)i.focus();},350);});
 
 // ---------- graphique : boutons ----------
 Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(b){
@@ -562,16 +616,51 @@ var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeou
 if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){renderChart(resolved());});}
 
 // ---------- réglages ----------
-var REQ={sCop:'cop',sPci:'pci',sRend:'rend'};
-var OPT={sPrixA:'prixA',sPrixB:'prixB',sElec:'prixElec',sHP:'prixHP',sHC:'prixHC'};
-var elecModeUI='base';
+var REQ={sCop:'cop',sPci:'pci',sRend:'rend',sRendGaz:'rendGaz'};
+var OPT={sElec:'prixElec',sHP:'prixHP',sHC:'prixHC'};
+var elecModeUI='base', compsUI=[];
 function numStr(v){return v===null||v===undefined?'':String(v).replace('.',',');}
 function setElecMode(m){elecModeUI=m;$('elecBase').setAttribute('aria-pressed',m==='base');$('elecHphc').setAttribute('aria-pressed',m==='hphc');
   $('boxBase').classList.toggle('hidden',m!=='base');$('boxHphc').classList.toggle('hidden',m!=='hphc');}
+// --- liste des comparaisons (brouillon, enregistré avec « Enregistrer les réglages ») ---
+function readCompsUI(){
+  compsUI.forEach(function(c){var r=document.querySelector('#compList [data-cid="'+c.id+'"]');if(!r)return;
+    c.on=r.querySelector('.cOn').checked;c.label=r.querySelector('.cLabel').value;c.prixRaw=r.querySelector('.cPrix').value;});
+}
+function renderCompsUI(){
+  $('compList').innerHTML=compsUI.map(function(c){
+    var nth=0;compsUI.some(function(x){if(x.type===c.type)nth++;return x.id===c.id;});
+    var gaz=c.type==='gaz', ph=gaz?'ex. 0,14':(nth===1?'ex. 1,90':nth===2?'ex. 1,40':'ex. 1,60');
+    var phN=gaz?'ex. Mon contrat gaz':(nth===1?'ex. Prix actuel':nth===2?'ex. Achat moins cher':'ex. Autre fournisseur');
+    return '<div class="comp'+(c.on?'':' off')+'" data-cid="'+esc(c.id)+'"><div class="comp-head">'+
+      '<label class="chk"><input type="checkbox" class="cOn"'+(c.on?' checked':'')+'> <span>'+(gaz?'🔵 Gaz ':'🛢️ Fioul ')+nth+'</span></label>'+
+      '<button class="icon-btn del cDel" type="button" aria-label="Supprimer '+(gaz?'Gaz ':'Fioul ')+nth+'">🗑️</button></div>'+
+      '<div class="settings-grid"><div><label class="sm" for="cl_'+esc(c.id)+'">Nom <span class="opt">(facultatif)</span></label><input type="text" class="cLabel" id="cl_'+esc(c.id)+'" maxlength="40" placeholder="'+phN+'" value="'+esc(c.label)+'"></div>'+
+      '<div><label class="sm" for="cp_'+esc(c.id)+'">Prix '+(gaz?'gaz (€/kWh)':'fioul (€/L)')+'</label><input type="text" class="cPrix" id="cp_'+esc(c.id)+'" inputmode="decimal" placeholder="'+ph+'" value="'+esc(c.prixRaw)+'"></div></div></div>';
+  }).join('')||'<p class="empty">Aucune comparaison : ajoute un prix fioul ou gaz.</p>';
+  $('btnAddFioul').disabled=$('btnAddGaz').disabled=compsUI.length>=MAX_COMPS;
+}
+function addComp(type){
+  readCompsUI();
+  if(compsUI.length>=MAX_COMPS){toast('Maximum '+MAX_COMPS+' comparaisons');return;}
+  var c={id:uid(),type:type,label:'',prixRaw:'',on:true};compsUI.push(c);renderCompsUI();
+  var i=document.getElementById('cp_'+c.id);if(i)i.focus();
+  toast('Ajouté : mets le prix puis « Enregistrer les réglages »');
+}
+$('btnAddFioul').addEventListener('click',function(){addComp('fioul');});
+$('btnAddGaz').addEventListener('click',function(){addComp('gaz');});
+$('compList').addEventListener('change',function(ev){if(ev.target.classList.contains('cOn')){var r=ev.target.closest('.comp');r.classList.toggle('off',!ev.target.checked);}});
+$('compList').addEventListener('click',function(ev){
+  var b=ev.target.closest('.cDel');if(!b)return;readCompsUI();
+  var id=b.closest('.comp').getAttribute('data-cid');
+  if(!confirm('Supprimer cette comparaison ? (Tes relevés ne sont pas touchés.)'))return;
+  compsUI=compsUI.filter(function(x){return x.id!==id;});renderCompsUI();toast('Supprimée : appuie sur « Enregistrer les réglages »');
+});
 function fillSettings(){
   Object.keys(REQ).forEach(function(id){$(id).value=numStr(settings[REQ[id]]);});
   Object.keys(OPT).forEach(function(id){$(id).value=numStr(settings[OPT[id]]);});
-  $('sPct').value=numStr(settings.pctHC);$('sLabelA').value=settings.labelA;$('sLabelB').value=settings.labelB;
+  $('sPct').value=numStr(settings.pctHC);
+  compsUI=settings.comps.map(function(c){return {id:c.id,type:c.type,label:c.label,prixRaw:numStr(c.prix),on:c.on};});renderCompsUI();
   setElecMode(settings.elecMode);
 }
 function labelOf(id){return $(id).previousElementSibling?$(id).previousElementSibling.textContent:id;}
@@ -581,21 +670,26 @@ $('btnPct').addEventListener('click',function(){$('sPct').value=numStr(HC_SUGGES
 $('btnSaveSettings').addEventListener('click',function(){
   var n=Object.assign({},settings),id,v,raw;
   for(id in REQ){v=parseNum($(id).value);if(isNaN(v)||v<=0){toast('Valeur invalide : '+labelOf(id));$(id).focus();return;}n[REQ[id]]=v;}
-  if(n.rend>100){toast('Le rendement doit être ≤ 100 %');return;}
+  if(n.rend>100||n.rendGaz>100){toast('Le rendement doit être ≤ 100 %');return;}
   for(id in OPT){raw=$(id).value.trim();if(raw===''){n[OPT[id]]=null;continue;}v=parseNum(raw);if(isNaN(v)||v<=0){toast('Valeur invalide : '+labelOf(id));$(id).focus();return;}n[OPT[id]]=v;}
   raw=$('sPct').value.trim();if(raw===''){n.pctHC=null;}else{v=parseNum(raw.replace('%',''));if(isNaN(v)||v<0||v>100){toast('% heures creuses : entre 0 et 100');$('sPct').focus();return;}n.pctHC=v;}
-  n.labelA=$('sLabelA').value.trim().slice(0,40);n.labelB=$('sLabelB').value.trim().slice(0,40);n.elecMode=elecModeUI;
-  settings=n;save(KEY_SET,settings);renderAll();toast('Réglages enregistrés');
+  readCompsUI();var comps=[],bad=null;
+  compsUI.forEach(function(c){var r=String(c.prixRaw||'').trim(),pv=null;if(r!==''){pv=parseNum(r);if(isNaN(pv)||pv<=0){if(!bad)bad=c;return;}}
+    comps.push({id:c.id,type:c.type,label:String(c.label||'').trim().slice(0,40),prix:pv,on:!!c.on});});
+  if(bad){toast('Prix invalide pour '+(bad.type==='gaz'?'un prix gaz':'un prix fioul')+' (ex. 1,90)');var i=document.getElementById('cp_'+bad.id);if(i)i.focus();return;}
+  if(!comps.some(function(c){return c.on;})){toast('Coche au moins une comparaison (fioul ou gaz)');return;}
+  n.comps=comps;n.elecMode=elecModeUI;
+  settings=n;save(KEY_SET,settings);fillSettings();renderAll();toast('Réglages enregistrés');
 });
 $('btnResetSettings').addEventListener('click',function(){
-  if(!confirm('Remettre COP 3, PCI 10, rendement 85 % et électricité Base 0,2001 €/kWh ? Tes prix et noms de fioul A/B sont conservés.'))return;
-  settings=Object.assign({},settings,{cop:DEFAULTS.cop,pci:DEFAULTS.pci,rend:DEFAULTS.rend,elecMode:'base',prixElec:DEFAULTS.prixElec});
+  if(!confirm('Remettre COP 3, PCI 10, rendement fioul 85 %, rendement gaz 90 % et électricité Base 0,2001 €/kWh ? Tes comparaisons (prix et noms) sont conservées.'))return;
+  settings=Object.assign({},settings,{cop:DEFAULTS.cop,pci:DEFAULTS.pci,rend:DEFAULTS.rend,rendGaz:DEFAULTS.rendGaz,elecMode:'base',prixElec:DEFAULTS.prixElec});
   save(KEY_SET,settings);fillSettings();renderAll();toast('Valeurs par défaut remises');
 });
 
 // ---------- export / import ----------
 $('btnExport').addEventListener('click',function(){
-  var data={app:'suivi-pac-fioul',version:2,exportedAt:new Date().toISOString(),settings:settings,entries:entries};
+  var data={app:'suivi-pac-fioul',version:3,exportedAt:new Date().toISOString(),settings:settings,entries:entries};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='suivi-pac-fioul-'+todayIso()+'.json';
   document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
