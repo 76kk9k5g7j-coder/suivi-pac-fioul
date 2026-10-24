@@ -1,0 +1,2307 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0f766e">
+<title>Ma PAC : économies</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#14202b; --muted:#5d6b78; --line:#e1e6eb;
+  --accent:#0f766e; --accent2:#e07a1f; --accent-soft:#d9f2ee; --danger:#c0392b; --ok:#1e8e3e;
+  --input:#f8fafb; --accent3:#6d4bd8; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e1419; --card:#172028; --text:#e8eef3; --muted:#93a3b1; --line:#26323d;
+    --accent:#2dd4bf; --accent2:#f59e4b; --accent-soft:#123a36; --danger:#ef6b5b; --ok:#4ade80;
+    --input:#111a21; --accent3:#a78bfa; --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:760px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 14px calc(104px + env(safe-area-inset-bottom))}
+header{padding:6px 2px 12px}
+header.top{display:flex;align-items:flex-start;gap:10px;padding:2px 2px 10px}
+header.top .htxt{flex:1;min-width:0}
+header.top .sub{font-size:.85rem}
+.gear{flex:none;width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:1.35rem;line-height:1;cursor:pointer;box-shadow:var(--shadow);-webkit-tap-highlight-color:transparent}
+h1{font-size:1.45rem;margin:0 0 2px}
+h2{font-size:1.1rem;margin:0 0 12px}
+.sub{color:var(--muted);font-size:.92rem;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px;box-shadow:var(--shadow)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.grid{grid-template-columns:1fr}
+@media (min-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.stat h3{margin:0 0 6px;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.stat .big{font-size:1.35rem;font-weight:700;color:var(--accent);line-height:1.15}
+.stat .row{font-size:.86rem;color:var(--muted);margin-top:3px}
+.stat .eur{font-weight:700;color:var(--text)}
+.stat .eur.neg{color:var(--danger)}
+label{display:block;font-size:.9rem;font-weight:600;margin:10px 0 5px}
+input,textarea{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--input);color:var(--text)}
+textarea{min-height:48px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:.83rem;color:var(--muted);margin:5px 0 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);font-size:1rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){.btn.primary{color:#062a26}}
+.btn.danger{color:var(--danger)}
+.btn.small{min-height:44px;padding:0 12px;font-size:.9rem}
+.btn.block{width:100%}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.actions .btn{flex:1 1 auto}
+.seg{display:flex;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;min-height:42px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.95rem;font-weight:600;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.preview{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--accent-soft);font-size:.92rem}
+.preview.warn{background:rgba(224,122,31,.15)}
+ul.list{list-style:none;margin:0;padding:0}
+ul.list li{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+ul.list li:first-child{border-top:0}
+.li-main{flex:1;min-width:0}
+.li-top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.li-date{font-weight:700}
+.li-kwh{font-weight:700;color:var(--accent)}
+.li-sub{font-size:.85rem;color:var(--muted)}
+.li-note{font-size:.88rem;margin-top:3px;word-break:break-word}
+.li-btns{display:flex;flex-direction:column;gap:6px}
+.icon-btn{min-width:44px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:1.05rem;cursor:pointer}
+.icon-btn.del{color:var(--danger)}
+.empty{color:var(--muted);text-align:center;padding:14px 0}
+.welcome{border:2px dashed var(--accent);text-align:center}
+.welcome p{margin:0 0 12px}
+.formula{font-size:.88rem;color:var(--muted);background:var(--input);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px}
+.formula b{color:var(--text)}
+.chart-wrap{width:100%;margin-top:10px}
+.chart-wrap svg{display:block;width:100%;height:auto}
+.chart-wrap{position:relative}
+.chart-wrap.xh-on{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.xh-tip{position:absolute;left:0;top:0;z-index:6;pointer-events:none;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:5px 8px;font-size:.72rem;line-height:1.4;white-space:nowrap}
+.xh-tip b{display:block;font-size:.74rem;margin-bottom:1px}
+.xh-tip .xr{display:flex;align-items:center;gap:5px}
+.xh-tip .xr i{width:8px;height:8px;border-radius:50%;flex:none}
+.xh-tip .xr i.sq{border-radius:2px}
+.xh-tip .xr span{color:var(--muted)}
+.xh-tip .xr em{font-style:normal;font-weight:600;margin-left:auto;padding-left:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:420px){.settings-grid{grid-template-columns:1fr}}
+.note{font-size:.8rem;color:var(--muted);margin-top:12px;line-height:1.5}
+.note a{color:var(--accent)}
+details>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:32px}
+details>summary::-webkit-details-marker{display:none}
+details>summary h2{margin:0}
+details>summary::after{content:"▾";color:var(--muted);font-size:1.2rem}
+details[open]>summary::after{content:"▴"}
+details[open]>summary{margin-bottom:6px}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--text);color:var(--bg);
+  padding:12px 18px;border-radius:12px;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90vw;z-index:40}
+.toast.show{opacity:1}
+.hidden{display:none!important}
+.stat .unit{font-size:.85rem;font-weight:500;color:var(--muted)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.cmp .col{background:var(--input);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.86rem;min-width:0}
+.cmp .ch{font-weight:700;font-size:.82rem;margin-bottom:4px;overflow-wrap:anywhere}
+.cmp .pr{font-weight:500;color:var(--muted)}
+.cmp .kv{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;color:var(--muted)}
+.cmp .kv b{color:var(--text)}
+.cmp .kv b.net{color:var(--ok)}
+.cmp .kv b.neg{color:var(--danger)}
+.cmp .missing{color:var(--muted);font-style:italic;font-size:.8rem}
+.diff{font-size:.84rem;color:var(--muted);margin-top:6px}
+.diff b{color:var(--text)}
+.banner{border:2px dashed var(--accent2)}
+.banner p{margin:0 0 10px}
+.sh{font-size:.95rem;margin:18px 0 6px;color:var(--accent)}
+.opt{font-weight:400;color:var(--muted)}
+.hcinfo{font-weight:600;margin:12px 0 0}
+.comp{border:1px solid var(--line);border-radius:12px;padding:8px 12px 10px;margin:10px 0 0;background:var(--input)}
+.comp.off{opacity:.6}
+.comp-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chk{display:flex;align-items:center;gap:10px;margin:0;font-weight:700;cursor:pointer;min-height:44px}
+.ecs-on{margin-top:4px}
+#ecsInfo b{white-space:nowrap}
+.chk input{width:24px;height:24px;min-height:24px;padding:0;margin:0;accent-color:var(--accent);flex:none}
+.comp label.sm{font-size:.82rem;margin:6px 0 4px}
+.comp input[type=text]{background:var(--card)}
+/* v18 : barre d'onglets façon « Liquid Glass » iOS : pilule flottante translucide (flou + saturation), reflet sur les bords, bulle de verre qui glisse sous l'onglet actif */
+.tabs{--ti:0;--gl-bg:rgba(255,255,255,.66);--gl-bd:rgba(255,255,255,.75);--gl-hi:rgba(255,255,255,.9);--gl-lo:rgba(15,40,60,.07);--gl-sh:0 10px 30px rgba(20,32,43,.18),0 2px 6px rgba(20,32,43,.08);
+  --bb-bg:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.62));--bb-bd:rgba(255,255,255,.95);--bb-sh:0 2px 8px rgba(20,32,43,.14),inset 0 1px 0 #fff,inset 0 -1px 1px rgba(15,118,110,.10);
+  position:fixed;z-index:15;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));max-width:440px;margin:0 auto;
+  display:flex;gap:0;padding:5px;border-radius:30px;background:var(--card);border:1px solid var(--line);box-shadow:var(--gl-sh)}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .tabs{background:var(--gl-bg);border-color:var(--gl-bd);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
+    box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 -1px 0 var(--gl-lo),var(--gl-sh)}}
+@media (prefers-color-scheme: dark){.tabs{--gl-bg:rgba(30,42,52,.62);--gl-bd:rgba(255,255,255,.13);--gl-hi:rgba(255,255,255,.16);--gl-lo:rgba(0,0,0,.35);--gl-sh:0 12px 34px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.3);
+  --bb-bg:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.07));--bb-bd:rgba(255,255,255,.22);--bb-sh:0 2px 10px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 1px rgba(45,212,191,.12)}}
+.tabs .tab-bubble{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px)/3);border-radius:24px;background:var(--bb-bg);border:1px solid var(--bb-bd);box-shadow:var(--bb-sh);pointer-events:none;
+  transform:translateX(calc(var(--ti)*100%));transition:transform .45s cubic-bezier(.3,1.35,.5,1)}
+.tabs button{position:relative;z-index:1;flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:24px;background:transparent;color:var(--muted);font-size:.8rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .25s}
+.tabs button .ti{font-size:1.3rem;line-height:1;transition:transform .3s}
+.tabs button[aria-selected="true"]{color:var(--accent)}
+.tabs button[aria-selected="true"] .ti{transform:scale(1.12)}
+.tabs button:active .ti{transform:scale(.92)}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){.tabs .tab-bubble,.tabs button,.tabs button .ti{transition:none}}
+select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--input);color:var(--text)}
+.simres{display:grid;grid-template-columns:1fr;gap:0;margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.simres .r{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 12px;border-top:1px solid var(--line);background:var(--input)}
+.simres .r:first-child{border-top:0}
+.simres .r span{color:var(--muted);font-size:.92rem}
+.simres .r b{font-size:1.05rem;text-align:right;white-space:nowrap}
+.simres .r.total{background:var(--accent-soft)}
+.simres .r.total span{color:var(--text);font-weight:700}
+.simres .r.total b{font-size:1.3rem;color:var(--ok)}
+.simres .r.total b.neg{color:var(--danger)}
+.simres .r b.miss{font-weight:500;font-style:italic;color:var(--muted);font-size:.85rem;white-space:normal}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
+.tag{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--text);margin-left:6px;vertical-align:1px}
+@media (max-width:420px){.tabs button{padding:0 2px}}
+.gauge{position:relative;height:24px;border-radius:99px;background:var(--input);border:1px solid var(--line);overflow:hidden;margin-top:8px}
+.gauge>i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);opacity:.85}
+.gauge.low>i{background:var(--danger)}
+.gauge>b{position:absolute;top:0;bottom:0;width:2px;background:var(--accent2)}
+.gauge>span{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--text)}
+.tag.liv{background:rgba(224,122,31,.18)}
+.li-warn{font-size:.85rem;color:var(--danger)}
+.ptable{width:100%;border-collapse:collapse;margin-top:12px;font-size:.9rem}
+.ptable th,.ptable td{padding:8px 6px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.ptable th:first-child,.ptable td:first-child{text-align:left}
+.ptable th{color:var(--muted);font-weight:600;font-size:.8rem;border-top:0}
+.ptable tr.tot td{font-weight:700;background:var(--accent-soft)}
+.editing{outline:2px solid var(--accent2);outline-offset:2px}
+.wnav{display:flex;align-items:center;gap:10px;margin-top:10px}
+.wlab{flex:1;text-align:center;line-height:1.25}
+.wlab b{display:block;font-size:1.05rem}
+.wlab span{font-size:.8rem;color:var(--muted)}
+.wnav .icon-btn:disabled{opacity:.35;cursor:default}
+.evol-unit{margin-top:10px}
+.evol-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.evol-tbl .ptable{font-size:.82rem}
+.evol-tbl .ptable th i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.evol-tbl .ptable th{white-space:normal;vertical-align:bottom}
+.evol-tbl tr.sel td{background:var(--accent-soft)}
+.evol-tbl tr.tot td{font-weight:700}
+.evol-tbl td.neg{color:var(--danger)}
+#evolTip{min-height:1.2em}
+.evol-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.evol-row .seg{flex:1;margin:0}
+.tbtn{min-height:36px;padding:6px 10px;font-size:.85rem;white-space:nowrap;flex:none}
+.tbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.legend .tleg i{height:0;border-top:2px dashed #8c8c8c;border-radius:0;vertical-align:4px;background:none}
+.legend .tnote{font-size:.78rem}
+.legend .hatch i{border:1px solid var(--accent)}
+.stat-seg{margin-bottom:10px}
+.spread-row{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:.85rem;color:var(--muted)}
+.seg-sm button{white-space:nowrap}
+.seg-sm button{min-height:34px;font-size:.82rem}
+.ptable tr.summer td{color:var(--muted);font-style:italic}
+.ctable td{vertical-align:middle}
+.ctable{width:100%;table-layout:fixed}
+.ctable th,.ctable td{padding-left:3px;padding-right:3px;white-space:normal}
+.ctable input{width:100%;max-width:6em;min-height:40px;padding:6px 8px;text-align:right;border-radius:10px;box-sizing:border-box}
+#copMonthTbl th:first-child,#copMonthTbl td:first-child{width:22%}
+#copPtsTbl th:last-child,#copPtsTbl td:last-child{width:56px}
+.ctable td.mc{font-weight:700}
+.ctable td.mc.forced{color:var(--muted);text-decoration:line-through;font-weight:400}
+.sh4{font-size:.9rem;margin:16px 0 4px}
+.ptable td.sub{font-size:.78rem;color:var(--muted);display:block;padding-top:0;border-top:0}
+.ptable td small{display:block;font-size:.75rem;color:var(--muted);white-space:normal}
+.ptable.has-t{font-size:.8rem}
+.ptable.has-t th,.ptable.has-t td{padding:7px 4px}
+#consoTbl td:first-child{white-space:normal}
+/* v16 : réglages plein écran, rentabilité, relevés condensés */
+html.sp-open,html.sp-open body{overflow:hidden}
+.spage{position:fixed;left:0;right:0;top:0;bottom:0;z-index:30;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.sp-head{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:calc(8px + env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left));background:var(--bg);border-bottom:1px solid var(--line)}
+.sp-head h2{flex:1;margin:0;font-size:1.15rem}
+.sp-auto{font-size:.75rem;color:var(--muted)}
+.sp-status{flex-basis:100%;margin:0;font-size:.82rem;color:var(--ok)}
+.sp-status.err{color:var(--danger)}
+.sp-body{max-width:760px;margin:0 auto;padding:14px 14px calc(40px + env(safe-area-inset-bottom))}
+.sp-sec>summary h2{font-size:1.05rem}
+.sp-sec .sh:first-of-type{margin-top:8px}
+details.ihelp{margin-top:4px}
+details.ihelp>summary{display:inline-flex;min-height:30px;font-size:.82rem;font-weight:600;color:var(--accent)}
+details.ihelp>summary::after{content:none}
+details.ihelp[open]>summary{margin-bottom:0}
+details.ihelp>.hint{margin-top:0}
+details.info{margin-top:18px}
+.roi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:7px 12px 8px;margin:0 0 12px;box-shadow:var(--shadow);font-size:.84rem;line-height:1.3}
+.roi-l1{display:flex;align-items:center;gap:8px;min-height:30px}
+.roi-main{flex:1;min-width:0}
+.roi-main .pct{font-size:1.05rem;font-weight:800;color:var(--accent)}
+.roi-main .linkbtn{text-align:left;font-size:.84rem}
+.roi-pick{flex:none;display:flex;gap:4px;max-width:60%;overflow-x:auto}
+.roi-pick .vs{color:var(--muted);font-size:.78rem;white-space:nowrap}
+.roi-pick button{min-height:30px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);background:var(--input);color:var(--muted);font-size:.76rem;font-weight:600;white-space:nowrap;cursor:pointer}
+.roi-pick button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+.roi-pick select{width:auto;max-width:150px;min-height:30px;padding:2px 6px;font-size:16px;border-radius:8px}
+.roi-bar{position:relative;height:6px;border-radius:99px;background:var(--input);border:1px solid var(--line);overflow:hidden;margin:5px 0 4px}
+.roi-bar>i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:99px}
+/* Style de barre interchangeable : #roiBar[data-bar="…"] + variable --p (0 → 1) posée par renderRoi. v17 : « classic » (= v16). */
+.roi.done .roi-bar[data-bar="classic"]>i{background:var(--ok)}
+.roi-l2{color:var(--muted);font-size:.78rem}
+.roi-l2 b{color:var(--text)}
+ul.rlist li{display:block;padding:0}
+.r-line{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;padding:8px 0;border:0;background:none;color:var(--text);font:inherit;font-size:.9rem;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.r-line>span{white-space:nowrap}
+.r-date{font-weight:700}
+.r-kwh{color:var(--accent);font-weight:700}
+.r-vol{color:var(--muted)}
+.r-eur{margin-left:auto;font-weight:700;color:var(--ok)}
+.r-eur.neg{color:var(--danger)}
+.r-chev{color:var(--muted);font-size:.9rem;width:14px;text-align:center}
+.rrow.open .r-chev{transform:rotate(180deg)}
+.r-det{padding:0 0 10px}
+.r-act{display:flex;gap:8px;margin-top:8px}
+.r-act .btn{flex:1}
+.more-btn{margin-top:8px}
+/* v17 : relevés cuve condensés, COP du simulateur, prévision de rentabilité */
+.r-key{margin-left:auto;font-weight:700;color:var(--muted)}
+.r-lvl{color:var(--accent);font-weight:700}
+.r-liv{color:var(--accent2);font-weight:700}
+.sim-cop-row{display:flex;gap:8px;align-items:stretch;margin-top:8px}
+.sim-cop-row input{flex:0 0 108px;width:108px;font-size:16px;text-align:center;font-weight:700}
+.sim-cop-row select{flex:1;min-width:0}
+.seg.presets button{font-size:.86rem;padding:0 4px;white-space:nowrap}
+.roi-q{white-space:nowrap}
+/* v18 : barre « E » (choisie par Alexandre) : épaisse, gris-bleu terne -> or -> vert, de plus en plus lumineuse ; couleurs calculées en JS (--c2, --c3…) */
+.roi-bar[data-bar="E"]{height:14px;margin:6px 0 5px;background:var(--input)}
+.roi-bar[data-bar="E"]>i{background:linear-gradient(90deg,#4b5d78,var(--c2,#5f7390) 70%,var(--c3,#6a7f99));box-shadow:inset 0 1px 0 rgba(255,255,255,var(--hl,.08)),0 0 var(--gl,0px) var(--gc,transparent);filter:brightness(var(--br,.75))}
+.roi-bar[data-bar="E"]>em{position:absolute;top:0;bottom:0;width:36px;font:800 10px/12px system-ui,-apple-system,sans-serif;font-style:normal;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap;text-align:right}
+.roi-bar[data-bar="E"]>em.out{text-align:left;color:var(--muted);text-shadow:none}
+.roi-bar.grow>i{animation:roiGrow .9s cubic-bezier(.2,.7,.2,1)}
+@keyframes roiGrow{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@media (prefers-reduced-motion:reduce){.roi-bar.grow>i{animation:none}}
+#pacKwLimit{margin-top:4px}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div class="htxt">
+      <h1>🔥 Ma PAC : économies</h1>
+      <p class="sub">Chaque kWh de ta pompe à chaleur, c'est du fioul (ou du gaz) en moins.</p>
+    </div>
+    <button class="gear" type="button" id="btnGear" aria-label="Réglages" aria-haspopup="dialog" aria-controls="settingsPage">⚙️</button>
+  </header>
+
+  <div id="viewSuivi" role="tabpanel" aria-labelledby="tabSuivi">
+  <section class="roi" id="roiCard" aria-label="Rentabilité de la PAC">
+    <div class="roi-l1"><span class="roi-main" id="roiMain"></span><span class="roi-pick" id="roiPick"></span></div>
+    <div class="roi-bar hidden" id="roiBar" data-bar="E" style="--p:0"><i id="roiFill"></i><em id="roiPctIn" aria-hidden="true"></em></div>
+    <div class="roi-l2 hidden" id="roiSub"></div>
+  </section>
+
+  <section id="welcome" class="card welcome hidden">
+    <p><b>Bienvenue !</b> Aucun relevé pour l'instant.</p>
+    <button class="btn primary block" id="btnFirst" type="button">➕ Ajouter mon premier relevé PAC</button>
+  </section>
+
+  <section aria-label="Tableau de bord">
+    <div class="seg seg-sm stat-seg" id="statSeg" role="group" aria-label="Période du résumé">
+      <button type="button" data-sp="week" aria-pressed="false">Semaine</button>
+      <button type="button" data-sp="month" aria-pressed="false">Mois</button>
+      <button type="button" data-sp="year" aria-pressed="false">Année</button>
+      <button type="button" data-sp="all" aria-pressed="true">Total</button>
+    </div>
+    <div class="grid" id="stats"></div>
+  </section>
+
+  <section class="card" id="formCard" style="margin-top:14px">
+    <button class="btn primary block" type="button" id="btnNewReading">➕ Relevé PAC</button>
+    <div id="formBody" class="hidden">
+    <h2 id="formTitle">➕ Nouveau relevé PAC</h2>
+    <div class="seg" role="group" aria-label="Mode de saisie">
+      <button type="button" id="modeKwh" aria-pressed="true">kWh de la période</button>
+      <button type="button" id="modeIndex" aria-pressed="false">Index compteur</button>
+    </div>
+    <p class="hint" id="modeHint"></p>
+    <form id="form" autocomplete="off" novalidate>
+      <label for="fDate">Date</label>
+      <input type="date" id="fDate" required>
+      <label for="fVal" id="fValLabel">kWh électriques consommés par la PAC</label>
+      <input type="text" id="fVal" inputmode="decimal" placeholder="ex. 30" required>
+      <label for="fNote">Note <span style="font-weight:400;color:var(--muted)">(facultatif)</span></label>
+      <input type="text" id="fNote" placeholder="ex. semaine froide, PAC en continu">
+      <div class="preview hidden" id="preview"></div>
+      <div class="actions">
+        <button class="btn primary" type="submit" id="btnSave">Ajouter le relevé</button>
+        <button class="btn" type="button" id="btnCancel">Annuler</button>
+      </div>
+    </form>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📈 Évolution</h2>
+    <div class="seg" role="group" aria-label="Type de graphique">
+      <button type="button" data-view="cumul" aria-pressed="true">Cumul</button>
+      <button type="button" data-view="week" aria-pressed="false">Semaine</button>
+      <button type="button" data-view="month" aria-pressed="false">Mois</button>
+      <button type="button" data-view="year" aria-pressed="false">Année</button>
+    </div>
+    <div id="evolCtl" class="hidden">
+      <div class="evol-row">
+        <div class="seg seg-sm" id="evolUnit" role="group" aria-label="Unité des barres"></div>
+        <button class="btn tbtn" type="button" data-temptoggle aria-pressed="false">🌡️ Température</button>
+      </div>
+      <div class="wnav" id="evolNav">
+        <button class="icon-btn" type="button" id="evolPrev" aria-label="Période précédente">◀</button>
+        <div class="wlab"><b id="evolNavLab">—</b><span id="evolNavSub"></span></div>
+        <button class="icon-btn" type="button" id="evolNext" aria-label="Période suivante">▶</button>
+      </div>
+    </div>
+    <div class="chart-wrap" id="chart"></div>
+    <div class="legend" id="legend"></div>
+    <p class="hint" id="evolTip"></p>
+    <div class="evol-tbl" id="evolTable"></div>
+  </section>
+
+  <section class="card">
+    <h2>🗒️ Relevés PAC</h2>
+    <ul class="list rlist" id="list"></ul>
+    <button class="btn small block hidden more-btn" type="button" id="btnListAll"></button>
+  </section>
+  </div>
+
+  <div id="viewSim" role="tabpanel" aria-labelledby="tabSim" class="hidden">
+  <section class="card">
+    <h2>🧮 Et si j'avais eu une PAC ?</h2>
+    <p class="hint" style="margin-top:0">Entre une consommation de fioul ou de gaz : le simulateur calcule ce qu'une pompe à chaleur aurait consommé en électricité, et l'économie. <b>Rien n'est enregistré</b> : tes relevés et tes réglages ne sont pas modifiés.</p>
+    <label>Énergie</label>
+    <div class="seg" role="group" aria-label="Énergie simulée">
+      <button type="button" id="simFioul" aria-pressed="true">🛢️ Fioul (litres)</button>
+      <button type="button" id="simGaz" aria-pressed="false">🔵 Gaz (kWh)</button>
+    </div>
+    <label for="simQty" id="simQtyLabel">Consommation de fioul (litres)</label>
+    <input type="text" id="simQty" inputmode="decimal" placeholder="ex. 500" autocomplete="off">
+    <label for="simPeriod">Période <span class="opt">(facultatif)</span></label>
+    <input type="text" id="simPeriod" maxlength="60" placeholder="ex. hiver 2025-2026" autocomplete="off">
+    <div id="simEcsBox" class="hidden">
+      <label for="simEcsMois">💧 Durée couverte par cette consommation (mois)</label>
+      <input type="text" id="simEcsMois" inputmode="decimal" value="12" autocomplete="off">
+      <p class="hint" id="simEcsHint"></p>
+    </div>
+    <label for="simCopIn">COP à utiliser</label>
+    <div class="seg presets" role="group" aria-label="Scénario de COP" id="simPresets">
+      <button type="button" data-simp="fav" aria-pressed="false">😊 Favorable</button>
+      <button type="button" data-simp="neu" aria-pressed="true">😐 Neutre</button>
+      <button type="button" data-simp="def" aria-pressed="false">🥶 Défavorable</button>
+    </div>
+    <div class="sim-cop-row">
+      <input type="text" id="simCopIn" inputmode="decimal" autocomplete="off" aria-label="COP (modifiable)" enterkeyhint="done">
+      <select id="simCop" aria-label="COP de base"></select>
+    </div>
+    <p class="hint" id="simCopHint"></p>
+    <label for="simComp">Prix à utiliser</label>
+    <select id="simComp"></select>
+    <label for="simPrix" id="simPrixLabel">Prix du fioul (€/L)</label>
+    <input type="text" id="simPrix" inputmode="decimal" placeholder="ex. 1,90" autocomplete="off">
+    <p class="hint" id="simPrixHint"></p>
+    <p class="hint" id="simParams"></p>
+    <div id="simOut"></div>
+    <div class="formula" id="simFormula"></div>
+    <p class="note">⚠️ Simplification : on suppose que la PAC couvre 100 % du chauffage avec un COP moyen constant (COP fixe ou COP du mois choisi). Les choix Favorable / Neutre / Défavorable multiplient ce COP par 1,2 / 1 / 0,8. Si tu as déclaré que la chaudière fait aussi l'eau chaude (⚙️ Réglages), cette part reste à la chaudière et est retirée avant le calcul. En réalité, par grand froid, une PAC peut avoir besoin d'un appoint (chaudière ou résistance) et son COP baisse. Les abonnements (électricité, fioul, gaz) et le coût d'achat de la PAC ne sont pas comptés.</p>
+  </section>
+  </div>
+
+  <div id="viewCuve" role="tabpanel" aria-labelledby="tabCuve" class="hidden">
+  <section class="card banner hidden" id="tankBanner">
+    <p>🛢️ Commence par renseigner la forme et les dimensions de ta cuve (rien n'est pré-rempli). Ensuite, note la hauteur de fioul mesurée en cm : l'appli calcule les litres.</p>
+    <button class="btn primary block" type="button" id="btnGoTank">⚙️ Renseigner ma cuve</button>
+  </section>
+
+  <section aria-label="Niveau de la cuve"><div class="grid" id="tankStats"></div></section>
+
+  <section class="card" id="tankFormCard" style="margin-top:14px">
+    <button class="btn primary block" type="button" id="btnNewTank">➕ Relevé cuve</button>
+    <div id="tkFormBody" class="hidden">
+    <h2 id="tkFormTitle">➕ Nouveau relevé cuve</h2>
+    <div class="seg" role="group" aria-label="Type de relevé">
+      <button type="button" id="tkModeNiv" aria-pressed="true">📏 Niveau (cm)</button>
+      <button type="button" id="tkModeLiv" aria-pressed="false">🚚 Livraison (L)</button>
+    </div>
+    <p class="hint" id="tkModeHint"></p>
+    <form id="tkForm" autocomplete="off" novalidate>
+      <label for="tkDate">Date</label>
+      <input type="date" id="tkDate" required>
+      <label for="tkVal" id="tkValLabel">Hauteur de fioul mesurée (cm, depuis le fond)</label>
+      <input type="text" id="tkVal" inputmode="decimal" placeholder="ex. 45" required>
+      <label for="tkNote">Note <span class="opt">(facultatif)</span></label>
+      <input type="text" id="tkNote" maxlength="80" placeholder="ex. mesuré à la jauge">
+      <div class="preview hidden" id="tkPreview"></div>
+      <div class="actions"><button class="btn primary" type="submit" id="tkSave">Ajouter le relevé</button><button class="btn" type="button" id="tkCancel">Annuler</button></div>
+    </form>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📉 Niveau de la cuve</h2>
+    <div class="chart-wrap" id="tankChart"></div>
+    <div class="legend" id="tankLegend"></div>
+  </section>
+
+  <section class="card">
+    <h2>🔥 Consommation de fioul</h2>
+    <div class="seg" role="group" aria-label="Période de consommation">
+      <button type="button" data-tview="month" aria-pressed="true">Mois</button>
+      <button type="button" data-tview="winter" aria-pressed="false">Saison</button>
+    </div>
+    <div class="wnav" id="consoNav">
+      <button class="icon-btn" type="button" id="consoPrev" aria-label="Précédent">◀</button>
+      <div class="wlab"><b id="consoNavLab">—</b><span id="consoNavSub"></span></div>
+      <button class="icon-btn" type="button" id="consoNext" aria-label="Suivant">▶</button>
+    </div>
+    <div class="evol-row"><span style="flex:1"></span><button class="btn tbtn" type="button" data-temptoggle aria-pressed="false">🌡️ Température</button></div>
+    <div class="chart-wrap" id="consoChart"></div>
+    <div class="legend" id="consoLegend"></div>
+    <div id="consoTable"></div>
+    <details class="ihelp"><summary>ℹ️ Comment c'est calculé</summary><p class="hint" id="consoHint"></p></details>
+  </section>
+
+  <section class="card">
+    <h2>🗒️ Relevés cuve</h2>
+    <ul class="list rlist" id="tankList"></ul>
+    <button class="btn small block hidden more-btn" type="button" id="btnTankAll"></button>
+  </section>
+  </div>
+</main>
+
+<nav class="tabs" role="tablist" aria-label="Sections" id="tabsNav">
+  <span class="tab-bubble" aria-hidden="true"></span>
+  <button type="button" role="tab" id="tabSuivi" aria-selected="true" aria-controls="viewSuivi"><span class="ti" aria-hidden="true">📊</span><span>Suivi</span></button>
+  <button type="button" role="tab" id="tabCuve" aria-selected="false" aria-controls="viewCuve"><span class="ti" aria-hidden="true">🛢️</span><span>Cuve</span></button>
+  <button type="button" role="tab" id="tabSim" aria-selected="false" aria-controls="viewSim"><span class="ti" aria-hidden="true">🧮</span><span>Simulateur</span></button>
+</nav>
+
+<div id="settingsPage" class="spage hidden" role="dialog" aria-modal="true" aria-labelledby="spTitle">
+  <div class="sp-head">
+    <button class="icon-btn" type="button" id="btnSpClose" aria-label="Fermer les réglages">←</button>
+    <h2 id="spTitle">⚙️ Réglages</h2>
+    <span class="sp-auto">Enregistrement automatique</span>
+    <p class="sp-status hidden" id="spStatus" role="status" aria-live="polite"></p>
+  </div>
+  <div class="sp-body">
+
+  <details class="card sp-sec" id="secPac">
+    <summary><h2>🔌 PAC &amp; électricité</h2></summary>
+    <h3 class="sh">💶 Prix de la PAC (rentabilité)</h3>
+    <div class="settings-grid">
+      <div><label for="sPacPrix">Prix PAC, pose comprise (€)</label><input type="text" inputmode="decimal" id="sPacPrix" placeholder="ex. 1500"></div>
+      <div><label for="sPacAides">Aides reçues (€) <span class="opt">(facultatif)</span></label><input type="text" inputmode="decimal" id="sPacAides" placeholder="ex. 0"></div>
+      <div><label for="sPacDate">Date d'installation</label><input type="date" id="sPacDate"></div>
+      <div><label for="sPacEnt">Entretien par an (€) <span class="opt">(facultatif)</span></label><input type="text" inputmode="decimal" id="sPacEnt" placeholder="ex. 0"></div>
+    </div>
+    <p class="hint">Date vide = date de ton premier relevé PAC. Sert seulement à la carte « Rentabilité » du Suivi.</p>
+    <label for="sPacKw">Puissance électrique max de la PAC (kW) <span class="opt">(facultatif)</span></label>
+    <input type="text" inputmode="decimal" id="sPacKw" placeholder="ex. 1" autocomplete="off">
+    <p class="hint" id="pacKwLimit"></p>
+    <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Sert seulement à la prévision de rentabilité : par grand froid, la PAC ne peut pas fournir plus que sa puissance électrique max × 24 h × son COP du jour ; au-delà, c'est un autre chauffage (bois, fioul…) qui prend le relais, sans économie en plus. Vide = pas de limite. Midea PortaSplit : 0,8 kW consommés en chauffage nominal (fiche technique Midea) ; la valeur max est indiquée sur l'étiquette de l'appareil (« Heating power input »).</p></details>
+
+    <h3 class="sh">Électricité</h3>
+    <div class="seg" role="group" aria-label="Option tarifaire">
+      <button type="button" id="elecBase" aria-pressed="true">Base (prix unique)</button>
+      <button type="button" id="elecHphc" aria-pressed="false">Heures pleines / creuses</button>
+    </div>
+    <div id="boxBase">
+      <label for="sElec">Prix électricité (€/kWh)</label><input type="text" inputmode="decimal" id="sElec">
+      <p class="hint">Par défaut 0,2001 €/kWh (Tarif Bleu EDF Base). L'abonnement n'est pas compté.</p>
+    </div>
+    <div id="boxHphc" class="hidden">
+      <p class="hcinfo">🌙 Heures creuses : 22 h – 7 h</p>
+      <div class="settings-grid">
+        <div><label for="sHP">Prix heures pleines (€/kWh)</label><input type="text" inputmode="decimal" id="sHP" placeholder="ex. 0,2142"></div>
+        <div><label for="sHC">Prix heures creuses (€/kWh)</label><input type="text" inputmode="decimal" id="sHC" placeholder="ex. 0,1589"></div>
+      </div>
+      <label for="sPct">% de la conso PAC en heures creuses</label>
+      <div style="display:flex;gap:8px"><input type="text" inputmode="decimal" id="sPct" placeholder="ex. 37,5" style="flex:1"><button class="btn small" type="button" id="btnPct">Utiliser 37,5 %</button></div>
+      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Suggestion : 22 h – 7 h = 9 h sur 24 = 37,5 % si la PAC tourne de façon régulière toute la journée. Ajuste si elle tourne surtout la nuit ou le jour. Pour Tempo, mets tes prix moyens HP/HC.</p></details>
+      <p class="hint" id="elecAvg"></p>
+    </div>
+
+    <h3 class="sh">COP de la PAC</h3>
+    <div id="copSection">
+    <div class="seg" role="group" aria-label="Mode de COP">
+      <button type="button" id="copFixe" aria-pressed="true">COP fixe</button>
+      <button type="button" id="copTemp" aria-pressed="false">COP selon la température</button>
+    </div>
+    <div id="boxCopFixe">
+      <label for="sCop">COP de la PAC</label><input type="text" inputmode="decimal" id="sCop">
+      <p class="hint">Le même COP pour tous les relevés.</p>
+    </div>
+    <div id="boxCopTemp" class="hidden">
+      <p class="hint">Entre de 2 à 6 points « température extérieure → COP » (fiche de ta PAC).</p>
+      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Le COP d'une PAC air/air baisse quand il fait froid dehors. Entre deux points, l'appli calcule une valeur intermédiaire (ligne droite). Plus froid que ton point le plus froid ou plus chaud que ton point le plus chaud : elle garde la valeur du point le plus proche. Jamais moins de 1. ⚠️ COP peu fiable sous 0 °C (dégivrage).</p></details>
+      <table class="ptable ctable" id="copPtsTbl"></table>
+      <div class="actions">
+        <button class="btn small" type="button" id="btnAddPt">+ Ajouter un point</button>
+        <button class="btn small" type="button" id="btnMidea">Remplir avec Midea PortaSplit (valeurs réalistes)</button>
+      </div>
+      <label for="sCorr">% de correction (terrain) <span class="opt">(facultatif)</span></label>
+      <input type="text" inputmode="decimal" id="sCorr" placeholder="ex. 15">
+      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Les COP des fiches sont mesurés en laboratoire. En vrai, ils sont souvent 10 à 20 % plus bas (dégivrage, gaine, pièce…). Avec 15 %, tous les COP calculés sont multipliés par 0,85. Vide = 0 %.</p></details>
+      <h4 class="sh4">Température extérieure moyenne par mois</h4>
+      <div class="actions" style="margin-top:6px"><button class="btn small" type="button" id="btnMetz">Normales Metz (Météo-France 1991-2020)</button></div>
+      <table class="ptable ctable" id="copMonthTbl"></table>
+      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">« COP calculé » vient de la température du mois, de tes points et du % de correction. Pour imposer un COP sur un mois, remplis « COP forcé » (vide = calculé). Pour un relevé qui couvre plusieurs mois, le COP est la moyenne des mois, pondérée par le nombre de jours dans chaque mois. Pour utiliser les températures réelles : ⚙️ Général → Météo.</p></details>
+    </div>
+    </div>
+  </details>
+
+  <details class="card sp-sec" id="secOld">
+    <summary><h2>🛢️ Ancien chauffage (fioul / gaz) &amp; cuve</h2></summary>
+    <h3 class="sh">Comparaisons : fioul et gaz</h3>
+    <p class="hint" style="margin-top:0">Fioul en €/L, gaz en €/kWh. Aucun prix n'est pré-rempli.</p>
+    <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Coche les comparaisons à afficher (au moins une, jusqu'à 8). Gaz : le prix du kWh sur ta facture de gaz. Les quantités évitées ne dépendent pas du prix. Une comparaison sans prix n'est pas affichée dans le Suivi.</p></details>
+    <div id="compList"></div>
+    <div class="actions">
+      <button class="btn small" type="button" id="btnAddFioul">+ Ajouter un prix fioul</button>
+      <button class="btn small" type="button" id="btnAddGaz">+ Ajouter un prix gaz</button>
+    </div>
+
+    <h3 class="sh">Chaudière</h3>
+    <div class="settings-grid">
+      <div><label for="sPci">PCI fioul (kWh/L)</label><input type="text" inputmode="decimal" id="sPci"></div>
+      <div><label for="sRend">Rendement chaudière fioul (%)</label><input type="text" inputmode="decimal" id="sRend"></div>
+      <div><label for="sRendGaz">Rendement chaudière gaz (%)</label><input type="text" inputmode="decimal" id="sRendGaz"></div>
+    </div>
+    <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Rendement gaz, repères : chaudière à condensation ≈ 95-100 % (sur PCI), chaudière classique ≈ 85-90 %. 90 % par défaut. PCI 10 kWh/L et rendement fioul 85 % : valeurs moyennes, à ajuster selon ta chaudière.</p></details>
+
+    <h3 class="sh">💧 Eau chaude</h3>
+    <label class="chk ecs-on"><input type="checkbox" id="sEcsOn"> <span id="sEcsLab">Le fioul chauffe aussi l'eau chaude</span></label>
+    <div class="settings-grid hidden" id="ecsFields">
+      <div><label for="sEcsPers">Nombre de personnes</label><input type="text" inputmode="numeric" id="sEcsPers" placeholder="ex. 2" autocomplete="off"></div>
+      <div><label for="sEcsKwh">Consommation d'eau chaude par personne (kWh/an)</label><input type="text" inputmode="decimal" id="sEcsKwh" autocomplete="off"></div>
+    </div>
+    <p class="hint hidden" id="ecsAvg">Pré-rempli avec la moyenne française : ≈ 800 kWh par personne et par an (ADEME, ≈ 56 L d'eau à 40 °C par jour). Modifiable.</p>
+    <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Si ta chaudière fioul ou gaz fait aussi l'eau chaude, une partie de ta consommation ne sert pas au chauffage. On suppose que l'eau chaude reste faite par la chaudière (la PAC ne remplace que le chauffage) : cette part est donc retirée dans le Simulateur avant de calculer ce qu'aurait consommé la PAC et l'économie. Le chiffre par personne est la chaleur à fournir à l'eau ; la quantité de fioul ou de gaz est calculée avec le rendement de ta chaudière ci-dessus. Le Suivi et la rentabilité ne changent pas : ils partent des kWh réellement consommés par la PAC.</p></details>
+    <div class="preview hidden" id="ecsInfo"></div>
+
+    <div id="tankBox">
+    <h3 class="sh">🛢️ Ma cuve</h3>
+    <label for="tkShape">Forme de la cuve</label>
+    <select id="tkShape">
+      <option value="">— Choisis la forme —</option>
+      <option value="rect">Rectangulaire (parallélépipède)</option>
+      <option value="hcyl">Cylindre couché (horizontal)</option>
+      <option value="vcyl">Cylindre debout (vertical)</option>
+    </select>
+    <div class="settings-grid">
+      <div class="hidden" data-dim="diametre"><label for="tkDiametre">Diamètre (cm)</label><input type="text" inputmode="decimal" id="tkDiametre" placeholder="ex. 120"></div>
+      <div class="hidden" data-dim="longueur"><label for="tkLongueur">Longueur (cm)</label><input type="text" inputmode="decimal" id="tkLongueur" placeholder="ex. 150"></div>
+      <div class="hidden" data-dim="largeur"><label for="tkLargeur">Largeur (cm)</label><input type="text" inputmode="decimal" id="tkLargeur" placeholder="ex. 70"></div>
+      <div class="hidden" data-dim="hauteur"><label for="tkHauteur">Hauteur (cm)</label><input type="text" inputmode="decimal" id="tkHauteur" placeholder="ex. 140"></div>
+    </div>
+    <p class="hint" id="tkShapeHint">Choisis la forme pour afficher les dimensions à mesurer (dimensions intérieures si possible).</p>
+    <div class="settings-grid">
+      <div><label for="tkCap">Capacité nominale (L) <span class="opt">(facultatif)</span></label><input type="text" inputmode="decimal" id="tkCap" placeholder="ex. 1500"></div>
+      <div><label for="tkRes">Réserve basse (L) <span class="opt">(facultatif)</span></label><input type="text" inputmode="decimal" id="tkRes" placeholder="ex. 300"></div>
+    </div>
+    <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Capacité nominale : celle indiquée sur la plaque ou la facture de la cuve. Si tu la renseignes, les litres calculés sont recalés proportionnellement dessus (utile si tes mesures sont extérieures). Réserve basse : seuil d'alerte pour commander avant d'être à sec.</p></details>
+    <div class="preview" id="tkCapPreview"></div>
+    <p class="hint li-warn hidden" id="tkStatus" role="status" aria-live="polite"></p>
+    </div>
+
+    <h3 class="sh">Répartition de la consommation (graphique Cuve)</h3>
+    <div class="seg seg-sm" role="group" aria-label="Répartition entre deux relevés">
+      <button type="button" data-tspread="climat" aria-pressed="true">Climat (degrés-jours)</button>
+      <button type="button" data-tspread="uniform" aria-pressed="false">Uniforme</button>
+    </div>
+    <p class="hint">Climat : les litres entre deux relevés espacés sont répartis selon le froid habituel de chaque mois. Uniforme : à parts égales sur chaque jour.</p>
+  </details>
+
+  <details class="card sp-sec" id="secGen">
+    <summary><h2>🌍 Général</h2></summary>
+    <h3 class="sh">📍 Météo</h3>
+    <div class="settings-grid">
+      <div><label for="sLat">Latitude</label><input type="text" inputmode="decimal" id="sLat" placeholder="ex. 49,12"></div>
+      <div><label for="sLon">Longitude</label><input type="text" inputmode="decimal" id="sLon" placeholder="ex. 6,18"></div>
+    </div>
+    <div class="actions">
+      <button class="btn small" type="button" id="btnGeo">📍 Ma position</button>
+      <button class="btn small" type="button" id="btnTFetch">🔄 Mettre à jour les températures</button>
+    </div>
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="sTReal"> <span>Températures réelles pour le COP (via Internet)</span></label>
+    <div id="boxTReal" class="hidden">
+      <p class="hint">En mode « COP selon la température », chaque relevé prend la moyenne des températures réelles de sa période (le « COP forcé » par mois ne s'applique alors pas). Pour les jours pas encore disponibles, les températures moyennes du mois sont utilisées.</p>
+    </div>
+    <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Ta position sert à récupérer la température moyenne réelle de chaque jour sur open-meteo.com (gratuit, sans compte) : pour les « Températures réelles » du COP et pour la courbe 🌡️ Température des graphiques. Les températures sont gardées sur cet appareil. Seules la latitude et la longitude sont envoyées à Open-Meteo : tes relevés restent sur l'appareil. Sans position, ou si Internet ne répond pas, les températures normales de Metz sont utilisées.</p></details>
+    <p class="hint" id="tRealStatus"></p>
+
+    <h3 class="sh">💾 Sauvegarde</h3>
+    <p class="hint" style="margin-top:0">Tes données (relevés PAC, cuve et réglages) restent <b>uniquement sur cet appareil</b>. Exporte un fichier pour passer du téléphone au PC ou ne rien perdre.</p>
+    <div class="actions">
+      <button class="btn small" type="button" id="btnExport">⬇️ Exporter (JSON)</button>
+      <button class="btn small" type="button" id="btnImport">⬆️ Importer</button>
+      <input type="file" id="fileImport" accept="application/json,.json" class="hidden">
+    </div>
+
+    <h3 class="sh">↺ Valeurs par défaut</h3>
+    <p class="hint" style="margin-top:0">Remet COP fixe 3, PCI 10, rendements 85 % / 90 % et électricité Base 0,2001 €/kWh (prix, cuve et relevés conservés).</p>
+    <div class="actions"><button class="btn small" type="button" id="btnResetSettings">Valeurs par défaut</button></div>
+
+    <details class="ihelp info" id="infoCalc">
+      <summary>ℹ️ Comment c'est calculé &amp; sources</summary>
+      <div class="formula">
+        <b>Calcul</b><br>
+        Chaleur produite = kWh élec × COP (fixe, ou selon la température de la période du relevé)<br>
+        Litres de fioul évités = chaleur ÷ (PCI × rendement fioul)<br>
+        kWh de gaz évités = chaleur ÷ rendement gaz<br>
+        Fioul évité (€) = litres × prix fioul (€/L)<br>
+        Gaz évité (€) = kWh gaz × prix gaz (€/kWh)<br>
+        Économie nette = fioul ou gaz évité − kWh élec × prix élec<br>
+        Écart = différence entre deux comparaisons
+        <div id="formulaEx" style="margin-top:6px"></div>
+      </div>
+      <div class="formula">
+        <b>Rentabilité de la PAC</b> (estimation)<br>
+        Montant à récupérer = prix PAC pose comprise − aides<br>
+        Récupéré = somme des économies nettes des relevés depuis l'installation (comparaison choisie sur la carte) − entretien (par an, au prorata)<br>
+        <b>Date de rentabilité (prévision « saisonnière »)</b> : on chauffe beaucoup plus en janvier qu'en septembre, donc on ne fait pas une simple moyenne.<br>
+        1. Tes relevés depuis l'installation donnent la chaleur fournie par ta PAC (kWh élec × COP), comparée au froid qu'il a fait sur la même période en <b>degrés-jours</b> (pour chaque jour : 18 °C − température moyenne ; températures réelles Open-Meteo si ta position est renseignée, sinon normales de Metz). On obtient « chaleur par degré-jour » : c'est la mesure de ta maison.<br>
+        2. Pour la suite, l'appli avance jour par jour avec les degrés-jours normaux de Metz (Météo-France 1991-2020) : beaucoup en hiver, presque rien en été. Chaque jour : chaleur prévue × (prix fioul ou gaz évité − électricité ÷ COP du mois), moins l'entretien.<br>
+        2 bis. Si tu as indiqué la <b>puissance électrique max</b> de ta PAC : chaque jour, elle ne peut pas fournir plus que puissance × 24 h × COP du jour (COP plus faible quand il fait froid, températures normales du mois). Ce qui dépasse est chauffé par un autre système (bois, fioul…) et ne rapporte pas d'économie en plus. Pour le calibrage, une période de relevés déjà au maximum est écartée (elle ne montre pas tout le besoin) s'il reste assez d'autres relevés. C'est un plafond théorique (PAC à fond 24 h/24) : en vrai, elle sera un peu en dessous.<br>
+        3. La date de rentabilité est le jour où le total dépasse le prix à récupérer. La fourchette correspond à un hiver 12 % plus froid ou plus doux que la normale (25 % si l'estimation est encore très approximative).<br>
+        Elle se recalcule à chaque relevé : plus il y a de relevés (surtout en plein hiver), plus elle est fiable. Moins de 14 jours de relevés ou moins de 100 degrés-jours mesurés : « estimation encore très approximative ». Si presque aucun froid n'a été mesuré (relevés d'été), on retombe sur l'économie moyenne par jour. Non estimable si l'économie prévue sur un an est nulle ou négative ; au-delà de 6 ans : « &gt; 6 ans ».
+      </div>
+      <div class="formula">
+        <b>Calcul des litres de la cuve</b> (dimensions en cm, 1 L = 1 000 cm³)<br>
+        Rectangulaire : longueur × largeur × hauteur de fioul ÷ 1 000<br>
+        Cylindre debout : π × rayon² × hauteur de fioul ÷ 1 000<br>
+        Cylindre couché : surface du segment × longueur ÷ 1 000, avec surface = r² × arccos((r − h) ÷ r) − (r − h) × √(2 r h − h²)<br>
+        Consommé entre deux relevés = niveau précédent + livraisons entre les deux − niveau actuel
+      </div>
+      <p class="note">COP 3, PCI 10 kWh/L, rendement fioul 85 % et gaz 90 % : valeurs moyennes, à ajuster selon ta PAC et ta chaudière. Les abonnements (électricité, gaz) ne sont pas comptés.</p>
+      <p class="note">ℹ️ Électricité : 0,2001 €/kWh TTC = Tarif Bleu EDF option Base 3 et 6 kVA, en vigueur depuis le 01/08/2026 (0,1985 € de 9 à 15 kVA). Heures creuses au 01/08/2026 : HP 0,2142 €, HC 0,1589 € TTC/kWh. Source : <a href="https://particulier.edf.fr/fr/accueil/electricite-gaz/tarif-bleu.html" target="_blank" rel="noopener">EDF, Tarif Bleu</a> (vérifié le 24/10/2026).</p>
+      <p class="note">ℹ️ Pour info seulement (non pré-rempli) : prix moyen national du fioul 1,9308 €/L TTC au 16/10/2026 (ministère de la Transition écologique, livraison 2 000 à 4 999 L, publié le 22/10/2026, via <a href="https://www.comparonslenergie.com/chauffage/fioul/" target="_blank" rel="noopener">comparonslenergie.com</a>).</p>
+      <p class="note">ℹ️ Pour info seulement (non pré-rempli) : prix repère CRE du gaz pour un logement chauffé au gaz, octobre 2026, zone GRDF : 0,14557 €/kWh TTC en moyenne (0,13594 € à 0,16436 € selon la commune). Source : <a href="https://www.cre.fr/actualites/toute-lactualite/le-prix-repere-de-vente-de-gaz-augmente-de-63-ttc-au-1er-octobre-2026.html" target="_blank" rel="noopener">CRE</a> (vérifié le 24/10/2026). L'abonnement gaz n'est pas compté, comme pour l'électricité.</p>
+      <p class="note">ℹ️ Midea PortaSplit, valeurs réalistes : −10 °C : 2,5 · −7 °C : 2,8 · +2 °C : 3,9 · +7 °C : 4,5 · +12 °C : 5,0, avec 10 % de correction. Les valeurs de Midea (mesurées en laboratoire, à charge partielle, norme EN 14825) sont plus hautes : 2,70 · 3,18 · 4,35 · 5,57 · 6,78. Elles sont baissées ici surtout quand il fait doux, car cette PAC ne peut pas descendre sous environ 300 W : quand il faut peu de chaleur, elle s'arrête et redémarre, ce qui fait perdre du rendement. Elles ont aussi été comparées aux splits fixes certifiés par Eurovent et à des mesures faites chez des particuliers (COP sur la saison d'environ 2,4 à 3). Les 10 % de correction couvrent les pertes autour de la fenêtre et l'usage réel. Mets plutôt 15 % si la fenêtre est mal calfeutrée ou si la pièce est chauffée à plus de 22 °C. Sources : <a href="https://www.midea.es/wp-content/uploads/2024/05/ErP_MMCS-12HRN8-QRD0.pdf" target="_blank" rel="noopener">fiche ErP Midea</a>, <a href="https://eprel.ec.europa.eu/qr/1917520" target="_blank" rel="noopener">fiche énergie EPREL</a>, <a href="https://www.eurovent-certification.com" target="_blank" rel="noopener">catalogue Eurovent</a>, <a href="https://www.buildingscience.com/sites/default/files/migrate/pdf/BA-1407_Long-Term_Monitoring_Mini-Splits_Northeast_v2.pdf" target="_blank" rel="noopener">étude BuildingScience (mesures sur plusieurs années)</a>.</p>
+      <p class="note">ℹ️ Températures normales : Metz-Frescaty, Météo-France 1991-2020. Températures réelles : <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>.</p>
+    </details>
+  </details>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+var KEY_DATA='pacFioul.entries.v1', KEY_SET='pacFioul.settings.v1', KEY_WELCOME='pacFioul.welcomeDone';
+// Comparaisons (fioul / gaz) : prix volontairement vides, c'est l'utilisateur qui les saisit.
+var DEFAULTS={cop:3, pci:10, rend:85, rendGaz:90, ecsOn:false, ecsPers:null, ecsKwh:800,
+  comps:[{id:'f1',type:'fioul',label:'',prix:null,on:true}],
+  elecMode:'base', prixElec:0.2001, prixHP:null, prixHC:null, pctHC:null,
+  copMode:'fixe', copPts:[], copCorr:null, tMonths:[null,null,null,null,null,null,null,null,null,null,null,null], copOver:[null,null,null,null,null,null,null,null,null,null,null,null], tReal:false, lat:null, lon:null, pacPrix:null, pacAides:null, pacDate:null, pacEnt:null};
+var MAX_COMPS=8;
+var OLD_DEFAULT_FIOUL=1.9308, HC_SUGGEST=37.5;
+
+var $=function(id){return document.getElementById(id);};
+function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){toast('Impossible d\'enregistrer (stockage indisponible)');}}
+function posNum(v){v=(v===null||v===''||v===undefined)?NaN:Number(v);return (isFinite(v)&&v>0)?v:null;}
+
+// Normalise des réglages (stockage local ou import v1/v2/v3) + migrations
+function normalizeSettings(raw){
+  var s=Object.assign({},DEFAULTS); raw=(raw&&typeof raw==='object')?raw:{};
+  ['cop','pci','rend','rendGaz','prixElec'].forEach(function(k){var v=posNum(raw[k]);if(v!==null)s[k]=v;});
+  if('prixElec' in raw && raw.prixElec===null) s.prixElec=null;
+  ['prixHP','prixHC'].forEach(function(k){s[k]=posNum(raw[k]);});
+  var p=Number(raw.pctHC); s.pctHC=(raw.pctHC!==null&&raw.pctHC!==''&&isFinite(p)&&p>=0&&p<=100)?p:null;
+  s.elecMode=raw.elecMode==='hphc'?'hphc':'base';
+  if(s.rend>100) s.rend=DEFAULTS.rend;
+  if(s.rendGaz>100) s.rendGaz=DEFAULTS.rendGaz;
+  var comps=null;
+  if(Array.isArray(raw.comps)){ // v3
+    comps=raw.comps.filter(function(c){return c&&(c.type==='fioul'||c.type==='gaz');}).slice(0,MAX_COMPS).map(function(c){
+      return {id:String(c.id||uid()),type:c.type,label:typeof c.label==='string'?c.label.slice(0,40):'',prix:posNum(c.prix),on:c.on!==false};});
+    if(!comps.length) comps=null;
+  }
+  var legacy=!!raw&&('prixA' in raw||'prixB' in raw||'prixFioul' in raw||'labelA' in raw||'labelB' in raw);
+  if(!comps&&!legacy) comps=DEFAULTS.comps.map(function(c){return Object.assign({},c);}); // nouvelle installation : une seule comparaison fioul
+  if(!comps){ // v1/v2 : fioul A et B deviennent les deux premières comparaisons fioul
+    var pA=posNum(raw.prixA), pB=posNum(raw.prixB);
+    // v1 : un seul "prixFioul" (défaut 1,9308). On le reprend en A seulement s'il avait été modifié.
+    var old=posNum(raw.prixFioul);
+    if(old!==null && pA===null && Math.abs(old-OLD_DEFAULT_FIOUL)>1e-9) pA=old;
+    comps=[{id:'f1',type:'fioul',label:typeof raw.labelA==='string'?raw.labelA.slice(0,40):'',prix:pA,on:true},
+           {id:'f2',type:'fioul',label:typeof raw.labelB==='string'?raw.labelB.slice(0,40):'',prix:pB,on:true}];
+  }
+  var seen={};comps.forEach(function(c){if(seen[c.id])c.id=uid();seen[c.id]=1;});
+  s.comps=comps;
+  // COP selon la température (v5)
+  function finOrNull(v,min,max){if(v===null||v===''||v===undefined||typeof v==='boolean')return null;v=Number(v);return (isFinite(v)&&v>=min&&v<=max)?v:null;}
+  s.copMode=raw.copMode==='temp'?'temp':'fixe';
+  s.copPts=Array.isArray(raw.copPts)?raw.copPts.map(function(p){return {t:finOrNull(p&&p.t,-50,50),cop:finOrNull(p&&p.cop,0.01,20)};}).filter(function(p){return p.t!==null&&p.cop!==null;}).slice(0,6):[];
+  s.copCorr=finOrNull(raw.copCorr,0,90);
+  s.tMonths=[];s.copOver=[];
+  for(var mi=0;mi<12;mi++){s.tMonths.push(finOrNull(Array.isArray(raw.tMonths)?raw.tMonths[mi]:null,-50,50));s.copOver.push(finOrNull(Array.isArray(raw.copOver)?raw.copOver[mi]:null,1,20));}
+  s.tReal=raw.tReal===true;
+  s.lat=finOrNull(raw.lat,-90,90);s.lon=finOrNull(raw.lon,-180,180);
+  // Rentabilité (v16) : rien de pré-rempli
+  s.pacPrix=posNum(raw.pacPrix);s.pacAides=finOrNull(raw.pacAides,0,1e7);s.pacEnt=finOrNull(raw.pacEnt,0,1e6);
+  s.pacKw=finOrNull(raw.pacKw,0.01,30);
+  // v19 : eau chaude faite par la chaudière (désactivé par défaut ; 800 kWh/personne/an = moyenne française ADEME, modifiable)
+  s.ecsOn=raw.ecsOn===true;s.ecsPers=finOrNull(raw.ecsPers,1,30);var ek=finOrNull(raw.ecsKwh,1,20000);s.ecsKwh=ek===null?DEFAULTS.ecsKwh:ek;
+  s.pacDate=(typeof raw.pacDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.pacDate))?raw.pacDate:null;
+  return s;
+}
+
+var entries=load(KEY_DATA,[]); if(!Array.isArray(entries)) entries=[];
+var settings=normalizeSettings(load(KEY_SET,{}));
+save(KEY_SET,settings); // écrit la version migrée
+var mode='kwh', editingId=null, chartView='cumul';
+
+// ---------- formats ----------
+var nf1=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});
+var nf0=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0});
+var nfE=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});
+var nfN=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:4});
+var nf2=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}), nf2c=nf2;
+function fKwh(x){return (Math.abs(x)<100?nf1:nf0).format(x)+' kWh';}
+function fL(x){return nf1.format(x)+' L';}
+function fE(x){return nfE.format(x);}
+function fSigned(x){return (x>0?'+':'')+nfE.format(x);}
+function parseNum(s){if(s==null)return NaN;s=String(s).trim().replace(/\s/g,'').replace(',','.');if(s==='')return NaN;return Number(s);}
+function pad(n){return (n<10?'0':'')+n;}
+function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function todayIso(){return iso(new Date());}
+function parseIso(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function fDate(s){var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function defaultName(c,list){var n=0;(list||settings.comps).some(function(x){if(x.type===c.type)n++;return x.id===c.id;});return (c.type==='gaz'?'Gaz ':'Fioul ')+n;}
+function compName(c,list){return (c.label||'').trim()||defaultName(c,list);}
+function fKwhG(x){return fKwh(x).replace(' kWh',' kWh de gaz');}
+
+// ---------- calcul ----------
+function elecPrice(s){
+  s=s||settings;
+  if(s.elecMode==='hphc'){
+    if(s.prixHP===null||s.prixHC===null||s.pctHC===null) return null;
+    return s.prixHP*(1-s.pctHC/100)+s.prixHC*(s.pctHC/100);
+  }
+  return s.prixElec;
+}
+function calc(kwh,s,cop){
+  s=s||settings;
+  var chaleur=kwh*((cop!==null&&cop!==undefined&&cop>0)?cop:s.cop);
+  var litres=chaleur/(s.pci*s.rend/100);
+  var kwhGaz=chaleur/(s.rendGaz/100);
+  var pe=elecPrice(s), coutElec=pe===null?null:kwh*pe;
+  var sides=s.comps.filter(function(c){return c.on;}).map(function(c){
+    var qty=c.type==='gaz'?kwhGaz:litres, eur=c.prix===null?null:qty*c.prix;
+    return {id:c.id,type:c.type,name:compName(c,s.comps),prix:c.prix,qty:qty,eur:eur,net:(eur===null||coutElec===null)?null:eur-coutElec};
+  });
+  var hasFioul=sides.some(function(x){return x.type==='fioul';}), hasGaz=sides.some(function(x){return x.type==='gaz';});
+  // Écart : 2 prix -> premier − second ; plus de 2 -> le plus avantageux − le moins avantageux (même coût élec)
+  var pr=sides.filter(function(x){return x.eur!==null;}), diff=null;
+  if(pr.length===2) diff={hi:pr[0],lo:pr[1],v:pr[0].eur-pr[1].eur,max:false};
+  else if(pr.length>2){var so=pr.slice().sort(function(a,b){return b.eur-a.eur;});diff={hi:so[0],lo:so[so.length-1],v:so[0].eur-so[so.length-1].eur,max:true};}
+  return {kwh:kwh,chaleur:chaleur,litres:litres,kwhGaz:kwhGaz,coutElec:coutElec,sides:sides,hasFioul:hasFioul,hasGaz:hasGaz,diff:diff};
+}
+// ---------- COP selon la température ----------
+// Températures moyennes mensuelles normales, Metz-Frescaty (57039001), 1991-2020 — Météo-France, fiche climatologique :
+// https://donneespubliques.meteofrance.fr/FichesClim/FICHECLIM_57039001.pdf
+var METZ_TNORM=[2.7,3.6,7,10.5,14.5,17.9,20.1,19.7,15.7,11.3,6.5,3.5];
+// Midea PortaSplit (MMCS-12HRN8 / PortaSplit / PortaSplit-CH) — valeurs « réalistes ». Midea (labo, charge partielle EN 14825) :
+// 2,70 / 3,18 / 4,35 / 5,57 / 6,78 à −10 / −7 / +2 / +7 / +12 °C ; abaissées (modulation mini ~300 W, comparaison splits fixes
+// Eurovent et études de terrain : COP saisonnier ~2,4–3) + 10 % de correction terrain par défaut du bouton.
+var MIDEA_PTS=[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:3.9},{t:7,cop:4.5},{t:12,cop:5}], MIDEA_CORR=10;
+var KEY_TEMPS='pacFioul.temps.v1';
+var tempCache=load(KEY_TEMPS,null); if(!tempCache||typeof tempCache!=='object'||!tempCache.days||typeof tempCache.days!=='object')tempCache={loc:'',days:{}};
+var tempFetching=false, tempStatus='';
+var MONTHS_AB=['janv.','févr.','mars','avril','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+var MONTHS_FR=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+function copPtsSorted(pts){return (pts||[]).filter(function(p){return p&&isFinite(p.t)&&p.cop>0;}).slice().sort(function(a,b){return a.t-b.t;});}
+function copInterp(t,pts,corr){
+  pts=copPtsSorted(pts); if(!pts.length||!isFinite(t))return null; var c=pts[pts.length-1].cop;
+  if(t<=pts[0].t)c=pts[0].cop;
+  else for(var i=1;i<pts.length;i++){if(t<=pts[i].t){var a=pts[i-1],b=pts[i];c=a.cop+(b.cop-a.cop)*(t-a.t)/(b.t-a.t);break;}}
+  return Math.max(1,c*(1-(corr||0)/100));
+}
+function tempReady(s){s=s||settings;return s.copMode==='temp'&&copPtsSorted(s.copPts).length>=2;}
+function monthCop(m,s){s=s||settings;if(s.copOver[m]!==null)return Math.max(1,s.copOver[m]);if(s.tMonths[m]===null)return null;return copInterp(s.tMonths[m],s.copPts,s.copCorr);}
+function locOf(s){return (s.lat!==null&&s.lon!==null)?s.lat.toFixed(2)+','+s.lon.toFixed(2):'';}
+// COP d'une période : du jour « from » (inclus) au jour « to » (exclu). Sans période connue : le jour « to » seul.
+function copFor(from,to,s){
+  s=s||settings;
+  if(!tempReady(s))return {cop:s.cop,src:'fixe'};
+  if(!from||from>=to){from=to;to=addDays(to,1);}
+  var days=[],d=parseIso(from),end=parseIso(to);while(d<end&&days.length<4000){days.push(iso(d));d.setDate(d.getDate()+1);}
+  var loc=locOf(s);
+  if(s.tReal&&loc&&tempCache.loc===loc){
+    var sum=0,n=0,real=0;
+    days.forEach(function(k){var v=tempCache.days[k];
+      if(typeof v==='number'){sum+=v;n++;real++;}else{var tn=s.tMonths[+k.slice(5,7)-1];if(tn!==null){sum+=tn;n++;}}});
+    if(real>0){var tm=sum/n;return {cop:copInterp(tm,s.copPts,s.copCorr),src:real===days.length?'reel':'mixte',t:tm};}
+  }
+  var tot=0,cnt=0;days.forEach(function(k){var c=monthCop(+k.slice(5,7)-1,s);if(c!==null){tot+=c;cnt++;}});
+  if(cnt)return {cop:tot/cnt,src:'mois'};
+  return {cop:s.cop,src:'fixe'};
+}
+function copSrcText(r){
+  var t=nf2c.format(r.cop);
+  if(r.src==='fixe')return 'COP '+t+(settings.copMode==='temp'?' (fixe : températures ou points manquants)':' (fixe)');
+  if(r.src==='mois')return 'COP '+t+' (température moyenne du mois)';
+  return 'COP '+t+' ('+(r.src==='reel'?'températures réelles':'températures réelles + moyennes')+', '+nf1.format(r.t)+' °C en moyenne)';
+}
+function calcRange(list,from,to){
+  var k=0,h=0;list.forEach(function(e){if((!from||e.date>=from)&&(!to||e.date<=to)){k+=e.kwh;h+=e.kwh*e.cop;}});
+  return calc(k,null,(tempReady()&&k>0)?h/k:null);
+}
+// ---------- Courbe 🌡️ Température sur les graphiques en barres ----------
+var TEMP_MIN=-5, TEMP_MAX=35, KEY_STEMP='pacFioul.showTemp', showTemp=load(KEY_STEMP,false)===true, tempFailed=false, TEMP_COL='#8c8c8c';
+// Température moyenne extérieure du jour « from » (inclus) au jour « to » (exclu). Jours futurs ignorés (null si tout est futur).
+// Jour réel (cache Open-Meteo, même position que les Réglages) sinon normale mensuelle de Metz.
+function tempPeriod(from,to){
+  var today=todayIso(), loc=locOf(settings), useC=!!loc&&tempCache.loc===loc, sum=0,n=0,real=0,d=from,g=0;
+  for(;d<to&&d<today&&g<4000;d=addDays(d,1),g++){var v=useC?tempCache.days[d]:undefined;
+    if(typeof v==='number'){sum+=v;real++;}else sum+=METZ_TNORM[+d.slice(5,7)-1];n++;}
+  return n?{t:sum/n,real:real,n:n}:null;
+}
+function tempNote(pts){
+  var any=pts.filter(Boolean), real=any.reduce(function(a,x){return a+x.real;},0), n=any.reduce(function(a,x){return a+x.n;},0);
+  if(!locOf(settings))return 'Températures : normales de Metz (aucune position : ajoute-la dans ⚙️ Réglages → Général)';
+  if(real>0&&real===n)return 'Températures : Open-Meteo';
+  if(real>0)return 'Températures : Open-Meteo (normales de Metz pour les jours manquants)';
+  if(tempFetching)return 'Températures : normales de Metz (météo en cours de chargement…)';
+  return 'Températures : normales de Metz (météo indisponible)';
+}
+function fTemp(t){return nf1.format(t)+' °C';}
+// Axe °C (à droite) + ligne pointillée grise + points. Ne touche pas à l'échelle des barres.
+function tempOverlay(pts,cx,T,ph,xAxis,tipLab){
+  var vals=pts.filter(Boolean).map(function(p){return p.t;});if(!vals.length)return '';
+  // Échelle FIXE −5 → 35 °C sur tous les graphiques (comparaisons d'une période à l'autre) ; valeurs hors plage posées au bord.
+  var lo=TEMP_MIN, hi=TEMP_MAX, st=10, Y=function(v){v=Math.max(lo,Math.min(hi,v));return T+ph-ph*(v-lo)/(hi-lo);}, g='<g class="temp-ov">';
+  for(var v=lo;v<=hi+1e-9;v+=st)g+='<text class="taxis" x="'+xAxis+'" y="'+(Y(v)+3).toFixed(1)+'" font-size="9" fill="'+TEMP_COL+'" text-anchor="start">'+nf0.format(v)+'°</text>';
+  var segs=[],cur='';pts.forEach(function(p,j){if(!p||p.brk){if(cur)segs.push(cur);cur='';if(!p)return;}
+    cur+=(cur?'L':'M')+cx(j).toFixed(1)+' '+Y(p.t).toFixed(1);});if(cur)segs.push(cur);
+  segs.forEach(function(d){if(d.indexOf('L')>0)g+='<path class="tline" d="'+d+'" fill="none" stroke="'+TEMP_COL+'" stroke-width="1.5" stroke-dasharray="4 3"/>';});
+  pts.forEach(function(p,j){if(!p)return;g+='<circle class="tdot" data-t="'+p.t.toFixed(2)+'" cx="'+cx(j).toFixed(1)+'" cy="'+Y(p.t).toFixed(1)+'" r="3" fill="'+TEMP_COL+'"><title>'+esc(tipLab(j)+' : '+fTemp(p.t))+'</title></circle>';});
+  return g+'</g>';
+}
+function tempLegend(pts,extra){return '<span class="tleg"><i></i>🌡️ Temp. moy. (axe droit, °C)</span><span class="tnote">'+esc(tempNote(pts))+(extra?' · '+esc(extra):'')+'</span>';}
+function renderTempButtons(){Array.prototype.forEach.call(document.querySelectorAll('[data-temptoggle]'),function(b){b.setAttribute('aria-pressed',showTemp);});}
+function rerenderBarCharts(){renderChart(resolved());if(tankReady&&!$('viewCuve').classList.contains('hidden'))renderConsoChart(tankAnalyze());}
+function setTempStatus(t){tempStatus=t;var el=document.getElementById('tRealStatus');if(el)el.textContent=t;}
+// Récupère les températures moyennes journalières manquantes (Open-Meteo, archive, sans clé)
+function fetchTemps(force){
+  var s=settings, loc=locOf(s);
+  if(!(s.tReal||showTemp)||!loc||tempFetching)return Promise.resolve(false);
+  var ds=entries.map(function(e){return e.date;});
+  if(showTemp&&typeof tankReads!=='undefined')tankReads.forEach(function(r){ds.push(r.date);});
+  if(!ds.length){setTempStatus('Aucun relevé : rien à récupérer pour l\'instant.');return Promise.resolve(false);}
+  if(tempCache.loc!==loc)tempCache={loc:loc,days:{}};
+  ds.sort();var start=ds[0], end=ds[ds.length-1], y=addDays(todayIso(),-1);
+  if(showTemp){var fw=winterOf(start)+'-09-01';if(fw<start)start=fw;end=y;}
+  if(end>y)end=y;
+  var miss=[];if(start<=end){for(var d=start,guard=0;d<=end&&guard<4000;d=addDays(d,1),guard++)if(typeof tempCache.days[d]!=='number')miss.push(d);}
+  if(!miss.length){setTempStatus('✅ Températures réelles à jour ('+Object.keys(tempCache.days).length+' jours gardés sur l\'appareil).');return Promise.resolve(false);}
+  var key=miss[0]+'_'+miss[miss.length-1];
+  if(!force&&tempCache.triedKey===key&&Date.now()-(tempCache.tried||0)<6*3600*1000)return Promise.resolve(false);
+  var url='https://archive-api.open-meteo.com/v1/archive?latitude='+s.lat.toFixed(4)+'&longitude='+s.lon.toFixed(4)+'&start_date='+miss[0]+'&end_date='+miss[miss.length-1]+'&daily=temperature_2m_mean&timezone=Europe%2FParis';
+  tempFetching=true;setTempStatus('⏳ Récupération des températures réelles…');
+  return fetch(url).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();}).then(function(j){
+    var t=j&&j.daily&&j.daily.time, v=j&&j.daily&&j.daily.temperature_2m_mean, n=0;
+    if(!Array.isArray(t)||!Array.isArray(v))throw new Error('format');
+    t.forEach(function(k,i){if(typeof v[i]==='number'&&isFinite(v[i])&&/^\d{4}-\d{2}-\d{2}$/.test(k)){tempCache.days[k]=v[i];n++;}});
+    tempCache.tried=Date.now();tempCache.triedKey=key;save(KEY_TEMPS,tempCache);
+    setTempStatus('✅ '+n+' jour(s) de températures réelles récupérés ('+Object.keys(tempCache.days).length+' gardés sur l\'appareil).');
+    tempFetching=false;tempFailed=false;renderAll();if(tankReady&&!$('viewCuve').classList.contains('hidden'))renderConsoChart(tankAnalyze());return true;
+  }).catch(function(){
+    tempFetching=false;tempFailed=true;tempCache.tried=Date.now();tempCache.triedKey=key;save(KEY_TEMPS,tempCache);
+    if(showTemp)rerenderBarCharts();
+    setTempStatus('⚠️ Températures réelles indisponibles (hors ligne ?) : les températures moyennes du mois sont utilisées.');
+    return false;
+  });
+}
+
+// Quantité principale affichée (graphiques, gros chiffre) : litres de fioul, ou kWh de gaz si seul le gaz est activé
+function volMain(c){return (c.hasGaz&&!c.hasFioul)?c.kwhGaz:c.litres;}
+function volUnit(c){return (c.hasGaz&&!c.hasFioul)?'kWh':'L';}
+function volText(c,sep){
+  var a=[];if(c.hasFioul||!c.hasGaz)a.push(fL(c.litres)+' de fioul évités');if(c.hasGaz)a.push(fKwhG(c.kwhGaz)+' évités');
+  return a.join(sep||' · ');
+}
+function resolved(){
+  var arr=entries.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0);});
+  var lastIdx=null, prevDate=null;
+  return arr.map(function(e){
+    var r=Object.assign({},e);
+    r.from=prevDate;prevDate=e.date;
+    var cf=copFor(r.from,e.date);r.cop=cf.cop;r.copInfo=cf;
+    if(typeof e.index==='number'){
+      if(lastIdx===null){r.kwh=0;r.start=true;}
+      else{var d=e.index-lastIdx;r.kwh=Math.max(0,d);if(d<0)r.bad=true;r.prevIndex=lastIdx;}
+      lastIdx=e.index;
+    }
+    return r;
+  });
+}
+function prevIndexBefore(date,excludeId){
+  var r=null;
+  entries.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0);})
+    .forEach(function(e){if(e.id!==excludeId&&typeof e.index==='number'&&e.date<=date)r=e.index;});
+  return r;
+}
+function weekStart(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
+function sumRange(list,from,to){var k=0;list.forEach(function(e){if((!from||e.date>=from)&&(!to||e.date<=to))k+=e.kwh;});return k;}
+
+// ---------- blocs de comparaison (fioul / gaz) ----------
+var MISSING='— renseigne le prix dans ⚙️ Réglages';
+function colHtml(side){
+  var h='<div class="col"><div class="ch">'+(side.type==='gaz'?'🔵 ':'🛢️ ')+esc(side.name)+(side.prix!==null?' <span class="pr">'+nfN.format(side.prix)+(side.type==='gaz'?' €/kWh':' €/L')+'</span>':'')+'</div>';
+  if(side.prix===null) return h+'<div class="missing">'+MISSING+'</div></div>';
+  h+='<div class="kv"><span>'+(side.type==='gaz'?'Gaz évité':'Fioul évité')+'</span><b>'+fE(side.eur)+'</b></div>';
+  if(side.net===null) h+='<div class="kv"><span>Éco. nette</span><span class="missing">— prix élec à renseigner</span></div>';
+  else h+='<div class="kv"><span>Éco. nette</span><b class="'+(side.net<0?'neg':'net')+'">'+fE(side.net)+'</b></div>';
+  return h+'</div>';
+}
+function diffText(c){
+  if(!c.diff) return '';
+  return (c.diff.max?'Écart max ':'Écart ')+esc(c.diff.hi.name)+' − '+esc(c.diff.lo.name)+' : <b>'+fSigned(c.diff.v)+'</b>';
+}
+function pricedSides(c){return c.sides.filter(function(x){return x.prix!==null;});}
+function cmpHtml(c){
+  var ps=pricedSides(c);
+  if(!ps.length) return '<div class="diff">'+(c.sides.length?'💶 Renseigne un prix (fioul ou gaz) dans ⚙️ Réglages pour voir les économies en euros.':'Aucune comparaison activée : coche-en une dans ⚙️ Réglages.')+'</div>';
+  var h='<div class="cmp">'+ps.map(colHtml).join('')+'</div>';
+  var parts=[];
+  if(c.diff) parts.push(diffText(c));
+  parts.push(c.coutElec===null?'Coût élec : — prix élec à renseigner':'Coût élec PAC : '+fE(c.coutElec));
+  return h+'<div class="diff">'+parts.join(' · ')+'</div>';
+}
+function compactLine(c){
+  function one(s){return esc(s.name)+' : '+(s.prix===null?'— prix à renseigner':(s.net===null?fE(s.eur)+' évités':'<b>'+fE(s.net)+'</b> nets'));}
+  var ps=pricedSides(c), a=ps.map(one); if(c.diff) a.push(diffText(c).replace(/^Écart/,'écart'));
+  return a.join(ps.length>2?'<br>':' · ');
+}
+
+// ---------- rendu ----------
+var KEY_SPER='pacFioul.statPeriod', statPeriod=(function(v){return ['week','month','year','all'].indexOf(v)>=0?v:'all';})(load(KEY_SPER,'all'));
+function renderStats(list){
+  var now=new Date(), t=iso(now);
+  var ws=iso(weekStart(now)), ms=t.slice(0,8)+'01', ys=t.slice(0,5)+'01-01';
+  var blocks=[['Cette semaine',ws,t],['Ce mois-ci',ms,t],['Cette année',ys,t],['Depuis le début',null,null]];
+  var SPI={week:0,month:1,year:2,all:3};blocks=[blocks[SPI[statPeriod]]];
+  Array.prototype.forEach.call(document.querySelectorAll('[data-sp]'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-sp')===statPeriod);});
+  $('stats').innerHTML=blocks.map(function(b){
+    var c=calcRange(list,b[1],b[2]);
+    var big=(c.hasGaz&&!c.hasFioul)?fKwh(c.kwhGaz)+' <span class="unit">de gaz évités</span>':fL(c.litres)+' <span class="unit">de fioul évités</span>';
+    return '<div class="stat"><h3>'+b[0]+'</h3><div class="big">'+big+'</div>'+
+      (c.hasGaz&&c.hasFioul?'<div class="row">ou '+fKwhG(c.kwhGaz)+' évités</div>':'')+
+      '<div class="row">'+fKwh(c.kwh)+' élec · '+nf0.format(c.chaleur)+' kWh de chaleur</div>'+cmpHtml(c)+'</div>';
+  }).join('');
+}
+var listAll=false, openRows={}, LIST_N=5;
+function mainSide(c){var ps=pricedSides(c);return ps.filter(function(x){return x.id===roiSel;})[0]||ps[0]||null;}
+function renderList(list){
+  var ul=$('list'), more=$('btnListAll');
+  if(!list.length){ul.innerHTML='<li class="empty" style="display:block">Aucun relevé pour l\'instant.</li>';more.classList.add('hidden');return;}
+  var rows=list.slice().reverse(), shown=listAll?rows:rows.slice(0,LIST_N);
+  more.classList.toggle('hidden',rows.length<=LIST_N);more.textContent=listAll?'Voir moins':'Voir tout ('+rows.length+')';
+  ul.innerHTML=shown.map(function(e){
+    var c=calc(e.kwh,null,e.cop), ms=mainSide(c), op=!!openRows[e.id];
+    var sub=typeof e.index==='number'
+      ? 'Index '+nfN.format(e.index)+(e.start?' · point de départ':(' · '+nfN.format(e.prevIndex)+' → '+nfN.format(e.index)))+(e.bad?' · ⚠️ index inférieur au précédent':'')
+      : '';
+    var vol=volUnit(c)==='kWh'?nf0.format(c.kwhGaz)+' kWh gaz':fL(c.litres);
+    var eur=ms?(ms.net!==null?'<span class="r-eur'+(ms.net<0?' neg':'')+'" title="'+esc(ms.name)+' : économie nette">'+fE(ms.net)+'</span>':'<span class="r-eur">'+fE(ms.eur)+'</span>'):'<span class="r-eur"></span>';
+    return '<li class="rrow'+(op?' open':'')+(e.id===editingId?' editing':'')+'"><button type="button" class="r-line" data-rtoggle="'+esc(e.id)+'" aria-expanded="'+op+'">'+
+      '<span class="r-date">'+fDate(e.date)+'</span><span class="r-kwh">'+fKwh(e.kwh)+'</span><span class="r-vol">'+vol+'</span>'+eur+(e.note?'<span aria-label="note">📝</span>':'')+'<span class="r-chev" aria-hidden="true">▾</span></button>'+
+      '<div class="r-det'+(op?'':' hidden')+'">'+
+      '<div class="li-sub">'+volText(c)+(typeof e.index==='number'?' <span class="tag">index</span>':'')+'</div>'+
+      '<div class="li-sub">'+compactLine(c)+'</div>'+
+      (e.start?'':'<div class="li-sub li-cop">🌡️ '+esc(copSrcText(e.copInfo))+'</div>')+
+      (sub?'<div class="li-sub">'+esc(sub)+'</div>':'')+
+      (e.note?'<div class="li-note">📝 '+esc(e.note)+'</div>':'')+
+      '<div class="r-act"><button class="btn small" type="button" data-edit="'+e.id+'">✏️ Modifier</button>'+
+      '<button class="btn small danger" type="button" data-del="'+e.id+'">🗑️ Supprimer</button></div></div></li>';
+  }).join('');
+}
+function renderWelcome(){
+  var done=load(KEY_WELCOME,false);
+  $('welcome').classList.toggle('hidden', !!done || entries.length>0);
+}
+function renderFormula(){
+  var cf0=copFor(null,todayIso()), c=calc(150,null,cf0.cop), pe=elecPrice();
+  var ex=[];
+  if(c.hasFioul||!c.hasGaz) ex.push('÷ ('+nfN.format(settings.pci)+' × '+nfN.format(settings.rend)+' %) = <b>'+fL(c.litres)+'</b> de fioul évités');
+  if(c.hasGaz) ex.push('÷ '+nfN.format(settings.rendGaz)+' % = <b>'+fKwhG(c.kwhGaz)+'</b> évités');
+  $('formulaEx').innerHTML='Exemple : 150 kWh × COP '+nf2c.format(cf0.cop)+(cf0.src==='fixe'?'':' (mois en cours)')+' = '+nf0.format(c.chaleur)+' kWh de chaleur'+(ex.length>1?'<br>→ ':' ')+ex.join('<br>→ ')+
+    (pe===null?'':'<br>Élec : 150 × '+nfN.format(pe)+' € = '+fE(c.coutElec))+cmpHtml(c);
+  var pm=$('elecAvg');
+  if(settings.elecMode==='hphc'){pm.textContent=pe===null?'Prix moyen : renseigne HP, HC et % d\'heures creuses.':'Prix moyen pondéré utilisé : '+nfN.format(pe)+' €/kWh';}
+}
+
+// ---------- graphique SVG ----------
+var COL={};
+function readColors(){var cs=getComputedStyle(document.documentElement);['--accent','--accent2','--accent3','--muted','--line','--text'].forEach(function(k){COL[k]=cs.getPropertyValue(k).trim()||'#888';});}
+function niceMax(v){if(v<=0)return 1;var p=Math.pow(10,Math.floor(Math.log10(v)));var n=v/p;var m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return m*p;}
+function svgEl(w,h,inner){return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Graphique" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">'+inner+'</svg>';}
+function txt(x,y,s,o){o=o||{};return '<text x="'+x+'" y="'+y+'" font-size="'+(o.size||11)+'" fill="'+(o.fill||COL['--muted'])+'" text-anchor="'+(o.anchor||'middle')+'">'+esc(s)+'</text>';}
+// Couleurs des courbes € (une par comparaison activée, 8 max)
+var SIDE_COLS=[function(){return COL['--accent2'];},function(){return COL['--accent3'];},function(){return '#2563eb';},function(){return '#db2777';},
+  function(){return '#ca8a04';},function(){return '#0891b2';},function(){return '#65a30d';},function(){return '#dc2626';}];
+var SIDE_DASH=['7 4','2 4','10 3 2 3','4 3','12 4','3 3 8 3','6 2 2 2','9 5'];
+var MONTHS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+
+// Séries du graphique (source unique des couleurs : courbes Cumul ET barres Semaine/Mois/Année)
+function chartSeries(c0){
+  var U=volUnit(c0), out=[{key:'vol',unit:U==='kWh'?'kWh':'L',col:COL['--accent'],dash:null,name:U==='kWh'?'kWh de gaz évités':'Litres de fioul évités',short:U==='kWh'?'kWh gaz':'Litres',val:function(c){return volMain(c);}}];
+  c0.sides.forEach(function(x,i){if(x.net===null)return;
+    out.push({key:'side:'+x.id,unit:'€',idx:i,col:SIDE_COLS[i%SIDE_COLS.length](),dash:SIDE_DASH[i%SIDE_DASH.length],name:x.name+' : € nets',short:x.name,val:function(c){return c.sides[i].net;}});});
+  return out;
+}
+var KEY_EUNIT='pacFioul.evolUnit', evolUnitSel=load(KEY_EUNIT,'vol')==='eur'?'eur':'vol', evolPage=0, evolSel=null, evolLast=null;
+// ---------- Bulle d'info (appui prolongé / glisser / survol) : helper COMMUN à tous les graphiques ----------
+// Tout nouveau graphique doit appeler setXhair(box,null) avant de se redessiner, puis setXhair(box,X) après box.innerHTML.
+// X = {W, T, ph, pts:[...]} en coordonnées du SVG (viewBox).
+//  - courbes : pt = {x, d:'AAAA-MM-JJ', items:[...]}            → trait vertical + points sur chaque courbe
+//  - barres  : pt = {x, x0, x1, title:'libellé période', items} → bande surlignée sur le groupe de barres
+//  item = {lab, col, val, y?(point sur la courbe), sq?(pastille carrée), bg?(fond CSS de la pastille, ex. hachures)}
+function tempY(v,T,ph){v=Math.max(TEMP_MIN,Math.min(TEMP_MAX,v));return T+ph-ph*(v-TEMP_MIN)/(TEMP_MAX-TEMP_MIN);}
+var XH_KEEP=2000;
+function setXhair(box,X){box.__xh=X;box.classList.toggle('xh-on',!!X);if(!box.__xhBound)bindXhair(box);}
+function xhHide(box){clearTimeout(box.__xhT);var t=box.querySelector('.xh-tip');if(t)t.style.display='none';var g=box.querySelector('svg g.xh');if(g)g.parentNode.removeChild(g);box.__xhIdx=null;}
+function xhShow(box,cx,cy){
+  var X=box.__xh, svg=box.querySelector('svg');if(!X||!X.pts.length||!svg)return;
+  var r=svg.getBoundingClientRect();if(!r.width)return;var k=X.W/r.width, sx=(cx-r.left)*k, best=0, bd=Infinity;
+  X.pts.forEach(function(p,i){var d=Math.abs(p.x-sx);if(d<bd){bd=d;best=i;}});
+  var p=X.pts[best], g=svg.querySelector('g.xh');
+  if(!g){g=document.createElementNS('http://www.w3.org/2000/svg','g');g.setAttribute('class','xh');g.setAttribute('pointer-events','none');svg.appendChild(g);}
+  g.innerHTML=(p.x0!=null?'<rect class="xh-band" x="'+p.x0.toFixed(1)+'" y="'+X.T+'" width="'+(p.x1-p.x0).toFixed(1)+'" height="'+X.ph+'" rx="4" fill="'+COL['--muted']+'" opacity=".16"/>'
+      :'<line x1="'+p.x.toFixed(1)+'" x2="'+p.x.toFixed(1)+'" y1="'+X.T+'" y2="'+(X.T+X.ph)+'" stroke="'+COL['--muted']+'" stroke-width="1" opacity=".8"/>')+
+    p.items.filter(function(it){return it.y!=null;}).map(function(it){return '<circle cx="'+p.x.toFixed(1)+'" cy="'+it.y.toFixed(1)+'" r="4.5" fill="'+it.col+'" style="stroke:var(--card)" stroke-width="1.5"/>';}).join('');
+  var tip=box.querySelector('.xh-tip');if(!tip){tip=document.createElement('div');tip.className='xh-tip';tip.setAttribute('role','status');box.appendChild(tip);}
+  tip.innerHTML='<b>'+(p.title!=null?esc(p.title):fDate(p.d))+'</b>'+p.items.map(function(it){return '<div class="xr"><i'+(it.sq?' class="sq"':'')+' style="background:'+(it.bg||it.col)+'"></i><span>'+esc(it.lab)+'</span><em>'+esc(it.val)+'</em></div>';}).join('');
+  tip.style.display='block';
+  var br=box.getBoundingClientRect(), bw=tip.offsetWidth, bh=tip.offsetHeight, lx=p.x/k+(r.left-br.left), ty=cy-br.top;
+  var off=p.x0!=null?Math.max(8,(p.x1-p.x0)/2/k+4):12, left=lx+off; if(left+bw>br.width)left=lx-off-bw; left=Math.max(0,Math.min(br.width-bw,left));
+  var top=ty-bh-18; top=Math.max(0,Math.min(br.height-bh,top));   // au-dessus du doigt
+  tip.style.left=left.toFixed(0)+'px';tip.style.top=top.toFixed(0)+'px';
+  box.__xhIdx=best;box.__xhLast={x:cx,y:cy,t:Date.now()};tip.setAttribute('data-idx',best);clearTimeout(box.__xhT);
+}
+function bindXhair(box){
+  box.__xhBound=true;var active=null;
+  box.addEventListener('pointerdown',function(e){if(!box.__xh)return;if(e.pointerType==='mouse'&&e.button!==0)return;
+    active=e.pointerId;if(e.pointerType!=='mouse')try{box.setPointerCapture(e.pointerId);}catch(_){} xhShow(box,e.clientX,e.clientY);});
+  box.addEventListener('pointermove',function(e){if(!box.__xh)return;
+    if(active===e.pointerId||e.pointerType==='mouse')xhShow(box,e.clientX,e.clientY);});
+  function end(e){if(active!==e.pointerId)return;active=null;
+    if(e.pointerType!=='mouse'){clearTimeout(box.__xhT);box.__xhT=setTimeout(function(){xhHide(box);},XH_KEEP);}}
+  box.addEventListener('pointerup',end);box.addEventListener('pointercancel',end);
+  box.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse'&&active===null)xhHide(box);});
+  document.addEventListener('pointerdown',function(e){if(box.__xhIdx!=null&&!box.contains(e.target))xhHide(box);},true);
+}
+function renderChart(list){
+  readColors();
+  var box=$('chart'); var W=Math.max(300,Math.round(box.clientWidth||600)); var H=Math.round(Math.min(320,Math.max(220,W*0.55)));
+  var c0=calc(1), U=volUnit(c0), eIdx=[];c0.sides.forEach(function(x,i){if(x.net!==null)eIdx.push(i);}); var hasE=eIdx.length>0;
+  var SER=chartSeries(c0), serByIdx={};SER.forEach(function(x){if(x.idx!==undefined)serByIdx[x.idx]=x;});
+  function sideCol(i){return serByIdx[i].col;} function sideDash(i){return serByIdx[i].dash;}
+  var L=46,R=(chartView==='cumul'&&hasE)?54:12,T=14,B=34, pw=W-L-R, ph=H-T-B;
+  var leg=$('legend');
+  $('evolCtl').classList.toggle('hidden',chartView==='cumul'||!list.length);$('evolTip').textContent='';$('evolTable').innerHTML='';evolLast=null;
+  setXhair(box,null);
+  if(!list.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,'Le graphique apparaîtra après ton premier relevé',{size:13}));leg.innerHTML='';return;}
+  var g='';
+  function gridY(max,fmt,fill){
+    var s='';for(var i=0;i<=4;i++){var v=max*i/4,y=T+ph-ph*i/4;
+      s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="'+COL['--line']+'" stroke-width="1"/>';
+      s+=txt(L-6,y+4,fmt(v),{anchor:'end',fill:fill||COL['--muted']});}
+    return s;}
+  var shortNum=function(v){return Math.abs(v)>=1000?nf1.format(v/1000)+'k':(Math.abs(v)<10&&v%1?nf1.format(v):nf0.format(v));};
+  if(chartView==='cumul'){
+    var pts=[],cl=0,acc=c0.sides.map(function(){return 0;}),byDate={};
+    list.forEach(function(e){var c=calc(e.kwh,null,e.cop);cl+=volMain(c);eIdx.forEach(function(i){acc[i]+=c.sides[i].net;});byDate[e.date]={l:cl,e:acc.slice()};});
+    Object.keys(byDate).sort().forEach(function(d){pts.push({d:d,t:parseIso(d).getTime(),l:byDate[d].l,e:byDate[d].e});});
+    var t0=pts[0].t,t1=pts[pts.length-1].t; if(t1===t0){t0-=86400000*3;t1+=86400000*3;}
+    var maxL=niceMax(Math.max.apply(null,pts.map(function(p){return p.l;})));
+    var eVals=[0];pts.forEach(function(p){eIdx.forEach(function(i){eVals.push(p.e[i]);});});
+    var maxE=niceMax(Math.max.apply(null,eVals)), minE=Math.min.apply(null,eVals); minE=minE<0?-niceMax(-minE):0; var spanE=maxE-minE||1;
+    var X=function(t){return L+pw*(t-t0)/(t1-t0);}, YL=function(v){return T+ph-ph*v/maxL;}, YE=function(v){return T+ph-ph*(v-minE)/spanE;};
+    g+=gridY(maxL,function(v){return shortNum(v)+' '+U;},COL['--accent']);
+    if(hasE)for(var i=0;i<=4;i++){var v=minE+spanE*i/4;g+=txt(W-R+6,T+ph-ph*i/4+4,shortNum(Math.round(v))+' €',{anchor:'start'});}
+    var pacCost=(hasE&&settings.pacPrix!==null)?settings.pacPrix-(settings.pacAides||0):null; // ligne « Prix PAC » seulement si elle tient dans l'axe €
+    if(pacCost!==null&&pacCost>0&&pacCost<=maxE){var yp=YE(pacCost).toFixed(1);g+='<line class="pacline" x1="'+L+'" x2="'+(W-R)+'" y1="'+yp+'" y2="'+yp+'" stroke="'+COL['--text']+'" stroke-opacity=".55" stroke-width="1.2" stroke-dasharray="2 3"/>'+txt(L+4,+yp>T+14?+yp-4:+yp+12,'Prix PAC '+shortNum(Math.round(pacCost))+' €',{anchor:'start',size:10,fill:COL['--text']});}
+    var nt=pts.length===1?1:4;
+    for(var k=0;k<nt;k++){var tt=nt===1?pts[0].t:t0+(t1-t0)*k/(nt-1);var dd=new Date(tt);g+=txt(nt===1?X(tt):Math.min(Math.max(X(tt),L+22),W-R-22),H-12,pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+'/'+String(dd.getFullYear()).slice(2));}
+    function path(fy){return pts.map(function(p,i){return (i?'L':'M')+X(p.t).toFixed(1)+' '+fy(p).toFixed(1);}).join('');}
+    var pathL=path(function(p){return YL(p.l);});
+    var volLab=U==='kWh'?'kWh de gaz évités':'Litres évités';
+    g+='<path d="'+pathL+'L'+X(pts[pts.length-1].t).toFixed(1)+' '+(T+ph)+'L'+X(pts[0].t).toFixed(1)+' '+(T+ph)+'Z" fill="'+COL['--accent']+'" opacity=".12"/>';
+    g+='<path data-s="vol" d="'+pathL+'" fill="none" stroke="'+SER[0].col+'" stroke-width="2.5" stroke-linejoin="round"/>';
+    eIdx.forEach(function(i){g+='<path data-s="'+esc(serByIdx[i].key)+'" d="'+path(function(p){return YE(p.e[i]);})+'" fill="none" stroke="'+sideCol(i)+'" stroke-width="2.5" stroke-dasharray="'+sideDash(i)+'" stroke-linecap="round" stroke-linejoin="round"/>';});
+    pts.forEach(function(p){var x=X(p.t).toFixed(1);
+      g+='<circle cx="'+x+'" cy="'+YL(p.l).toFixed(1)+'" r="3.5" fill="'+COL['--accent']+'"><title>'+fDate(p.d)+' : '+(U==='kWh'?fKwhG(p.l):fL(p.l))+' cumulés</title></circle>';
+      eIdx.forEach(function(i){g+='<circle cx="'+x+'" cy="'+YE(p.e[i]).toFixed(1)+'" r="3" fill="'+sideCol(i)+'"><title>'+fDate(p.d)+' · '+esc(c0.sides[i].name)+' : '+fE(p.e[i])+' cumulés</title></circle>';});});
+    leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>'+volLab+' (cumul, axe gauche)</span>'+
+      eIdx.map(function(i){return '<span><i style="background:'+sideCol(i)+'"></i>'+esc(c0.sides[i].name)+' : € nets cumulés (axe droit)</span>';}).join('')+
+      (hasE?'':'<span>Renseigne un prix de fioul ou de gaz (et d\'électricité) dans ⚙️ Réglages pour voir les courbes en €.</span>');
+    var xhVol=U==='kWh'?'Gaz évité':'Fioul évité';
+    var XHD={W:W,T:T,ph:ph,pts:pts.map(function(p){return {x:X(p.t),d:p.d,items:[{lab:xhVol,col:SER[0].col,val:U==='kWh'?fKwh(p.l):fL(p.l),y:YL(p.l)}].concat(eIdx.map(function(i){return {lab:c0.sides[i].name+' (net)',col:sideCol(i),val:fE(p.e[i]),y:YE(p.e[i])};}))};})};
+  } else {
+    renderBars(list,c0,SER,box,leg,W,H,L,T,ph,pw,gridY,shortNum);return;
+  }
+  box.innerHTML=svgEl(W,H,g);
+  setXhair(box,XHD);
+}
+
+// ---------- Barres groupées Semaine / Mois / Année ----------
+function evolPeriods(list,view){
+  // renvoie {keys:[...] triées, lab(k), long(k)} couvrant toutes les périodes de la 1re à la dernière donnée
+  var first=list[0].date,last=list[list.length-1].date,keys=[];
+  if(view==='week'){var w=weekStart(parseIso(first)),we=weekStart(parseIso(last));var gd=0;while(w<=we&&gd<3000){keys.push(iso(w));w.setDate(w.getDate()+7);gd++;}}
+  else if(view==='month'){var y=+first.slice(0,4),m=+first.slice(5,7)-1,y1=+last.slice(0,4),m1=+last.slice(5,7)-1;while(y<y1||(y===y1&&m<=m1)){keys.push(y+'-'+pad(m+1));m++;if(m>11){m=0;y++;}}}
+  else{for(var yy=+first.slice(0,4);yy<=+last.slice(0,4);yy++)keys.push(String(yy));}
+  return keys;
+}
+function evolKeyOf(d,view){if(view==='week')return iso(weekStart(parseIso(d)));if(view==='month')return d.slice(0,7);return d.slice(0,4);}
+function evolLab(k,view){if(view==='week')return k.slice(8,10)+'/'+k.slice(5,7);if(view==='month')return MONTHS[+k.slice(5,7)-1];return k;}
+function evolLong(k,view){if(view==='week')return 'semaine du '+fDate(k)+' au '+fDate(addDays(k,6));if(view==='month')return MONTHS_FR[+k.slice(5,7)-1]+' '+k.slice(0,4);return 'année '+k;}
+// Fenêtre affichée : {keys, page, pages, lab, sub}
+function evolWindow(all,view,nS,pw){
+  var groupMin=nS*7+10, fit=Math.max(1,Math.floor(pw/groupMin)), win=[],pages=1,lab='',sub='';
+  if(view==='month'){
+    var per=[12,6,4,3,2,1].filter(function(d){return d<=fit;})[0]||1;
+    var chunk=function(k){return (+k.slice(0,4))*12/per+Math.floor((+k.slice(5,7)-1)/per);};
+    var c0=chunk(all[0]),c1=chunk(all[all.length-1]);pages=c1-c0+1;
+    evolPage=Math.max(0,Math.min(evolPage,pages-1));var c=c1-evolPage, y=Math.floor(c*per/12), m0=(c*per)%12;
+    for(var i=0;i<per;i++)win.push(y+'-'+pad(m0+i+1));
+    lab=per===12?String(y):MONTHS[m0]+' – '+MONTHS[m0+per-1]+' '+y;sub=per===12?'janvier à décembre':per+' mois';
+  } else {
+    var n=view==='week'?Math.min(6,fit):Math.min(8,fit);
+    pages=Math.ceil(all.length/n);evolPage=Math.max(0,Math.min(evolPage,pages-1));
+    var end=all.length-evolPage*n, st=Math.max(0,end-n);win=all.slice(st,end);
+    if(view==='week'){lab=fDate(win[0]).slice(0,5)+' → '+fDate(addDays(win[win.length-1],6));sub=win.length+' semaine'+(win.length>1?'s':'');}
+    else{lab=win.length>1?win[0]+' – '+win[win.length-1]:win[0];sub=win.length+' année'+(win.length>1?'s':'');}
+  }
+  return {keys:win,page:evolPage,pages:pages,lab:lab,sub:sub};
+}
+function renderBars(list,c0,SER,box,leg,W,H,L,T,ph,pw,gridY,shortNum){
+  var view=chartView, hasEur=SER.some(function(x){return x.unit==='€';}), volU=SER[0].unit;
+  if(evolUnitSel==='eur'&&!hasEur)evolUnitSel='vol';
+  var uBox=$('evolUnit');
+  uBox.innerHTML='<button type="button" data-eunit="vol" aria-pressed="'+(evolUnitSel==='vol')+'">'+volU+'</button>'+(hasEur?'<button type="button" data-eunit="eur" aria-pressed="'+(evolUnitSel==='eur')+'">€</button>':'');
+  var unit=evolUnitSel==='eur'?'€':volU, ser=SER.filter(function(x){return x.unit===unit;});
+  // agrégation par période
+  var groups={};list.forEach(function(e){var k=evolKeyOf(e.date,view);if(!groups[k])groups[k]={kwh:0,h:0};groups[k].kwh+=e.kwh;groups[k].h+=e.kwh*e.cop;});
+  var all=evolPeriods(list,view), w=evolWindow(all,view,Math.max(1,ser.length),pw);
+  var pwFull=pw; if(showTemp)pw=pw-26;
+  $('evolNavLab').textContent=w.lab;$('evolNavSub').textContent=[w.sub,w.pages>1?'page '+(w.pages-w.page)+'/'+w.pages:''].filter(Boolean).join(' · ');
+  $('evolPrev').disabled=w.page>=w.pages-1;$('evolNext').disabled=w.page<=0;
+  var data=w.keys.map(function(k){var gg=groups[k], c=gg?calc(gg.kwh,null,(tempReady()&&gg.kwh>0)?gg.h/gg.kwh:null):null;
+    var to=view==='week'?addDays(k,7):view==='month'?(+k.slice(5,7)===12?(+k.slice(0,4)+1)+'-01-01':k.slice(0,5)+pad(+k.slice(5,7)+1)+'-01'):(+k+1)+'-01-01', from=view==='week'?k:view==='month'?k+'-01':k+'-01-01';
+    return {k:k,lab:evolLab(k,view),long:evolLong(k,view),c:c,kwh:gg?gg.kwh:0,h:gg?gg.h:0,v:ser.map(function(x){return c?x.val(c):null;}),tp:showTemp?tempPeriod(from,to):null};});
+  var per=view==='week'?'semaine':view==='month'?'mois':'année';
+  if(!ser.length){
+    box.innerHTML=svgEl(W,H,txt(W/2,H/2-8,'Aucune série en €',{size:13})+txt(W/2,H/2+12,'Renseigne un prix (fioul ou gaz) et l\'électricité dans ⚙️ Réglages',{size:11}));
+    leg.innerHTML='';return;}
+  var vals=[0];data.forEach(function(d){d.v.forEach(function(v){if(v!==null)vals.push(v);});});
+  var vMax=Math.max.apply(null,vals), vMin=Math.min.apply(null,vals), raw=(vMax-vMin)/4||1, p10=Math.pow(10,Math.floor(Math.log10(raw))), nr=raw/p10;
+  var step=(nr<=1?1:nr<=2?2:nr<=5?5:10)*p10, mx=Math.max(step,Math.ceil(vMax/step-1e-9)*step), mn=Math.min(0,Math.floor(vMin/step+1e-9)*step), span=mx-mn, nt=Math.round(span/step);
+  var Y=function(v){return T+ph-ph*(v-mn)/span;};
+  var g='';
+  for(var i=0;i<=nt;i++){var v=mn+step*i,y=Y(v);
+    g+='<line x1="'+L+'" x2="'+(L+pw)+'" y1="'+y+'" y2="'+y+'" stroke="'+COL['--line']+'" stroke-width="1"/>';
+    g+=txt(L-6,y+4,shortNum(Math.abs(v)<1e-9?0:v)+' '+unit,{anchor:'end'});}
+  if(mn<0)g+='<line x1="'+L+'" x2="'+(L+pw)+'" y1="'+Y(0).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="'+COL['--muted']+'" stroke-width="1.2"/>';
+  var n=data.length, slot=pw/n, nS=ser.length, gw=Math.min(slot*0.82,nS*22), bw=gw/nS;
+  var fmt=function(v,u){return v===null?'—':u==='€'?fE(v):(nf1.format(v)+' '+u);};
+  data.forEach(function(d,j){var gx=L+slot*j+(slot-gw)/2;
+    if(evolSel===j)g+='<rect x="'+(L+slot*j+1).toFixed(1)+'" y="'+T+'" width="'+(slot-2).toFixed(1)+'" height="'+ph+'" fill="'+COL['--accent']+'" opacity=".08" rx="4"/>';
+    d.v.forEach(function(v,si){if(v===null)return;var x=gx+bw*si, y0=Y(0), y1=Y(v), top=Math.min(y0,y1), hh=Math.abs(y1-y0);
+      g+='<rect class="ebar" data-s="'+esc(ser[si].key)+'" x="'+(x+0.5).toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+Math.max(1,bw-1).toFixed(1)+'" height="'+Math.max(v===0?0:1,hh).toFixed(1)+'" rx="'+Math.min(3,bw/3).toFixed(1)+'" fill="'+ser[si].col+'"><title>'+esc(d.long+' · '+ser[si].short+' : '+fmt(v,unit))+'</title></rect>';});
+    g+=txt(L+slot*j+slot/2,H-12,(view==='month'&&slot<30)?'JFMAMJJASOND'.charAt(+d.k.slice(5,7)-1):d.lab,{size:10});
+    if(n<=8&&nS===1&&d.v[0]!==null)g+=txt(L+slot*j+slot/2,Y(Math.max(0,d.v[0]))-5,unit==='€'?nf0.format(d.v[0]):nf1.format(d.v[0]),{size:10,fill:COL['--text']});
+    g+='<rect class="ehit" data-g="'+j+'" x="'+(L+slot*j).toFixed(1)+'" y="'+T+'" width="'+slot.toFixed(1)+'" height="'+(ph+B_HIT)+'" fill="transparent" style="cursor:pointer"/>';});
+  if(view==='week')g+=txt(L+pw/2,H-1,'(lundi de chaque semaine)',{size:9});
+  if(showTemp)g+=tempOverlay(data.map(function(d){return d.tp;}),function(j){return L+slot*j+slot/2;},T,ph,L+pw+5,function(j){return data[j].long;});
+  box.innerHTML=svgEl(W,H,g);
+  setXhair(box,{W:W,T:T,ph:ph,pts:data.map(function(d,j){var it=d.c?ser.map(function(x,si){return {lab:x.short,col:x.col,val:fmt(d.v[si],unit),sq:true};}):[{lab:'Aucun relevé',col:COL['--line'],val:'—',sq:true}];
+    if(d.tp)it.push({lab:'Temp. moy.',col:TEMP_COL,val:fTemp(d.tp.t),y:tempY(d.tp.t,T,ph)});
+    return {x:L+slot*j+slot/2,x0:L+slot*j+1,x1:L+slot*(j+1)-1,title:d.long.charAt(0).toUpperCase()+d.long.slice(1),items:it};})});
+  var tk=data.reduce(function(a,d){return a+d.kwh;},0), th=data.reduce(function(a,d){return a+d.h;},0), tot=calc(tk,null,(tempReady()&&tk>0)?th/tk:null);
+  leg.innerHTML=ser.map(function(x){return '<span data-s="'+esc(x.key)+'"><i style="background:'+x.col+'"></i>'+esc(x.name)+' par '+per+'</span>';}).join('')+
+    (unit!=='€'&&!hasEur?'<span>Renseigne un prix de fioul ou de gaz (et d\'électricité) dans ⚙️ Réglages pour voir les barres en €.</span>':'')+
+    '<span>Total affiché : '+compactLine(tot)+'</span>'+(showTemp?tempLegend(data.map(function(d){return d.tp;}),view==='week'?'':null):'');
+  // tableau des valeurs de la fenêtre
+  var totV=ser.map(function(x,si){var t=null;data.forEach(function(d){if(d.v[si]!==null)t=(t||0)+d.v[si];});return t;});
+  var head=view==='week'?'Semaine du':view==='month'?'Mois':'Année';
+  $('evolTable').innerHTML='<table class="ptable'+(showTemp?' has-t':'')+'" id="evolTbl"><thead><tr><th>'+head+'</th>'+ser.map(function(x){return '<th><i style="background:'+x.col+'"></i>'+esc(x.short)+'</th>';}).join('')+(showTemp?'<th>°C</th>':'')+'</tr></thead><tbody>'+
+    data.map(function(d,j){return '<tr data-g="'+j+'"'+(evolSel===j?' class="sel"':'')+'><td>'+esc(view==='week'?fDate(d.k):view==='month'?MONTHS_FR[+d.k.slice(5,7)-1]:d.k)+'</td>'+d.v.map(function(v){return '<td'+(v!==null&&v<0?' class="neg"':'')+'>'+fmt(v,unit)+'</td>';}).join('')+(showTemp?'<td class="tcell">'+(d.tp?fTemp(d.tp.t):'—')+'</td>':'')+'</tr>';}).join('')+
+    '<tr class="tot"><td>Total</td>'+totV.map(function(v){return '<td'+(v!==null&&v<0?' class="neg"':'')+'>'+fmt(v,unit)+'</td>';}).join('')+(showTemp?'<td></td>':'')+'</tr></tbody></table>';
+  evolLast={data:data,ser:ser,unit:unit,fmt:fmt};
+  showEvolTip();
+}
+var B_HIT=22;
+function showEvolTip(){
+  var t=$('evolTip');if(!evolLast||evolSel===null||!evolLast.data[evolSel]){t.textContent=evolLast?'👆 Touche une période pour voir ses valeurs.':'';return;}
+  var d=evolLast.data[evolSel];
+  t.textContent=(d.long.charAt(0).toUpperCase()+d.long.slice(1))+' : '+(d.c?evolLast.ser.map(function(x,si){return x.short+' '+evolLast.fmt(d.v[si],evolLast.unit);}).join(' · '):'aucun relevé')+(d.tp?' · 🌡️ '+fTemp(d.tp.t):'');
+}
+
+function renderAll(){
+  var list=resolved();
+  renderWelcome();renderRoi(list);renderStats(list);renderList(list);renderChart(list);renderFormula();
+  if(simReady){simFillOptions(true);renderSim();}
+  if(tankReady)renderTank();
+}
+
+// ---------- formulaire ----------
+function setMode(m){
+  mode=m;
+  $('modeKwh').setAttribute('aria-pressed',m==='kwh');$('modeIndex').setAttribute('aria-pressed',m==='index');
+  $('fValLabel').textContent=m==='kwh'?'kWh électriques consommés par la PAC sur la période':'Index du compteur de la PAC (kWh, valeur cumulée)';
+  $('fVal').placeholder=m==='kwh'?'ex. 30':'ex. 1250';
+  $('modeHint').textContent=m==='kwh'
+    ?'Tape la consommation de la PAC depuis ton dernier relevé.'
+    :'Tape le chiffre affiché sur le compteur : l\'appli calcule la différence avec l\'index précédent. Le tout premier index sert de point de départ (0 kWh).';
+  updatePreview();
+}
+function updatePreview(){
+  var v=parseNum($('fVal').value), p=$('preview'); p.classList.remove('warn');
+  if(isNaN(v)){p.classList.add('hidden');return;}
+  p.classList.remove('hidden');
+  var kwh=v, head='';
+  if(mode==='index'){
+    var prev=prevIndexBefore($('fDate').value||todayIso(),editingId);
+    if(prev===null){p.innerHTML='Premier index : il servira de <b>point de départ</b> (0 kWh comptés).';return;}
+    kwh=v-prev;
+    if(kwh<0){p.classList.add('warn');p.innerHTML='⚠️ Cet index est inférieur au précédent ('+nfN.format(prev)+'). Vérifie le chiffre.';return;}
+    head='Depuis l\'index précédent ('+nfN.format(prev)+') : <b>'+fKwh(kwh)+'</b><br>';
+  }
+  if(kwh<0){p.classList.add('warn');p.innerHTML='⚠️ Valeur négative.';return;}
+  var dt=$('fDate').value||todayIso(), pd=null;
+  entries.forEach(function(e){if(e.id!==editingId&&e.date<=dt&&(pd===null||e.date>pd))pd=e.date;});
+  var cf=copFor(pd,dt), c=calc(kwh,null,cf.cop);
+  p.innerHTML=head+'= '+nf0.format(c.chaleur)+' kWh de chaleur · '+esc(copSrcText(cf))+' → <b>'+volText(c)+'</b>'+cmpHtml(c);
+}
+function openForm(){$('formBody').classList.remove('hidden');$('btnNewReading').classList.add('hidden');}
+function closeForm(){$('formBody').classList.add('hidden');$('btnNewReading').classList.remove('hidden');}
+function resetForm(){
+  editingId=null;$('form').reset();$('fDate').value=todayIso();closeForm();
+  $('formTitle').textContent='➕ Nouveau relevé PAC';$('btnSave').textContent='Ajouter le relevé';
+  $('preview').classList.add('hidden');
+}
+$('form').addEventListener('submit',function(ev){
+  ev.preventDefault();
+  var date=$('fDate').value, v=parseNum($('fVal').value), note=$('fNote').value.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){toast('Choisis une date');return;}
+  if(isNaN(v)||v<0){toast('Entre un nombre positif (ex. 30 ou 12,5)');$('fVal').focus();return;}
+  var rec={date:date,note:note};
+  if(mode==='index'){rec.index=v;}else{rec.kwh=v;}
+  if(editingId){
+    entries=entries.map(function(e){if(e.id!==editingId)return e;var n={id:e.id,created:e.created,date:rec.date,note:rec.note};if('index' in rec)n.index=rec.index;else n.kwh=rec.kwh;return n;});
+    toast('Relevé modifié');
+  } else {
+    rec.id=uid();rec.created=Date.now();entries.push(rec);toast('Relevé ajouté ✅');
+  }
+  save(KEY_DATA,entries);save(KEY_WELCOME,true);resetForm();renderAll();
+});
+$('btnCancel').addEventListener('click',function(){resetForm();});
+$('btnNewReading').addEventListener('click',function(){resetForm();openForm();setTimeout(function(){$('fVal').focus();},30);});
+Array.prototype.forEach.call(document.querySelectorAll('[data-sp]'),function(b){b.addEventListener('click',function(){statPeriod=b.getAttribute('data-sp');save(KEY_SPER,statPeriod);renderStats(resolved());});});
+$('modeKwh').addEventListener('click',function(){setMode('kwh');});
+$('modeIndex').addEventListener('click',function(){setMode('index');});
+$('fVal').addEventListener('input',updatePreview);$('fDate').addEventListener('change',updatePreview);
+
+$('btnListAll').addEventListener('click',function(){listAll=!listAll;renderList(resolved());});
+$('list').addEventListener('click',function(ev){
+  var b=ev.target.closest('button'); if(!b)return;
+  if(b.hasAttribute('data-rtoggle')){var rid=b.getAttribute('data-rtoggle'),li=b.closest('li'),o=!openRows[rid];
+    if(o)openRows[rid]=1;else delete openRows[rid];li.classList.toggle('open',o);b.setAttribute('aria-expanded',o);li.querySelector('.r-det').classList.toggle('hidden',!o);return;}
+  var id=b.getAttribute('data-edit')||b.getAttribute('data-del');
+  var e=entries.filter(function(x){return x.id===id;})[0]; if(!e)return;
+  if(b.hasAttribute('data-del')){
+    if(confirm('Supprimer le relevé du '+fDate(e.date)+' ? Cette action est définitive.')){
+      entries=entries.filter(function(x){return x.id!==id;});save(KEY_DATA,entries);
+      if(editingId===id)resetForm();renderAll();toast('Relevé supprimé');}
+  } else {
+    editingId=id;setMode(typeof e.index==='number'?'index':'kwh');
+    $('fDate').value=e.date;$('fVal').value=String(typeof e.index==='number'?e.index:e.kwh).replace('.',',');$('fNote').value=e.note||'';
+    $('formTitle').textContent='✏️ Modifier le relevé du '+fDate(e.date);$('btnSave').textContent='Enregistrer la modification';openForm();
+    updatePreview();$('formCard').scrollIntoView({behavior:'smooth',block:'start'});$('fVal').focus({preventScroll:true});
+  }
+});
+
+$('btnFirst').addEventListener('click',function(){
+  resetForm();openForm();$('formCard').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){$('fVal').focus({preventScroll:true});},30);
+});
+
+// ---------- rentabilité de la PAC (estimation, n'utilise que les économies nettes déjà calculées) ----------
+var KEY_ROI='pacFioul.roiComp', roiSel=load(KEY_ROI,null);
+function roiOptions(){return pricedSides(calc(1));}
+function roiCompute(list){
+  var s=settings;
+  if(s.pacPrix===null)return {state:'noprice'};
+  var opts=roiOptions(); if(!opts.length)return {state:'nocomp'};
+  var side=opts.filter(function(x){return x.id===roiSel;})[0]||opts[0];
+  var cost=Math.max(0,s.pacPrix-(s.pacAides||0)), r={state:'ok',opts:opts,side:side,cost:cost};
+  if(side.net===null){r.state='noelec';return r;}
+  var d0=s.pacDate||(list.length?list[0].date:null);r.d0=d0;
+  var rows=d0?list.filter(function(e){return e.date>=d0;}).map(function(e){var sd=calc(e.kwh,null,e.cop).sides.filter(function(x){return x.id===side.id;})[0];return {d:e.date,net:sd&&sd.net!==null?sd.net:0};}):[];
+  var entDay=(s.pacEnt||0)/365, last=rows.length?rows[rows.length-1].d:null, ref=last||todayIso();
+  var cum=0,paid=null;rows.forEach(function(x){cum+=x.net;if(paid===null&&cum-entDay*Math.max(0,daysBetween(d0,x.d))>=cost)paid=x.d;});
+  r.ent=d0?entDay*Math.max(0,daysBetween(d0,ref)):0; r.rec=cum-r.ent; r.n=rows.length; r.last=last;
+  r.pct=cost>0?r.rec/cost*100:100;
+  if(last){var ws=addDays(last,-365), st=ws>d0?ws:d0, sum=0;
+    rows.forEach(function(x){if(st===d0?x.d>=d0:x.d>st)sum+=x.net;});
+    r.days=daysBetween(st,last); r.rate=r.days>0?sum/r.days-entDay:null;}
+  // ancienne méthode (moyenne plate) gardée pour comparaison / repli
+  if(r.rate!==null&&r.rate!==undefined&&r.rate>0&&last&&cost>r.rec)r.etaFlat=addDays(last,Math.ceil((cost-r.rec)/r.rate));
+  if(cost<=0||(rows.length&&r.rec>=cost)){r.done=true;r.paidDate=paid||d0||todayIso();r.benefit=r.rec-cost;}
+  else if(last){roiForecast(r,d0?list.filter(function(e){return e.date>=d0;}):[],s,side.id,entDay);}
+  return r;
+}
+// ---------- prévision saisonnière (v17) ----------
+// Calibrage : chaleur fournie par la PAC (kWh élec × COP) ÷ degrés-jours (base 18 °C) de la période des relevés.
+// Projection : jour par jour avec les degrés-jours normaux de Metz × économie nette par kWh de chaleur du mois (COP du mois).
+var ROI_MAX_DAYS=6*365, ROI_SPREAD=0.12, ROI_SPREAD_ROUGH=0.25;
+function djuNorm(y,m){return DJU_METZ[m]/new Date(y,m+1,0).getDate();}
+function djuDay(d,useReal){if(useReal){var v=tempCache.days[d];if(typeof v==='number')return Math.max(0,18-v);}return djuNorm(+d.slice(0,4),+d.slice(5,7)-1);}
+// COP à une température donnée (courbe + correction en mode température, sinon COP fixe)
+function copAtT(T,s){return tempReady(s)?copInterp(T,s.copPts,s.copCorr):s.cop;}
+function tDay(d,useReal){if(useReal){var v=tempCache.days[d];if(typeof v==='number')return v;}return METZ_TNORM[+d.slice(5,7)-1];}
+// Calibrage : chaleur PAC ÷ degrés-jours, période de relevé par période. Avec une puissance électrique max (kwe), le plafond d'une période
+// = somme sur ses jours de kwe × 24 h × COP(température du jour) ; une période en moyenne au plafond (≥ 98 %) ne dit pas tout le besoin
+// de la maison : elle est écartée du calcul s'il reste assez de périodes « libres » (≥ 40 degrés-jours), sinon gardée et plafonnée.
+function heatCalib(rows,s,kwe){
+  var loc=locOf(s),useReal=!!loc&&tempCache.loc===loc,per=[];
+  rows.forEach(function(e){if(!(e.from&&e.from<e.date))return;var nd=0,dj=0,cap=0;
+    for(var d=addDays(e.from,1),g=0;d<=e.date&&g<4000;d=addDays(d,1),g++){nd++;dj+=djuDay(d,useReal);if(kwe)cap+=kwe*24*copAtT(tDay(d,useReal),s);}
+    var heat=e.kwh*e.cop;per.push({nd:nd,dj:dj,heat:heat,cap:kwe?cap:null,sat:!!kwe&&nd>0&&heat>=0.98*cap});});
+  var uns=per.filter(function(p){return !p.sat;}),dU=uns.reduce(function(a,p){return a+p.dj;},0),use=(kwe&&uns.length<per.length&&dU>=40)?uns:per;
+  var H=0,D=0,days=0;use.forEach(function(p){H+=p.cap!==null?Math.min(p.heat,p.cap):p.heat;D+=p.dj;days+=p.nd;});
+  return {H:H,D:D,days:days,h:D>0?H/D:null,nSat:per.length-uns.length,nPer:per.length,excl:use!==per};
+}
+function roiForecast(r,rows,s,sid,entDay){
+  var kwe=s.pacKw||null,c=heatCalib(rows,s,kwe),H=c.H,D=c.D,days=c.days;
+  r.calDays=days;r.calDju=D;r.calHeat=H;r.calSat=c.nSat;r.calExcl=c.excl;r.kwe=kwe;
+  var nph=[];for(var m=0;m<12;m++){var cm=tempReady(s)?(monthCop(m,s)||s.cop):s.cop;var sd=calc(1/cm,null,cm).sides.filter(function(x){return x.id===sid;})[0];nph.push(sd&&sd.net!==null?sd.net:0);}
+  if(D<40||H<=0){ // presque pas de froid mesuré (ex. relevés d'été : clim, eau chaude…) : repli sur la moyenne plate
+    r.method='flat';r.rough=true;if(r.etaFlat){r.eta=r.etaLo=r.etaHi=r.etaFlat;}return;}
+  var h=H/D;r.heatPerDju=h;r.method='saison';r.rough=days<14||D<100;
+  // plafond de chaleur par jour, mois par mois (température normale de Metz du mois)
+  var capM=[];for(m=0;m<12;m++)capM.push(kwe?kwe*24*copAtT(METZ_TNORM[m],s):Infinity);r.capM=kwe?capM:null;
+  var year=0;for(m=0;m<12;m++){var nd=new Date(2027,m+1,0).getDate();year+=nd*Math.min(h*DJU_METZ[m]/nd,capM[m])*nph[m];}year-=entDay*365;r.yearNet=year;
+  if(year<=0){r.eta=null;r.nonEst=true;return;}
+  function proj(f){var cum=r.rec,dt=parseIso(r.last);for(var i=1;i<=ROI_MAX_DAYS;i++){dt.setDate(dt.getDate()+1);var y=dt.getFullYear(),mm=dt.getMonth();
+    cum+=Math.min(h*f*djuNorm(y,mm),capM[mm])*nph[mm]-entDay;if(cum>=r.cost)return iso(dt);}return null;}
+  var sp=r.rough?ROI_SPREAD_ROUGH:ROI_SPREAD;
+  r.eta=proj(1);r.etaLo=proj(1+sp);r.etaHi=proj(1-sp);r.far=!r.eta;
+}
+// Température en dessous de laquelle le besoin (chaleur par degré-jour × (18 − T)) dépasse le plafond kwe × 24 h × COP(T)
+function pacLimitT(h,kwe,s){for(var i=0;i<=430;i++){var T=18-i/10;if(h*(18-T)>kwe*24*copAtT(T,s))return T;}return null;}
+function renderPacKwLimit(){
+  var el=$('pacKwLimit'),v=parseNum($('sPacKw').value);if(!(v>0&&v<=30)){el.textContent='';el.classList.add('hidden');return;}
+  el.classList.remove('hidden');
+  var list=resolved(),d0=settings.pacDate||(list.length?list[0].date:null),rows=d0?list.filter(function(e){return e.date>=d0;}):[],c=heatCalib(rows,settings,v);
+  if(!c.h||c.D<40){el.textContent='Limite estimée : renseigne des relevés PAC (en période de chauffe) pour l\'estimer.';return;}
+  var T=pacLimitT(c.h,v,settings);
+  el.textContent=T===null?'Limite estimée : d\'après tes relevés, la PAC couvrirait tous tes besoins même vers −25 °C.':
+    'Limite estimée : la PAC ne couvre plus tous tes besoins en dessous d\'environ '+nf0.format(Math.round(T))+' °C (d\'après tes relevés : '+nf1.format(c.h)+' kWh de chaleur par degré-jour'+(c.nSat?' ; '+c.nSat+' période(s) de relevés déjà au maximum '+(c.excl?'écartée(s)':'gardée(s)')+')':')')+'.';
+}
+function roiEtaHtml(r){
+  var q=' · <span class="roi-q">'+(r.rough?'estimation encore très approximative':'estimation')+'</span>';
+  if(r.far)return 'rentabilisation : <b id="roiEta">&gt; 6 ans</b>'+q;
+  var lo=r.etaLo||r.eta, hi=r.etaHi;
+  if(!hi)return 'rentabilisée entre <b id="roiEta">'+fMonthYear(lo)+'</b> et plus de 6 ans'+q;
+  if(lo.slice(0,7)===hi.slice(0,7))return 'rentabilisée vers <b id="roiEta">'+fMonthYear(lo)+'</b>'+q;
+  if(lo.slice(0,4)===hi.slice(0,4))return 'rentabilisée entre <b id="roiEta">'+MONTHS_FR[+lo.slice(5,7)-1]+'</b> et <b>'+fMonthYear(hi)+'</b>'+q;
+  return 'rentabilisée entre <b id="roiEta">'+fMonthYear(lo)+'</b> et <b>'+fMonthYear(hi)+'</b>'+q;
+}
+function fEur0(x){return nf0.format(Math.round(x))+' €';}
+function fMonthYear(d){return MONTHS_FR[+d.slice(5,7)-1]+' '+d.slice(0,4);}
+function renderRoi(list){
+  var r=roiCompute(list), card=$('roiCard'), main=$('roiMain'), pick=$('roiPick'), bar=$('roiBar'), sub=$('roiSub');
+  card.classList.toggle('done',!!r.done);
+  var setBtn=function(t,f){return '<button type="button" class="linkbtn" data-roiset="'+f+'">'+t+'</button>';};
+  if(r.state!=='ok'){
+    main.innerHTML='💶 '+(r.state==='noprice'?setBtn('Rentabilité : renseigne le prix de ta PAC (⚙️)','sPacPrix'):r.state==='nocomp'?setBtn('Rentabilité : renseigne un prix fioul ou gaz (⚙️)','compList'):setBtn('Rentabilité : renseigne le prix de l\'électricité (⚙️)','sElec'));
+    pick.innerHTML='';bar.classList.add('hidden');sub.classList.add('hidden');return;}
+  var p=Math.max(0,Math.min(100,r.pct));
+  var firstShow=bar.classList.contains('hidden');
+  bar.classList.remove('hidden');sub.classList.remove('hidden');$('roiFill').style.width=p.toFixed(1)+'%';bar.style.setProperty('--p',(p/100).toFixed(3));bar.classList.toggle('full',p>=100);
+  roiBarStyle(bar,p,r.done);if(firstShow&&!roiGrown){roiGrown=true;bar.classList.add('grow');}
+  if(r.done){
+    main.innerHTML='💶 <b class="pct">✅ PAC rentabilisée</b>';
+    sub.innerHTML='Rentabilisée le <b>'+fDate(r.paidDate)+'</b> · bénéfice net <b>'+fEur0(r.benefit)+'</b>';
+  } else {
+    main.innerHTML='💶 Rentabilité <b class="pct" id="roiPct">'+nf0.format(Math.max(0,r.pct))+' %</b>';
+    var eta=!r.n?'ajoute des relevés PAC':(r.eta||r.far)?roiEtaHtml(r):'date de rentabilité non estimable';
+    sub.setAttribute('data-eta',r.eta||'');sub.setAttribute('data-lo',r.etaLo||'');sub.setAttribute('data-hi',r.etaHi||'');
+    sub.innerHTML='<span id="roiRec">'+(r.rec<0?'Pas d\'économie pour l\'instant ('+fEur0(r.rec)+')':fEur0(r.rec)+' récupérés sur '+fEur0(r.cost))+'</span> · '+eta;
+  }
+  sub.title='Prévision saisonnière : chaleur mesurée par degré-jour, projetée avec les températures normales des mois à venir (comparée à '+r.side.name+'). Détails : ⚙️ Réglages → Général → Comment c\'est calculé.';
+  if(r.opts.length===1)pick.innerHTML='<span class="vs">vs '+esc(r.side.name)+'</span>';
+  else if(r.opts.length<=3)pick.innerHTML=r.opts.map(function(o){return '<button type="button" data-roic="'+esc(o.id)+'" aria-pressed="'+(o.id===r.side.id)+'">'+esc(o.name)+'</button>';}).join('');
+  else pick.innerHTML='<select id="roiSelect" aria-label="Comparer avec">'+r.opts.map(function(o){return '<option value="'+esc(o.id)+'"'+(o.id===r.side.id?' selected':'')+'>vs '+esc(o.name)+'</option>';}).join('')+'</select>';
+}
+// Barre E : plus la part récupérée est grande, plus c'est doré/vert et lumineux (couleurs calculées ici : pas de color-mix, compatible vieux Safari)
+var roiGrown=false;
+function mixHex(a,b,t){t=Math.max(0,Math.min(1,t));var x=parseInt(a.slice(1),16),y=parseInt(b.slice(1),16);
+  return '#'+[16,8,0].map(function(k){var c=Math.round(((x>>k)&255)*(1-t)+((y>>k)&255)*t);return (c<16?'0':'')+c.toString(16);}).join('');}
+function roiBarStyle(bar,p,done){var t=p/100, st=bar.style;
+  st.setProperty('--c2',mixHex('#5f7390','#f5c84b',t));st.setProperty('--c3',mixHex('#6a7f99','#5fe08a',t));
+  st.setProperty('--br',(0.75+0.4*t).toFixed(3));st.setProperty('--hl',(0.08+0.3*t).toFixed(3));st.setProperty('--gl',(t*12).toFixed(1)+'px');st.setProperty('--gc','rgba(201,240,107,'+(t*0.6).toFixed(3)+')');
+  var em=$('roiPctIn'), lab=Math.round(Math.max(0,p))+' %';em.textContent=lab;
+  if(p>=15){em.className='';em.style.left='calc('+p.toFixed(1)+'% - 41px)';}else{em.className='out';em.style.left='calc('+Math.max(0,p).toFixed(1)+'% + 5px)';}}
+function setRoiSel(id){roiSel=id;save(KEY_ROI,id);var l=resolved();renderRoi(l);renderList(l);}
+$('roiCard').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-roic]');if(b){setRoiSel(b.getAttribute('data-roic'));return;}
+  var f=ev.target.closest('[data-roiset]');if(f){var t=f.getAttribute('data-roiset');openSettings(t==='compList'?'secOld':'secPac',t==='compList'?null:t);}});
+$('roiCard').addEventListener('change',function(ev){if(ev.target.id==='roiSelect')setRoiSel(ev.target.value);});
+
+// ---------- graphique : boutons ----------
+$('evolUnit').addEventListener('click',function(ev){var b=ev.target.closest('[data-eunit]');if(!b)return;evolUnitSel=b.getAttribute('data-eunit');save(KEY_EUNIT,evolUnitSel);evolPage=0;evolSel=null;renderChart(resolved());});
+Array.prototype.forEach.call(document.querySelectorAll('[data-temptoggle]'),function(b){b.addEventListener('click',function(){
+  showTemp=!showTemp;save(KEY_STEMP,showTemp);renderTempButtons();rerenderBarCharts();if(showTemp)fetchTemps(false).then(function(){if(showTemp)rerenderBarCharts();});});});
+$('evolPrev').addEventListener('click',function(){evolPage++;evolSel=null;renderChart(resolved());});
+$('evolNext').addEventListener('click',function(){if(evolPage>0)evolPage--;evolSel=null;renderChart(resolved());});
+$('chart').addEventListener('click',function(ev){var r=ev.target.closest&&ev.target.closest('.ehit');
+  if(!r&&document.elementsFromPoint)r=document.elementsFromPoint(ev.clientX,ev.clientY).filter(function(e){return e.classList&&e.classList.contains('ehit');})[0]; // clic redirigé par la capture du pointeur
+  if(!r)return;var j=+r.getAttribute('data-g');evolSel=evolSel===j?null:j;
+  var box=$('chart'), last=box.__xhIdx!=null?box.__xhLast:null;renderChart(resolved());
+  if(last){xhShow(box,last.x,last.y);box.__xhT=setTimeout(function(){xhHide(box);},XH_KEEP);}}); // la bulle reste après le tap
+$('evolTable').addEventListener('click',function(ev){var r=ev.target.closest('tr[data-g]');if(!r)return;var j=+r.getAttribute('data-g');evolSel=evolSel===j?null:j;renderChart(resolved());});
+Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(b){
+  b.addEventListener('click',function(){chartView=b.getAttribute('data-view');evolPage=0;evolSel=null;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(x){x.setAttribute('aria-pressed',x===b);});
+    renderChart(resolved());});
+});
+var rt,lastW=window.innerWidth;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(window.innerWidth===lastW)return;lastW=window.innerWidth;renderChart(resolved());if(tankReady&&!$('viewCuve').classList.contains('hidden'))renderTankChart(tankAnalyze());},150);});
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){renderChart(resolved());if(tankReady&&!$('viewCuve').classList.contains('hidden'))renderTankChart(tankAnalyze());});}
+
+// ---------- réglages ----------
+var REQ={sCop:'cop',sPci:'pci',sRend:'rend',sRendGaz:'rendGaz'};
+var OPT={sElec:'prixElec',sHP:'prixHP',sHC:'prixHC'};
+var elecModeUI='base', compsUI=[];
+function numStr(v){return v===null||v===undefined?'':String(v).replace('.',',');}
+function setElecMode(m){elecModeUI=m;$('elecBase').setAttribute('aria-pressed',m==='base');$('elecHphc').setAttribute('aria-pressed',m==='hphc');
+  $('boxBase').classList.toggle('hidden',m!=='base');$('boxHphc').classList.toggle('hidden',m!=='hphc');}
+// --- liste des comparaisons (brouillon d'interface, enregistré automatiquement) ---
+function readCompsUI(){
+  compsUI.forEach(function(c){var r=document.querySelector('#compList [data-cid="'+c.id+'"]');if(!r)return;
+    c.on=r.querySelector('.cOn').checked;c.label=r.querySelector('.cLabel').value;c.prixRaw=r.querySelector('.cPrix').value;});
+}
+function renderCompsUI(){setTimeout(renderEcsInfo,0); // libellé eau chaude selon fioul / gaz
+  $('compList').innerHTML=compsUI.map(function(c){
+    var nth=0;compsUI.some(function(x){if(x.type===c.type)nth++;return x.id===c.id;});
+    var gaz=c.type==='gaz', ph=gaz?'ex. 0,14':(nth===1?'ex. 1,90':nth===2?'ex. 1,40':'ex. 1,60');
+    var phN=gaz?'ex. Mon contrat gaz':(nth===1?'ex. Prix actuel':nth===2?'ex. Achat moins cher':'ex. Autre fournisseur');
+    return '<div class="comp'+(c.on?'':' off')+'" data-cid="'+esc(c.id)+'"><div class="comp-head">'+
+      '<label class="chk"><input type="checkbox" class="cOn"'+(c.on?' checked':'')+'> <span>'+(gaz?'🔵 Gaz ':'🛢️ Fioul ')+nth+'</span></label>'+
+      '<button class="icon-btn del cDel" type="button" aria-label="Supprimer '+(gaz?'Gaz ':'Fioul ')+nth+'">🗑️</button></div>'+
+      '<div class="settings-grid"><div><label class="sm" for="cl_'+esc(c.id)+'">Nom <span class="opt">(facultatif)</span></label><input type="text" class="cLabel" id="cl_'+esc(c.id)+'" maxlength="40" placeholder="'+phN+'" value="'+esc(c.label)+'"></div>'+
+      '<div><label class="sm" for="cp_'+esc(c.id)+'">Prix '+(gaz?'gaz (€/kWh)':'fioul (€/L)')+'</label><input type="text" class="cPrix" id="cp_'+esc(c.id)+'" inputmode="decimal" placeholder="'+ph+'" value="'+esc(c.prixRaw)+'"></div></div></div>';
+  }).join('')||'<p class="empty">Aucune comparaison : ajoute un prix fioul ou gaz.</p>';
+  $('btnAddFioul').disabled=$('btnAddGaz').disabled=compsUI.length>=MAX_COMPS;
+}
+function addComp(type){
+  readCompsUI();
+  if(compsUI.length>=MAX_COMPS){toast('Maximum '+MAX_COMPS+' comparaisons');return;}
+  var c={id:uid(),type:type,label:'',prixRaw:'',on:true};compsUI.push(c);renderCompsUI();
+  var i=document.getElementById('cp_'+c.id);if(i)i.focus();
+  scheduleSave(0);
+}
+$('btnAddFioul').addEventListener('click',function(){addComp('fioul');});
+$('btnAddGaz').addEventListener('click',function(){addComp('gaz');});
+$('compList').addEventListener('change',function(ev){if(ev.target.classList.contains('cOn')){var r=ev.target.closest('.comp');r.classList.toggle('off',!ev.target.checked);}});
+$('compList').addEventListener('click',function(ev){
+  var b=ev.target.closest('.cDel');if(!b)return;readCompsUI();
+  var id=b.closest('.comp').getAttribute('data-cid');
+  if(!confirm('Supprimer cette comparaison ? (Tes relevés ne sont pas touchés.)'))return;
+  compsUI=compsUI.filter(function(x){return x.id!==id;});renderCompsUI();scheduleSave(0);
+});
+// --- COP selon la température : brouillon d'interface ---
+var copModeUI='fixe', copPtsUI=[];
+function setCopMode(m){copModeUI=m;$('copFixe').setAttribute('aria-pressed',m==='fixe');$('copTemp').setAttribute('aria-pressed',m==='temp');
+  $('boxCopFixe').classList.toggle('hidden',m!=='fixe');$('boxCopTemp').classList.toggle('hidden',m!=='temp');}
+function readPtsUI(){Array.prototype.forEach.call(document.querySelectorAll('#copPtsTbl tr[data-i]'),function(r){var i=+r.getAttribute('data-i');if(copPtsUI[i]){copPtsUI[i].tRaw=r.querySelector('.pT').value;copPtsUI[i].cRaw=r.querySelector('.pC').value;}});}
+function renderPtsUI(){
+  $('copPtsTbl').innerHTML='<thead><tr><th>Temp. extérieure (°C)</th><th>COP</th><th></th></tr></thead><tbody>'+
+    (copPtsUI.length?copPtsUI.map(function(p,i){return '<tr data-i="'+i+'"><td><input type="text" inputmode="text" class="pT" aria-label="Température du point '+(i+1)+'" placeholder="ex. 7" value="'+esc(p.tRaw)+'"></td>'+
+      '<td><input type="text" inputmode="decimal" class="pC" aria-label="COP du point '+(i+1)+'" placeholder="ex. 3,5" value="'+esc(p.cRaw)+'"></td>'+
+      '<td><button class="icon-btn del pDel" type="button" aria-label="Supprimer le point '+(i+1)+'">🗑️</button></td></tr>';}).join('')
+    :'<tr><td colspan="3" class="empty" style="text-align:left;white-space:normal">Aucun point : ajoute-en (2 à 6) ou utilise le bouton Midea.</td></tr>')+'</tbody>';
+  $('btnAddPt').disabled=copPtsUI.length>=6;
+  updateCopPreview();
+}
+function renderMonthUI(){
+  var h='<thead><tr><th>Mois</th><th>T moy. (°C)</th><th>COP calculé</th><th>COP forcé</th></tr></thead><tbody>';
+  for(var m=0;m<12;m++)h+='<tr data-m="'+m+'"><td>'+MONTHS_AB[m]+'</td><td><input type="text" inputmode="text" class="mT" aria-label="Température moyenne '+MONTHS_FR[m]+'" value="'+esc(numStr(settings.tMonths[m]))+'"></td><td class="mc" id="mc'+m+'">—</td>'+
+    '<td><input type="text" inputmode="decimal" class="mO" aria-label="COP forcé '+MONTHS_FR[m]+'" placeholder="—" value="'+esc(numStr(settings.copOver[m]))+'"></td></tr>';
+  $('copMonthTbl').innerHTML=h+'</tbody>';
+}
+function uiPts(){readPtsUI();var a=[];copPtsUI.forEach(function(p){var t=parseNum(p.tRaw),c=parseNum(p.cRaw);if(isFinite(t)&&c>0)a.push({t:t,cop:c});});return a;}
+function updateCopPreview(){
+  var pts=uiPts(), corr=parseNum($('sCorr').value);if(!isFinite(corr)||corr<0)corr=0;
+  for(var m=0;m<12;m++){var cell=$('mc'+m);if(!cell)continue;var r=document.querySelector('#copMonthTbl tr[data-m="'+m+'"]');
+    var t=parseNum(r.querySelector('.mT').value), o=parseNum(r.querySelector('.mO').value), c=(pts.length>=2&&isFinite(t))?copInterp(t,pts,corr):null;
+    cell.textContent=c===null?'—':nf2.format(c);cell.classList.toggle('forced',o>0&&c!==null);}
+}
+function showTReal(){$('boxTReal').classList.toggle('hidden',!$('sTReal').checked);}
+$('copFixe').addEventListener('click',function(){setCopMode('fixe');scheduleSave(0);});
+$('copTemp').addEventListener('click',function(){setCopMode('temp');scheduleSave(0);});
+$('btnAddPt').addEventListener('click',function(){readPtsUI();if(copPtsUI.length>=6){toast('6 points maximum');return;}copPtsUI.push({tRaw:'',cRaw:''});renderPtsUI();
+  var r=document.querySelectorAll('#copPtsTbl .pT');if(r.length)r[r.length-1].focus();});
+$('copPtsTbl').addEventListener('click',function(ev){var b=ev.target.closest('.pDel');if(!b)return;readPtsUI();copPtsUI.splice(+b.closest('tr').getAttribute('data-i'),1);renderPtsUI();scheduleSave(0);});
+$('copPtsTbl').addEventListener('input',updateCopPreview);
+$('copMonthTbl').addEventListener('input',updateCopPreview);
+$('sCorr').addEventListener('input',updateCopPreview);
+$('btnMidea').addEventListener('click',function(){
+  readPtsUI();var hasData=copPtsUI.some(function(p){return String(p.tRaw).trim()!==''||String(p.cRaw).trim()!=='';});
+  if((hasData||$('sCorr').value.trim()!=='')&&!confirm('Remplacer tes points et ton % de correction par ceux de la Midea PortaSplit ?'))return;
+  copPtsUI=MIDEA_PTS.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});$('sCorr').value=numStr(MIDEA_CORR);renderPtsUI();
+  scheduleSave(0);});
+$('btnMetz').addEventListener('click',function(){
+  Array.prototype.forEach.call(document.querySelectorAll('#copMonthTbl tr[data-m]'),function(r){r.querySelector('.mT').value=numStr(METZ_TNORM[+r.getAttribute('data-m')]);});
+  updateCopPreview();scheduleSave(0);});
+$('sTReal').addEventListener('change',showTReal);
+$('btnGeo').addEventListener('click',function(){
+  if(!navigator.geolocation){toast('Position indisponible sur cet appareil');return;}
+  navigator.geolocation.getCurrentPosition(function(p){$('sLat').value=numStr(Math.round(p.coords.latitude*100)/100);$('sLon').value=numStr(Math.round(p.coords.longitude*100)/100);scheduleSave(0);},
+    function(){toast('Position refusée ou indisponible : tape-la à la main');},{timeout:10000});});
+$('btnTFetch').addEventListener('click',function(){
+  flushSave();if(!locOf(settings)){toast('Mets la latitude et la longitude');return;}
+  if(!settings.tReal&&!showTemp){toast('Active « Températures réelles » (COP) ou la courbe 🌡️ Température d\'un graphique');return;}
+  fetchTemps(true);});
+function fillSettings(){
+  Object.keys(REQ).forEach(function(id){$(id).value=numStr(settings[REQ[id]]);});
+  Object.keys(OPT).forEach(function(id){$(id).value=numStr(settings[OPT[id]]);});
+  $('sPct').value=numStr(settings.pctHC);
+  compsUI=settings.comps.map(function(c){return {id:c.id,type:c.type,label:c.label,prixRaw:numStr(c.prix),on:c.on};});renderCompsUI();
+  setElecMode(settings.elecMode);
+  setCopMode(settings.copMode);
+  copPtsUI=settings.copPts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});
+  $('sCorr').value=numStr(settings.copCorr);
+  renderMonthUI();renderPtsUI();
+  $('sTReal').checked=settings.tReal;$('sLat').value=numStr(settings.lat);$('sLon').value=numStr(settings.lon);showTReal();
+  $('sPacPrix').value=numStr(settings.pacPrix);$('sPacAides').value=numStr(settings.pacAides);$('sPacEnt').value=numStr(settings.pacEnt);$('sPacKw').value=numStr(settings.pacKw);renderPacKwLimit();
+  $('sEcsOn').checked=settings.ecsOn;$('sEcsPers').value=numStr(settings.ecsPers);$('sEcsKwh').value=numStr(settings.ecsKwh);renderEcsInfo();$('sPacDate').value=settings.pacDate||'';
+  setTempStatus(tempStatus);
+}
+function labelOf(id){return $(id).previousElementSibling?$(id).previousElementSibling.textContent:id;}
+$('elecBase').addEventListener('click',function(){setElecMode('base');scheduleSave(0);});
+$('elecHphc').addEventListener('click',function(){setElecMode('hphc');scheduleSave(0);});
+$('btnPct').addEventListener('click',function(){$('sPct').value=numStr(HC_SUGGEST);scheduleSave(0);});
+function collectSettings(){ // mêmes règles qu'avant (bouton « Enregistrer »), renvoie {err} ou {s}
+  var n=Object.assign({},settings),id,v,raw;
+  for(id in REQ){v=parseNum($(id).value);if(isNaN(v)||v<=0)return {err:'Valeur invalide : '+labelOf(id),el:id};n[REQ[id]]=v;}
+  if(n.rend>100||n.rendGaz>100)return {err:'Le rendement doit être ≤ 100 %'};
+  for(id in OPT){raw=$(id).value.trim();if(raw===''){n[OPT[id]]=null;continue;}v=parseNum(raw);if(isNaN(v)||v<=0)return {err:'Valeur invalide : '+labelOf(id),el:id};n[OPT[id]]=v;}
+  raw=$('sPct').value.trim();if(raw===''){n.pctHC=null;}else{v=parseNum(raw.replace('%',''));if(isNaN(v)||v<0||v>100)return {err:'% heures creuses : entre 0 et 100',el:'sPct'};n.pctHC=v;}
+  readCompsUI();var comps=[],bad=null;
+  compsUI.forEach(function(c){var r=String(c.prixRaw||'').trim(),pv=null;if(r!==''){pv=parseNum(r);if(isNaN(pv)||pv<=0){if(!bad)bad=c;return;}}
+    comps.push({id:c.id,type:c.type,label:String(c.label||'').trim().slice(0,40),prix:pv,on:!!c.on});});
+  if(bad)return {err:'Prix invalide pour '+(bad.type==='gaz'?'un prix gaz':'un prix fioul')+' (ex. 1,90)',el:'cp_'+bad.id};
+  if(!comps.some(function(c){return c.on;}))return {err:'Coche au moins une comparaison (fioul ou gaz)'};
+  n.comps=comps;n.elecMode=elecModeUI;
+  // --- COP selon la température ---
+  var strict=copModeUI==='temp', pts=[], badPt=false;
+  readPtsUI();
+  copPtsUI.forEach(function(p){var tr=String(p.tRaw).trim(),cr=String(p.cRaw).trim();if(tr===''&&cr==='')return;
+    var t=parseNum(tr),c=parseNum(cr);if(!isFinite(t)||t<-50||t>50||!(c>0)||c>20){badPt=true;return;}pts.push({t:t,cop:c});});
+  pts.sort(function(a,b){return a.t-b.t;});
+  var dup=pts.some(function(p,i){return i&&p.t===pts[i-1].t;});
+  if(strict){
+    if(badPt)return {err:'Point de COP invalide (ex. 7 °C → 3,5)'};
+    if(pts.length<2||pts.length>6)return {err:'COP selon la température : mets de 2 à 6 points'};
+    if(dup)return {err:'Deux points ont la même température'};
+  } else if(badPt||dup) pts=settings.copPts.slice();
+  n.copPts=pts.slice(0,6);
+  raw=$('sCorr').value.trim().replace('%','');
+  if(raw===''){n.copCorr=null;}else{v=parseNum(raw);if(isNaN(v)||v<0||v>=90){if(strict)return {err:'% de correction : entre 0 et 89',el:'sCorr'};v=settings.copCorr;}n.copCorr=v;}
+  var tM=[],cO=[],badM=null;
+  Array.prototype.forEach.call(document.querySelectorAll('#copMonthTbl tr[data-m]'),function(r){var m=+r.getAttribute('data-m');
+    var a=r.querySelector('.mT').value.trim(), b=r.querySelector('.mO').value.trim(), ta=null, ob=null;
+    if(a!==''){ta=parseNum(a);if(!isFinite(ta)||ta<-50||ta>50){if(badM===null)badM='Température invalide en '+MONTHS_FR[m];ta=settings.tMonths[m];}}
+    if(b!==''){ob=parseNum(b);if(!(ob>=1)||ob>20){if(badM===null)badM='COP forcé invalide en '+MONTHS_FR[m]+' (entre 1 et 20)';ob=settings.copOver[m];}}
+    tM[m]=ta;cO[m]=ob;});
+  if(strict&&badM)return {err:badM};
+  n.tMonths=tM;n.copOver=cO;
+  n.tReal=$('sTReal').checked;
+  var la=$('sLat').value.trim(), lo=$('sLon').value.trim();
+  n.lat=la===''?null:parseNum(la);n.lon=lo===''?null:parseNum(lo);
+  if(n.lat!==null&&(!isFinite(n.lat)||n.lat<-90||n.lat>90)){if(true)return {err:'Latitude invalide (ex. 49,12)',el:'sLat'};n.lat=settings.lat;}
+  if(n.lon!==null&&(!isFinite(n.lon)||n.lon<-180||n.lon>180)){if(true)return {err:'Longitude invalide (ex. 6,18)',el:'sLon'};n.lon=settings.lon;}
+  if(strict&&n.tReal&&(n.lat===null||n.lon===null))return {err:'Températures réelles : mets la latitude et la longitude'};
+  if(strict&&!n.tReal&&tM.some(function(t,m){return t===null&&cO[m]===null;}))return {err:'Remplis la température de chaque mois (ou le bouton « Normales Metz »)'};
+  n.copMode=copModeUI;
+  // Rentabilité (facultatif)
+  raw=$('sPacPrix').value.trim().replace('€','');if(raw===''){n.pacPrix=null;}else{v=parseNum(raw);if(!(v>0))return {err:'Prix de la PAC invalide (ex. 1500)',el:'sPacPrix'};n.pacPrix=v;}
+  raw=$('sPacAides').value.trim().replace('€','');if(raw===''){n.pacAides=null;}else{v=parseNum(raw);if(!(v>=0))return {err:'Aides invalides (ex. 300)',el:'sPacAides'};n.pacAides=v;}
+  raw=$('sPacEnt').value.trim().replace('€','');if(raw===''){n.pacEnt=null;}else{v=parseNum(raw);if(!(v>=0))return {err:'Entretien invalide (ex. 100)',el:'sPacEnt'};n.pacEnt=v;}
+  raw=$('sPacDate').value;n.pacDate=/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw:null;
+  n.ecsOn=$('sEcsOn').checked;
+  raw=$('sEcsPers').value.trim();if(raw===''){n.ecsPers=null;}else{v=parseNum(raw);if(!(v>=1&&v<=30))return {err:'Nombre de personnes invalide (ex. 2)',el:'sEcsPers'};n.ecsPers=v;}
+  raw=$('sEcsKwh').value.trim();if(raw===''){n.ecsKwh=DEFAULTS.ecsKwh;}else{v=parseNum(raw);if(!(v>0&&v<=20000))return {err:'Consommation d\'eau chaude invalide (ex. 800)',el:'sEcsKwh'};n.ecsKwh=v;}
+  raw=$('sPacKw').value.trim().replace(/kw/i,'');if(raw===''){n.pacKw=null;}else{v=parseNum(raw);if(!(v>0&&v<=30))return {err:'Puissance électrique invalide (ex. 1 ou 0,8)',el:'sPacKw'};n.pacKw=v;}
+  return {s:n};
+}
+var saveT=null;
+function setSpStatus(t,err){var el=$('spStatus');el.textContent=t||'';el.classList.toggle('hidden',!t);el.classList.toggle('err',!!err);}
+function trySaveSettings(){
+  clearTimeout(saveT);saveT=null;
+  var r=collectSettings();
+  if(r.err){setSpStatus('⚠️ Pas encore enregistré : '+r.err,true);return r;}
+  if(JSON.stringify(r.s)===JSON.stringify(settings)){if($('spStatus').classList.contains('err'))setSpStatus('');return r;}
+  settings=r.s;save(KEY_SET,settings);renderAll();updateCopPreview();setSpStatus('✓ Enregistré');toast('Enregistré',1200);
+  if((settings.copMode==='temp'&&settings.tReal)||showTemp)fetchTemps(false);
+  return r;
+}
+function scheduleSave(ms){clearTimeout(saveT);saveT=setTimeout(trySaveSettings,ms||0);}
+function flushSave(){var r=trySaveSettings();if(r&&!r.err)r=null;if(tankT||!$('tkStatus').classList.contains('hidden')){clearTimeout(tankT);tankT=null;r=trySaveTank()||r;}return r;}
+
+$('btnResetSettings').addEventListener('click',function(){
+  if(!confirm('Remettre COP fixe 3, PCI 10, rendement fioul 85 %, rendement gaz 90 % et électricité Base 0,2001 €/kWh ? Tes comparaisons (prix et noms) et tes points de COP / températures sont conservés.'))return;
+  settings=Object.assign({},settings,{copMode:'fixe',cop:DEFAULTS.cop,pci:DEFAULTS.pci,rend:DEFAULTS.rend,rendGaz:DEFAULTS.rendGaz,elecMode:'base',prixElec:DEFAULTS.prixElec});
+  clearTimeout(saveT);saveT=null;save(KEY_SET,settings);fillSettings();setSpStatus('');renderAll();toast('Valeurs par défaut remises');
+});
+
+// ---------- export / import ----------
+$('btnExport').addEventListener('click',function(){
+  var data={app:'suivi-pac-fioul',version:5,exportedAt:new Date().toISOString(),settings:settings,entries:entries,tank:{settings:tank,readings:tankReads}};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='suivi-pac-fioul-'+todayIso()+'.json';
+  document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
+  toast('Sauvegarde exportée');
+});
+$('btnImport').addEventListener('click',function(){$('fileImport').click();});
+$('fileImport').addEventListener('change',function(){
+  var f=this.files[0]; if(!f)return; var input=this;
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var d=JSON.parse(rd.result);
+      if(!d||!Array.isArray(d.entries))throw new Error('format');
+      var clean=d.entries.filter(function(e){return e&&/^\d{4}-\d{2}-\d{2}$/.test(e.date)&&(typeof e.kwh==='number'||typeof e.index==='number');})
+        .map(function(e){var n={id:String(e.id||uid()),created:+e.created||Date.now(),date:e.date,note:String(e.note||'')};if(typeof e.index==='number')n.index=e.index;else n.kwh=e.kwh;return n;});
+      var hasTank=!!(d.tank&&typeof d.tank==='object'), tkClean=hasTank?normalizeTankReadings(d.tank.readings):null;
+      if(!confirm('Importer '+clean.length+' relevé(s) ? Ils remplaceront les '+entries.length+' relevé(s) actuels de ce navigateur.'+
+        (hasTank?'\nCuve : '+tkClean.length+' relevé(s) de cuve remplaceront les '+tankReads.length+' actuels.':'\n(Ancienne sauvegarde sans cuve : tes réglages et relevés de cuve actuels sont conservés.)')))return;
+      entries=clean;save(KEY_DATA,entries);save(KEY_WELCOME,true);
+      if(d.settings&&typeof d.settings==='object'){settings=normalizeSettings(d.settings);save(KEY_SET,settings);fillSettings();}
+      if(hasTank){tank=normalizeTank(d.tank.settings);tankReads=tkClean;save(KEY_TANK,tank);save(KEY_TREAD,tankReads);fillTank();resetTankForm();}
+      resetForm();renderAll();toast('Import réussi ✅');
+    }catch(e){toast('Fichier invalide : ce n\'est pas une sauvegarde de cette appli');}
+    finally{input.value='';}
+  };
+  rd.readAsText(f);
+});
+
+// ---------- simulateur (calcul inverse, n'enregistre rien) ----------
+var simType='fioul', simCompSel=null, simReady=false, simCopSel='fixe', simPreset='neu';
+// Scénarios : facteur appliqué au COP de base (COP fixe ou COP du mois, courbe Midea « réaliste » déjà corrigée = Neutre).
+var SIM_PRESETS={fav:{f:1.2,name:'Favorable'},neu:{f:1,name:'Neutre'},def:{f:0.8,name:'Défavorable'}};
+function simCopFill(){
+  var sel=$('simCop'), ok=tempReady(), h='<option value="fixe">COP fixe des réglages ('+nf2.format(settings.cop)+')</option>';
+  if(ok)for(var m=0;m<12;m++){var c=monthCop(m);if(c!==null)h+='<option value="'+m+'">COP de '+MONTHS_FR[m]+' ('+nf2.format(c)+')</option>';}
+  sel.innerHTML=h;
+  if(!sel.querySelector('option[value="'+simCopSel+'"]'))simCopSel='fixe';
+  sel.value=simCopSel;
+  sel.classList.toggle('hidden',!ok);
+  $('simCopHint').textContent='Favorable = COP ×1,2 · Neutre = COP '+(ok?'des réglages ou du mois choisi':'des réglages')+' · Défavorable = ×0,8. Ou tape directement le COP voulu.'+(ok?'':' (COP par mois : « COP selon la température » dans ⚙️ Réglages.)');
+}
+function simCopBase(){return simCopSel==='fixe'?settings.cop:(monthCop(+simCopSel)||settings.cop);}
+function simCopTyped(){var v=parseNum($('simCopIn').value);return (isFinite(v)&&v>=1&&v<=10)?v:null;}
+function simCop(){return simPreset?Math.round(simCopBase()*SIM_PRESETS[simPreset].f*100)/100:simCopTyped();}
+function renderSimPresets(){Array.prototype.forEach.call(document.querySelectorAll('[data-simp]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-simp')===simPreset);});
+  if(simPreset)$('simCopIn').value=nfCop.format(simCop());}
+var nfCop=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:2});
+// v19 : eau chaude produite par l'ancienne chaudière (chaleur utile, kWh/an)
+function ecsYear(s){s=s||settings;return (s.ecsOn&&s.ecsPers>0&&s.ecsKwh>0)?s.ecsPers*s.ecsKwh:0;}
+function ecsTypesLabel(comps){var f=comps.some(function(c){return c.type==='fioul';}),g=comps.some(function(c){return c.type==='gaz';});
+  return f&&g?'Le fioul ou le gaz':(g?'Le gaz':'Le fioul');}
+function renderEcsInfo(){
+  var on=$('sEcsOn').checked,pers=parseNum($('sEcsPers').value),kr=$('sEcsKwh').value.trim(),k=kr===''?DEFAULTS.ecsKwh:parseNum(kr),info=$('ecsInfo');
+  readCompsUI();var comps=compsUI.length?compsUI:settings.comps,hasF=comps.some(function(c){return c.type==='fioul';}),hasG=comps.some(function(c){return c.type==='gaz';});if(!hasF&&!hasG)hasF=true;
+  $('sEcsLab').textContent=ecsTypesLabel(comps)+' chauffe aussi l\'eau chaude';
+  $('ecsFields').classList.toggle('hidden',!on);$('ecsAvg').classList.toggle('hidden',!on);info.classList.toggle('hidden',!on);if(!on){info.innerHTML='';return;}
+  if(!(pers>=1&&pers<=30)||!(k>0)){info.innerHTML='Renseigne le nombre de personnes pour calculer la part eau chaude.';return;}
+  var pci=parseNum($('sPci').value),rend=parseNum($('sRend').value),rg=parseNum($('sRendGaz').value);
+  if(!(pci>0))pci=settings.pci;if(!(rend>0&&rend<=100))rend=settings.rend;if(!(rg>0&&rg<=100))rg=settings.rendGaz;
+  var heat=pers*k,L=heat/(pci*rend/100),G=heat/(rg/100),h='Part eau chaude : '+nf0.format(pers)+' pers. × '+nf0.format(k)+' = <b>'+nf0.format(heat)+' kWh/an</b> de chaleur';
+  if(hasF)h+='<br>≈ <b>'+nf0.format(L)+' L de fioul/an</b> (≈ '+nf2.format(L/365)+' L/j ; PCI '+nfN.format(pci)+' kWh/L, rendement '+nfN.format(rend)+' %)';
+  if(hasG)h+='<br>≈ <b>'+nf0.format(G)+' kWh de gaz/an</b> (≈ '+nf0.format(G/10.5)+' m³ ; rendement '+nfN.format(rg)+' %)';
+  var a=null;try{a=tankAnalyze();}catch(e){}
+  if(hasF&&a&&a.rate>0){var ch=a.rate-L/365;h+='<br>Ta cuve (relevés récents) : '+nf2.format(a.rate)+' L/j → <b>chauffage seul ≈ '+nf2.format(Math.max(0,ch))+' L/j</b>'+(ch<=0?' (tout part dans l\'eau chaude : vérifie les chiffres)':'');}
+  h+='<br>Dans le Simulateur, cette part est retirée de la consommation : il reste le chauffage seul.';
+  info.innerHTML=h;
+}
+function simCompute(type,qty,prix,s,cop,ecsHeat){
+  s=s||settings;
+  var tot=type==='gaz'?qty*s.rendGaz/100:qty*s.pci*s.rend/100;
+  // eau chaude : reste à la chaudière ; seule la part chauffage est remplacée par la PAC (et évitée)
+  var ecsH=(ecsHeat>0&&tot>0)?Math.min(ecsHeat,tot):0, qEcs=tot>0?qty*ecsH/tot:0, qCh=qty-qEcs, chaleur=tot-ecsH;
+  var kwhPac=chaleur/((cop!==null&&cop!==undefined&&cop>0)?cop:s.cop), pe=elecPrice(s);
+  var coutComb=(prix===null||prix===undefined)?null:qCh*prix, coutElec=pe===null?null:kwhPac*pe;
+  return {chaleur:chaleur,chaleurTot:tot,ecsH:ecsH,qEcs:qEcs,qCh:qCh,ecsAll:ecsHeat>0&&ecsHeat>=tot,kwhPac:kwhPac,pe:pe,coutComb:coutComb,coutElec:coutElec,eco:(coutComb===null||coutElec===null)?null:coutComb-coutElec};
+}
+function simComps(){return settings.comps.filter(function(c){return c.type===simType&&c.prix!==null;});}
+function simFillOptions(keepPrice){
+  var list=simComps(), sel=$('simComp'), unit=simType==='gaz'?' €/kWh':' €/L';
+  if(simCompSel!=='manual'&&!list.some(function(c){return c.id===simCompSel;})){
+    var first=list.filter(function(c){return c.on;})[0];
+    simCompSel=first?first.id:'manual'; keepPrice=false;
+  }
+  sel.innerHTML=list.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(compName(c))+' : '+nfN.format(c.prix)+unit+(c.on?'':' (non cochée)')+'</option>';}).join('')+
+    '<option value="manual">Autre prix (saisi ci-dessous)</option>';
+  sel.value=simCompSel;
+  if(!keepPrice||simCompSel!=='manual'){var c=list.filter(function(x){return x.id===simCompSel;})[0];$('simPrix').value=c?numStr(c.prix):'';}
+  $('simPrixHint').textContent=list.length?'Le prix sert seulement à cette simulation : il ne modifie pas tes réglages.':'Aucun prix '+(simType==='gaz'?'gaz':'fioul')+' dans tes réglages : tape un prix pour cette simulation (il ne sera pas enregistré).';
+}
+function setSimType(t){
+  simType=t;simCompSel=null;
+  $('simFioul').setAttribute('aria-pressed',t==='fioul');$('simGaz').setAttribute('aria-pressed',t==='gaz');
+  $('simQtyLabel').textContent=t==='gaz'?'Consommation de gaz (kWh)':'Consommation de fioul (litres)';
+  $('simQty').placeholder=t==='gaz'?'ex. 5000':'ex. 500';
+  $('simPrixLabel').textContent=t==='gaz'?'Prix du gaz (€/kWh)':'Prix du fioul (€/L)';
+  $('simPrix').placeholder=t==='gaz'?'ex. 0,12':'ex. 1,90';
+  simFillOptions(false);renderSim();
+}
+function renderSim(){
+  var s=settings, gaz=simType==='gaz', pe=elecPrice(s);
+  simCopFill();var sc=simCop();renderSimPresets();
+  var copLab=sc===null?'<b>COP à saisir</b>':'COP '+nfCop.format(sc)+' ('+(simPreset?SIM_PRESETS[simPreset].name+(simCopSel==='fixe'?'':', '+MONTHS_FR[+simCopSel]):'saisi')+')';
+  $('simParams').innerHTML='Réglages utilisés : '+copLab+' · '+(gaz?'rendement chaudière gaz '+nfN.format(s.rendGaz)+' %':'PCI '+nfN.format(s.pci)+' kWh/L · rendement chaudière fioul '+nfN.format(s.rend)+' %')+
+    ' · électricité '+(pe===null?'<b>prix à renseigner</b>':nfN.format(pe)+' €/kWh'+(s.elecMode==='hphc'?' (moyenne HP/HC)':' (Base)'))+
+    ' — <button type="button" class="linkbtn" id="simGoSettings">modifier dans ⚙️ Réglages</button>';
+  var qty=parseNum($('simQty').value), raw=$('simPrix').value.trim(), prix=raw===''?null:parseNum(raw), out=$('simOut'), fo=$('simFormula');
+  var ey=ecsYear(s),mo=parseNum($('simEcsMois').value),moOk=mo>0&&mo<=24,ecsHeat=ey>0&&moOk?ey*mo/12:0;
+  $('simEcsBox').classList.toggle('hidden',!ey);
+  if(ey)$('simEcsHint').innerHTML=moOk?'Eau chaude faite par la chaudière (réglage) : '+nf0.format(s.ecsPers)+' pers. × '+nf0.format(s.ecsKwh)+' kWh/an × '+nfN.format(mo)+'/12 = <b>'+nf0.format(ecsHeat)+' kWh</b> de chaleur, retirés de cette consommation.':'⚠️ Durée invalide (entre 1 et 24 mois) : eau chaude non retirée.';
+  if(sc===null){out.innerHTML='<div class="preview warn">⚠️ COP invalide : tape un nombre entre 1 et 10 (ex. 3,2) ou choisis Favorable / Neutre / Défavorable.</div>';fo.innerHTML='';return;}
+  if(isNaN(qty)||qty<=0){
+    out.innerHTML=raw!==''&&(isNaN(prix)||prix<=0)?'<div class="preview warn">⚠️ Prix invalide (ex. '+(gaz?'0,12':'1,90')+').</div>':'';
+    fo.innerHTML='<b>Calcul</b><br>Chaleur utile = '+(gaz?'kWh de gaz × rendement gaz':'litres × PCI ('+nfN.format(s.pci)+' kWh/L) × rendement fioul')+'<br>kWh élec PAC = chaleur utile ÷ COP<br>Économie = coût '+(gaz?'du gaz':'du fioul')+' − coût élec PAC';
+    if(!out.innerHTML)out.innerHTML='<p class="empty">Entre une consommation pour voir le résultat.</p>';return;
+  }
+  if(prix!==null&&(isNaN(prix)||prix<=0)){out.innerHTML='<div class="preview warn">⚠️ Prix invalide (ex. '+(gaz?'0,12':'1,90')+').</div>';prix=null;}else out.innerHTML='';
+  var r=simCompute(simType,qty,prix,s,sc,ecsHeat), period=$('simPeriod').value.trim(), ecs=r.ecsH>0, uq=gaz?' kWh':' L';
+  var miss=function(t){return '<b class="miss">'+t+'</b>';};
+  out.innerHTML+=(period?'<p class="hint" style="margin:12px 0 0">📅 '+esc(period)+'</p>':'')+'<div class="simres">'+
+    '<div class="r"><span>Consommation '+(gaz?'gaz':'fioul')+'</span><b>'+nf2.format(qty)+(gaz?' kWh':' L')+'</b></div>'+
+    (ecs?'<div class="r"><span>💧 dont eau chaude (reste à la chaudière)</span><b id="simEcsQty">'+nf2.format(r.qEcs)+uq+'</b></div>'+
+      '<div class="r"><span>Chauffage seul</span><b id="simChQty">'+nf2.format(r.qCh)+uq+'</b></div>':'')+
+    '<div class="r"><span>Chaleur utile'+(ecs?' chauffage':'')+'</span><b id="simChaleur">'+nf2.format(r.chaleur)+' kWh</b></div>'+
+    '<div class="r"><span>Électricité PAC</span><b id="simPac">'+nf2.format(r.kwhPac)+' kWh</b></div>'+
+    '<div class="r"><span>Coût '+(gaz?'du gaz':'du fioul')+(ecs?' (chauffage)':'')+'</span>'+(r.coutComb===null?miss('— prix à saisir'):'<b id="simCoutComb">'+fE(r.coutComb)+'</b>')+'</div>'+
+    '<div class="r"><span>Coût électricité PAC</span>'+(r.coutElec===null?miss('— prix élec à renseigner'):'<b id="simCoutElec">'+fE(r.coutElec)+'</b>')+'</div>'+
+    '<div class="r total"><span>'+(r.eco!==null&&r.eco<0?'Surcoût avec PAC':'Économie avec PAC')+'</span>'+(r.eco===null?miss('—'):'<b id="simEco" class="'+(r.eco<0?'neg':'')+'">'+fE(r.eco)+'</b>')+'</div></div>'+
+    (r.ecsAll?'<div class="preview warn">⚠️ La part eau chaude dépasse cette consommation : vérifie la durée couverte ou le nombre de personnes.</div>':'');
+  fo.innerHTML='<b>Calcul</b><br>'+
+    'Chaleur utile = '+(gaz?nf2.format(qty)+' kWh × '+nfN.format(s.rendGaz)+' %':nf2.format(qty)+' L × '+nfN.format(s.pci)+' kWh/L × '+nfN.format(s.rend)+' %')+' = <b>'+nf2.format(r.chaleurTot)+' kWh</b><br>'+
+    (ecs?'Chaleur chauffage = '+nf2.format(r.chaleurTot)+' − '+nf2.format(r.ecsH)+' kWh d\'eau chaude = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qCh)+uq+' de '+(gaz?'gaz':'fioul')+')<br>':'')+
+    'kWh élec PAC = '+nf2.format(r.chaleur)+' ÷ COP '+nf2.format(sc)+' = <b>'+nf2.format(r.kwhPac)+' kWh</b><br>'+
+    (r.coutComb===null?'':'Coût '+(gaz?'gaz':'fioul')+(ecs?' chauffage':'')+' = '+nf2.format(r.qCh)+(gaz?' kWh':' L')+' × '+nfN.format(prix)+(gaz?' €/kWh':' €/L')+' = <b>'+fE(r.coutComb)+'</b><br>')+
+    (r.coutElec===null?'':'Coût élec = '+nf2.format(r.kwhPac)+' kWh × '+nfN.format(r.pe)+' €/kWh = <b>'+fE(r.coutElec)+'</b><br>')+
+    (r.eco===null?'':'Économie = '+fE(r.coutComb)+' − '+fE(r.coutElec)+' = <b>'+fE(r.eco)+'</b>');
+}
+function showView(v){
+  $('tabsNav').style.setProperty('--ti',{suivi:0,cuve:1,sim:2}[v]||0);
+  [['suivi','viewSuivi','tabSuivi'],['sim','viewSim','tabSim'],['cuve','viewCuve','tabCuve']].forEach(function(x){
+    $(x[1]).classList.toggle('hidden',x[0]!==v);$(x[2]).setAttribute('aria-selected',x[0]===v);});
+  if(v==='sim'){simFillOptions(true);renderSim();} else if(v==='cuve'){renderTank();renderTankChart(tankAnalyze());} else renderChart(resolved());
+  window.scrollTo(0,0);
+}
+$('tabSuivi').addEventListener('click',function(){showView('suivi');});
+var spOpen=false;
+function openSettings(sec,focusId){
+  fillSettings();fillTank();setSpStatus('');$('tkStatus').classList.add('hidden');
+  if(sec)['secPac','secOld','secGen'].forEach(function(id){$(id).open=id===sec;});
+  var pg=$('settingsPage');pg.classList.remove('hidden');document.documentElement.classList.add('sp-open');spOpen=true;pg.scrollTop=0;$('btnGear').setAttribute('aria-expanded','true');
+  setTimeout(function(){var el=focusId&&$(focusId);
+    if(el){el.scrollIntoView({block:'center'});try{el.focus({preventScroll:true});}catch(e){}}
+    else if(sec){$(sec).scrollIntoView({block:'start'});pg.scrollTop=Math.max(0,pg.scrollTop-70);}
+    else $('btnSpClose').focus({preventScroll:true});},60);
+}
+function closeSettings(){
+  var r=flushSave();
+  if(r&&r.err)toast('⚠️ Pas enregistré : '+r.err);
+  $('settingsPage').classList.add('hidden');document.documentElement.classList.remove('sp-open');spOpen=false;$('btnGear').setAttribute('aria-expanded','false');
+}
+$('btnGear').addEventListener('click',function(){openSettings();});
+$('btnSpClose').addEventListener('click',closeSettings);
+document.addEventListener('keydown',function(ev){if(spOpen&&ev.key==='Escape')closeSettings();});
+// Enregistrement automatique : saisie (petit délai) ou changement (immédiat). Cuve et import à part.
+function autoTarget(t){return t&&t.closest&&!t.closest('#tankBox')&&t.id!=='fileImport'&&t.closest('#settingsPage');}
+$('settingsPage').addEventListener('input',function(ev){if(ev.target.closest('#tankBox')){scheduleTank(700);return;}if(autoTarget(ev.target))scheduleSave(700);});
+$('settingsPage').addEventListener('change',function(ev){if(ev.target.closest('#tankBox')){scheduleTank(0);return;}if(autoTarget(ev.target))scheduleSave(0);});
+$('tabSim').addEventListener('click',function(){showView('sim');});
+$('tabCuve').addEventListener('click',function(){showView('cuve');});
+$('simFioul').addEventListener('click',function(){setSimType('fioul');});
+$('simGaz').addEventListener('click',function(){setSimType('gaz');});
+$('simQty').addEventListener('input',renderSim);$('simPeriod').addEventListener('input',renderSim);
+$('simPrix').addEventListener('input',function(){
+  var c=simComps().filter(function(x){return x.id===simCompSel;})[0];
+  if(c&&parseNum(this.value)!==c.prix){simCompSel='manual';$('simComp').value='manual';}
+  renderSim();});
+$('sPacKw').addEventListener('input',renderPacKwLimit);
+$('simEcsMois').addEventListener('input',renderSim);
+['sEcsOn','sEcsPers','sEcsKwh','sPci','sRend','sRendGaz'].forEach(function(id){$(id).addEventListener('input',renderEcsInfo);$(id).addEventListener('change',renderEcsInfo);});
+$('compList').addEventListener('change',renderEcsInfo);
+$('simCop').addEventListener('change',function(){simCopSel=this.value;if(!simPreset)simPreset='neu';renderSim();});
+$('simPresets').addEventListener('click',function(ev){var b=ev.target.closest('[data-simp]');if(!b)return;simPreset=b.getAttribute('data-simp');renderSim();});
+$('simCopIn').addEventListener('input',function(){simPreset=null;renderSim();});
+$('simCopIn').addEventListener('focus',function(){try{this.setSelectionRange(0,this.value.length);}catch(e){}});
+$('simComp').addEventListener('change',function(){simCompSel=this.value;var c=simComps().filter(function(x){return x.id===simCompSel;})[0];if(c)$('simPrix').value=numStr(c.prix);renderSim();});
+$('simParams').addEventListener('click',function(ev){if(ev.target.id!=='simGoSettings')return;openSettings('secPac');});
+
+// ---------- cuve à fioul (niveau en cm → litres) ----------
+var KEY_TANK='pacFioul.tank.v1', KEY_TREAD='pacFioul.tankReadings.v1', RECENT_DAYS=60;
+var SHAPES={rect:{lab:'Rectangulaire (parallélépipède)',dims:['longueur','largeur','hauteur']},
+  hcyl:{lab:'Cylindre couché (horizontal)',dims:['diametre','longueur']},
+  vcyl:{lab:'Cylindre debout (vertical)',dims:['diametre','hauteur']}};
+var DIM_IDS={longueur:'tkLongueur',largeur:'tkLargeur',hauteur:'tkHauteur',diametre:'tkDiametre'};
+function normalizeTank(raw){
+  raw=(raw&&typeof raw==='object')?raw:{};
+  var t={shape:SHAPES[raw.shape]?raw.shape:''};
+  ['longueur','largeur','hauteur','diametre','capNom','reserve'].forEach(function(k){t[k]=posNum(raw[k]);});
+  return t;
+}
+function normalizeTankReadings(arr){
+  if(!Array.isArray(arr))return [];
+  return arr.filter(function(r){return r&&/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&
+      ((r.type==='niveau'&&typeof r.h==='number'&&isFinite(r.h)&&r.h>=0)||(r.type==='livraison'&&typeof r.litres==='number'&&isFinite(r.litres)&&r.litres>0));})
+    .map(function(r){var n={id:String(r.id||uid()),created:+r.created||Date.now(),date:r.date,type:r.type,note:String(r.note||'').slice(0,80)};
+      if(r.type==='niveau')n.h=r.h;else n.litres=r.litres;return n;});
+}
+var tank=normalizeTank(load(KEY_TANK,{})), tankReads=normalizeTankReadings(load(KEY_TREAD,[]));
+var KEY_CVIEW='pacFioul.consoView', KEY_CSPREAD='pacFioul.consoSpread';
+var tankMode='niveau', tankReady=false, tkEditId=null, consoView=load(KEY_CVIEW,'month')==='winter'?'winter':'month', consoWinter=null, winterPage=0, consoSpread=load(KEY_CSPREAD,'climat')==='uniform'?'uniform':'climat';
+
+// Géométrie : volume (L) pour une hauteur de fioul h (cm)
+function tankGeom(t){
+  t=t||tank; if(!t||!SHAPES[t.shape])return null;
+  if(SHAPES[t.shape].dims.some(function(k){return !(t[k]>0);}))return null;
+  var g={shape:t.shape}, vol;
+  if(t.shape==='rect'){g.maxH=t.hauteur;vol=function(h){return t.longueur*t.largeur*h/1000;};}
+  else if(t.shape==='vcyl'){var r=t.diametre/2;g.maxH=t.hauteur;vol=function(h){return Math.PI*r*r*h/1000;};}
+  else {var R=t.diametre/2;g.maxH=t.diametre;
+    vol=function(h){var a=R*R*Math.acos((R-h)/R)-(R-h)*Math.sqrt(Math.max(0,2*R*h-h*h));return a*t.longueur/1000;};}
+  g.vol=function(h){return vol(Math.min(Math.max(h,0),g.maxH));};
+  g.geomFull=g.vol(g.maxH);
+  var k=(t.capNom>0)?t.capNom/g.geomFull:1;
+  g.cap=g.geomFull*k; g.scaled=k!==1;
+  g.litres=function(h){return g.vol(h)*k;};
+  return g;
+}
+function tankSorted(){return tankReads.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0);});}
+function daysBetween(a,b){var x=parseIso(a),y=parseIso(b);return Math.round((Date.UTC(y.getFullYear(),y.getMonth(),y.getDate())-Date.UTC(x.getFullYear(),x.getMonth(),x.getDate()))/86400000);}
+function addDays(s,n){var d=parseIso(s);d.setDate(d.getDate()+Math.round(n));return iso(d);}
+function fioulPrice(){var fl=settings.comps.filter(function(x){return x.type==='fioul'&&x.prix!==null;}),c=fl.filter(function(x){return x.on;})[0]||fl[0];return c?{prix:c.prix,name:compName(c)}:null;}
+function tankAnalyze(){
+  var g=tankGeom(), rows=[], prev=null, deliv=0, delivList=[], intervals=[], total=0, totalDeliv=0;
+  tankSorted().forEach(function(r){
+    var x=Object.assign({},r);
+    if(r.type==='livraison'){deliv+=r.litres;totalDeliv+=r.litres;delivList.push(r);rows.push(x);return;}
+    x.l=g?g.litres(r.h):null; x.pct=g?x.l/g.cap*100:null; x.over=g?r.h>g.maxH+1e-9:false;
+    if(prev&&g){
+      var d=daysBetween(prev.date,r.date);
+      x.prevDate=prev.date;x.deliv=deliv;x.days=d;x.conso=prev.l+deliv-x.l;x.perDay=d>0?x.conso/d:null;x.neg=x.conso<-0.5;
+      intervals.push({from:prev.date,to:r.date,conso:x.conso,days:d,neg:x.neg});
+      if(!x.neg)total+=Math.max(0,x.conso);
+    }
+    prev=x;deliv=0;delivList=[];rows.push(x);
+  });
+  var a={g:g,rows:rows,last:prev,intervals:intervals,total:total,totalDeliv:totalDeliv,delivAfter:deliv,delivAfterList:delivList};
+  if(!g||!prev)return a;
+  // consommation moyenne récente : intervalles finissant dans les 60 derniers jours (hors anomalies)
+  var lim=addDays(prev.date,-RECENT_DAYS), sc=0, sd=0, ac=0, ad=0;
+  intervals.forEach(function(i){if(i.neg||i.days<=0)return;ac+=i.conso;ad+=i.days;if(i.to>lim){sc+=i.conso;sd+=i.days;}});
+  a.rate=sd>0?sc/sd:null; a.rateDays=sd; a.allRate=ad>0?ac/ad:null;
+  // niveau actuel : dernier relevé (+ livraisons notées après, moins la conso estimée jusqu'à la livraison)
+  var ref=prev.date, cur=prev.l;
+  if(deliv>0){var ld=delivList[delivList.length-1].date;ref=ld;
+    cur=Math.max(0,cur-(a.rate?a.rate*daysBetween(prev.date,ld):0))+deliv;cur=Math.min(g.cap,cur);a.estimated=true;}
+  a.ref=ref;a.cur=cur;a.curPct=cur/g.cap*100;
+  var res=tank.reserve; a.low=res!==null&&cur<=res;
+  if(a.rate&&a.rate>0){
+    a.daysLeft=cur/a.rate;a.emptyDate=addDays(ref,a.daysLeft);
+    if(res!==null&&cur>res){a.daysRes=(cur-res)/a.rate;a.resDate=addDays(ref,a.daysRes);}
+  }
+  return a;
+}
+function gaugeHtml(pct,low,resPct){
+  var p=Math.max(0,Math.min(100,pct));
+  return '<div class="gauge'+(low?' low':'')+'" role="img" aria-label="Remplissage '+nf0.format(pct)+' %"><i style="width:'+p.toFixed(1)+'%"></i>'+
+    (resPct!==null&&resPct>0&&resPct<100?'<b style="left:'+resPct.toFixed(1)+'%" title="Réserve basse"></b>':'')+'<span>'+nf0.format(pct)+' %</span></div>';
+}
+function resPctOf(g){return (g&&tank.reserve!==null)?tank.reserve/g.cap*100:null;}
+function fCm(x){return nfN.format(x)+' cm';}
+function fDays(n){return n<1?'moins d\'1 jour':'≈ '+nf0.format(n)+' jour'+(Math.round(n)>1?'s':'');}
+
+function renderTankStats(a){
+  var g=a.g, box=$('tankStats'), fp=fioulPrice();
+  $('tankBanner').classList.toggle('hidden',!!g);
+  if(!g){box.innerHTML='';return;}
+  if(!a.last){box.innerHTML='<div class="stat"><h3>Ma cuve</h3><div class="big">'+fL(g.cap)+' <span class="unit">de capacité</span></div><div class="row">'+esc(SHAPES[tank.shape].lab)+
+    '</div><div class="row">Ajoute un premier relevé de hauteur ci-dessous pour voir le niveau.</div></div>';return;}
+  var h='', totalRow='<div class="row">Depuis le premier relevé : <span id="tkTotal">'+fL(a.total)+' consommés</span>'+(fp&&a.total>0?' (≈ '+fE(a.total*fp.prix)+')':'')+'</div>';
+  h+='<div class="stat"><h3>Niveau actuel'+(a.estimated?' (estimé)':'')+'</h3><div class="big" id="tkCur">'+fL(a.cur)+'</div>'+
+    '<div class="row">sur '+fL(g.cap)+' · '+(a.estimated?'après la livraison du '+fDate(a.ref):'relevé du '+fDate(a.last.date)+' ('+fCm(a.last.h)+')')+'</div>'+
+    gaugeHtml(a.curPct,a.low,resPctOf(g))+(a.low?'<div class="row li-warn">⚠️ Sous la réserve basse ('+fL(tank.reserve)+') : pense à commander.</div>':'')+'</div>';
+  if(a.rate){
+    h+='<div class="stat"><h3>Consommation moyenne</h3><div class="big" id="tkRate">'+nf1.format(a.rate)+' <span class="unit">L / jour</span></div>'+
+      '<div class="row">≈ '+nf0.format(a.rate*30)+' L par mois · sur les '+nf0.format(a.rateDays)+' derniers jours mesurés</div>'+
+      (fp?'<div class="row">Coût ≈ <span class="eur">'+fE(a.rate*fp.prix)+'</span> / jour, <span class="eur">'+fE(a.rate*30*fp.prix)+'</span> / mois ('+esc(fp.name)+')</div>':'')+totalRow+'</div>';
+    h+='<div class="stat"><h3>Autonomie estimée</h3><div class="big" id="tkDays">'+fDays(a.daysLeft)+'</div>'+
+      '<div class="row">Cuve vide vers le <b>'+fDate(a.emptyDate)+'</b></div>'+
+      (tank.reserve!==null?(a.daysRes!=null?'<div class="row">Réserve basse ('+fL(tank.reserve)+') atteinte vers le <b id="tkResDate">'+fDate(a.resDate)+'</b> ('+fDays(a.daysRes)+')</div>':'<div class="row li-warn">Déjà sous la réserve basse</div>'):'')+
+      '</div>';
+  } else {
+    h+='<div class="stat"><h3>Consommation</h3><div class="big">—</div><div class="row">Il faut deux relevés de niveau à des dates différentes pour calculer la consommation et l\'autonomie.</div></div>';
+  }
+  box.innerHTML=h;
+}
+function renderTankList(a){
+  var ul=$('tankList'), fp=fioulPrice(), more=$('btnTankAll');
+  if(!a.rows.length){ul.innerHTML='<li class="empty" style="display:block">Aucun relevé de cuve pour l\'instant.</li>';more.classList.add('hidden');return;}
+  var rows=a.rows.slice().reverse();more.classList.toggle('hidden',rows.length<=LIST_N);more.textContent=tankAll?'Voir moins':'Voir tout ('+rows.length+')';
+  if(!tankAll)rows=rows.slice(0,LIST_N);
+  ul.innerHTML=rows.map(function(r){
+    var line,key='',sub='',warn=false,op=!!tkOpen[r.id];
+    if(r.type==='livraison'){
+      line='<span class="r-date">'+fDate(r.date)+'</span><span class="r-liv">🚚 +'+fL(r.litres)+'</span>';
+      key=fp?'≈ '+fE(r.litres*fp.prix):'livraison';
+      sub='<div class="li-sub">Livraison de '+fL(r.litres)+(fp?' · ≈ '+fE(r.litres*fp.prix)+' au prix '+esc(fp.name):'')+'</div>';
+    } else {
+      line='<span class="r-date">'+fDate(r.date)+'</span><span class="r-lvl">'+(r.l===null?fCm(r.h):fL(r.l))+'</span>';
+      key=(r.prevDate&&!r.neg&&r.perDay!==null)?nf1.format(r.perDay)+' L/j':(r.pct!==null?nf0.format(r.pct)+' %':'');
+      sub='<div class="li-sub">Niveau · hauteur '+fCm(r.h)+(r.pct!==null?' · '+nf0.format(r.pct)+' % de la cuve':'')+'</div>';
+      if(r.prevDate){
+        sub+='<div class="li-sub">Depuis le '+fDate(r.prevDate)+' : <b>'+fL(r.conso)+'</b> consommés en '+r.days+' j'+(r.perDay!==null&&!r.neg?' · '+nf1.format(r.perDay)+' L/jour':'')+
+          (r.deliv>0?' (livraison +'+fL(r.deliv)+' comptée)':'')+(fp&&!r.neg&&r.conso>0?' · ≈ '+fE(r.conso*fp.prix):'')+'</div>';
+        if(r.neg){warn=true;sub+='<div class="li-warn">⚠️ Le niveau a monté : une livraison manque ? (ajoute-la en « Livraison »)</div>';}
+      }
+      if(r.over){warn=true;sub+='<div class="li-warn">⚠️ Hauteur supérieure à la hauteur de la cuve</div>';}
+    }
+    return '<li class="rrow'+(op?' open':'')+(r.id===tkEditId?' editing':'')+'"><button type="button" class="r-line" data-ttoggle="'+esc(r.id)+'" aria-expanded="'+op+'">'+
+      line+'<span class="r-key">'+key+'</span>'+(warn?'<span aria-label="attention">⚠️</span>':'')+(r.note?'<span aria-label="note">📝</span>':'')+'<span class="r-chev" aria-hidden="true">▾</span></button>'+
+      '<div class="r-det'+(op?'':' hidden')+'">'+sub+(r.note?'<div class="li-note">📝 '+esc(r.note)+'</div>':'')+
+      '<div class="r-act"><button class="btn small" type="button" data-tedit="'+esc(r.id)+'">✏️ Modifier</button>'+
+      '<button class="btn small danger" type="button" data-tdel="'+esc(r.id)+'">🗑️ Supprimer</button></div></div></li>';
+  }).join('');
+}
+var tkOpen={};
+function renderLevelChart(a){
+  readColors();
+  var box=$('tankChart'), leg=$('tankLegend'), W=Math.max(300,Math.round(box.clientWidth||600)), H=Math.round(Math.min(300,Math.max(210,W*0.55)));
+  var L=50,R=12,T=14,B=34,pw=W-L-R,ph=H-T-B, g=a.g;
+  var pts=a.rows.filter(function(r){return r.type==='niveau';});
+  setXhair(box,null);
+  if(!g||!pts.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,g?'Le graphique apparaîtra après ton premier relevé':'Renseigne d\'abord ta cuve',{size:13}));leg.innerHTML='';return;}
+  var dates=a.rows.map(function(r){return parseIso(r.date).getTime();});
+  var t0=Math.min.apply(null,dates),t1=Math.max.apply(null,dates); if(t1===t0){t0-=86400000*3;t1+=86400000*3;}
+  var maxL=Math.max(g.cap,Math.max.apply(null,pts.map(function(p){return p.l;})));
+  var X=function(t){return L+pw*(t-t0)/(t1-t0);}, Y=function(v){return T+ph-ph*v/maxL;};
+  var s='',i;
+  for(i=0;i<=4;i++){var v=maxL*i/4,y=T+ph-ph*i/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="'+COL['--line']+'" stroke-width="1"/>'+txt(L-6,y+4,nf0.format(v)+' L',{anchor:'end'});}
+  var nt=pts.length===1&&a.rows.length===1?1:4;
+  for(i=0;i<nt;i++){var tt=nt===1?parseIso(pts[0].date).getTime():t0+(t1-t0)*i/(nt-1);var dd=new Date(tt);
+    s+=txt(nt===1?X(tt):Math.min(Math.max(X(tt),L+22),W-R-22),H-12,pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+'/'+String(dd.getFullYear()).slice(2));}
+  if(tank.reserve!==null&&tank.reserve<maxL){var yr=Y(tank.reserve).toFixed(1);
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yr+'" y2="'+yr+'" stroke="'+COL['--accent2']+'" stroke-width="1.5" stroke-dasharray="6 4"/>';}
+  a.rows.forEach(function(r){if(r.type!=='livraison')return;var x=X(parseIso(r.date).getTime()).toFixed(1);
+    s+='<line x1="'+x+'" x2="'+x+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="'+COL['--accent3']+'" stroke-width="1.5" stroke-dasharray="3 3"><title>'+fDate(r.date)+' : livraison +'+fL(r.litres)+'</title></line>';});
+  var path=pts.map(function(p,j){return (j?'L':'M')+X(parseIso(p.date).getTime()).toFixed(1)+' '+Y(p.l).toFixed(1);}).join('');
+  if(pts.length>1)s+='<path d="'+path+'L'+X(parseIso(pts[pts.length-1].date).getTime()).toFixed(1)+' '+(T+ph)+'L'+X(parseIso(pts[0].date).getTime()).toFixed(1)+' '+(T+ph)+'Z" fill="'+COL['--accent']+'" opacity=".12"/>';
+  s+='<path d="'+path+'" fill="none" stroke="'+COL['--accent']+'" stroke-width="2.5" stroke-linejoin="round"/>';
+  pts.forEach(function(p){s+='<circle cx="'+X(parseIso(p.date).getTime()).toFixed(1)+'" cy="'+Y(p.l).toFixed(1)+'" r="3.5" fill="'+COL['--accent']+'"><title>'+fDate(p.date)+' : '+fL(p.l)+' ('+fCm(p.h)+')</title></circle>';});
+  box.innerHTML=svgEl(W,H,s);
+  var liv={};a.rows.forEach(function(r){if(r.type==='livraison')liv[r.date]=(liv[r.date]||0)+r.litres;});
+  setXhair(box,{W:W,T:T,ph:ph,pts:pts.map(function(p){var it=[{lab:'Cuve',col:COL['--accent'],val:fL(p.l)+' · '+fCm(p.h),y:Y(p.l)},{lab:'Remplie à',col:COL['--accent'],val:nf0.format(100*p.l/g.cap)+' %',y:Y(p.l)}];
+    if(liv[p.date])it.push({lab:'Livraison',col:COL['--accent3'],val:'+'+fL(liv[p.date]),y:Y(p.l)});return {x:X(parseIso(p.date).getTime()),d:p.date,items:it};})});
+  leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres dans la cuve (capacité '+fL(g.cap)+')</span>'+
+    (a.rows.some(function(r){return r.type==='livraison';})?'<span><i style="background:'+COL['--accent3']+'"></i>Livraison</span>':'')+
+    (tank.reserve!==null?'<span><i style="background:'+COL['--accent2']+'"></i>Réserve basse '+fL(tank.reserve)+'</span>':'');
+}
+function renderTankChart(a){renderLevelChart(a);renderConsoChart(a);}
+// Consommation par période : chaque intervalle entre deux relevés de niveau est réparti à parts égales sur ses jours,
+// du jour du relevé précédent (inclus) au jour du relevé suivant (exclu). Ex. 25/08 → 05/09 = 11 jours : 7 en août, 4 en septembre.
+// Hiver AAAA = du 1er septembre AAAA au 31 août AAAA+1.
+function winterOf(day){var y=+day.slice(0,4),m=+day.slice(5,7);return m>=9?y:y-1;}
+// Répartition « Climat » : chaque jour reçoit un poids = DJU normal du mois / nombre de jours du mois,
+// avec un plancher de 0,5 par jour (eau chaude, veille : l'été n'est jamais à zéro).
+// Les litres d'un intervalle sont répartis au prorata de ces poids : le total de l'intervalle est conservé exactement.
+// DJU base 18 °C, normales 1991-2020, station Metz-Frescaty (57039001) — source : Météo-France, fiche climatologique
+// https://donneespubliques.meteofrance.fr/FichesClim/FICHECLIM_57039001.pdf (année : 2724,7 DJU)
+var DJU_METZ=[473.5,408,341.2,226.6,117.5,42.6,14.4,18.1,81,208.1,345.2,448.5], DJU_FLOOR=0.5;
+function djuWeight(d){var y=d.getFullYear(),m=d.getMonth(),n=new Date(y,m+1,0).getDate();return Math.max(DJU_METZ[m]/n,DJU_FLOOR);}
+// « Estimé » : litres venant d'un intervalle de plus de EST_GAP jours entre deux relevés de niveau consécutifs
+// (leur répartition entre les mois est une hypothèse, en Climat comme en Uniforme). Les autres litres sont « mesurés ».
+var EST_GAP=45;
+function consoByPeriod(a,view,mode){
+  var per={},est={},isEst=false;mode=mode||consoSpread;
+  function add(day,l){var k=view==='day'?day:view==='month'?day.slice(0,7):view==='winter'?String(winterOf(day)):day.slice(0,4);per[k]=(per[k]||0)+l;if(isEst)est[k]=(est[k]||0)+l;}
+  a.intervals.forEach(function(i){
+    if(i.neg||!(i.conso>0))return;
+    isEst=i.days>EST_GAP;
+    if(i.days<=0){add(i.to,i.conso);return;}
+    var d=parseIso(i.from),k;
+    if(mode==='uniform'){var q=i.conso/i.days;for(k=0;k<i.days;k++){add(iso(d),q);d.setDate(d.getDate()+1);}return;}
+    var ws=[],days=[],W=0;for(k=0;k<i.days;k++){var w=djuWeight(d);ws.push(w);days.push(iso(d));W+=w;d.setDate(d.getDate()+1);}
+    var done=0;for(k=0;k<days.length;k++){var part=k===days.length-1?i.conso-done:i.conso*ws[k]/W;done+=part;add(days[k],part);}
+  });
+  return Object.keys(per).sort().map(function(k){var o={k:k,l:per[k]};if(est[k])o.est=Math.min(est[k],per[k]);return o;});
+}
+var MONTHS_LONG=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+function winterSub(y){return 'sept. '+y+' – août '+(+y+1);}
+function winterRange(a){ // hivers disponibles (min..max) : hivers avec consommation + hiver du dernier relevé
+  var ys=consoByPeriod(a,'winter').map(function(x){return +x.k;});
+  if(a.last)ys.push(winterOf(a.last.date));
+  if(!ys.length)return null;
+  return {min:Math.min.apply(null,ys),max:Math.max.apply(null,ys),def:a.last?winterOf(a.last.date):Math.max.apply(null,ys)};
+}
+function consoData(a,fp){
+  // renvoie {rows:[{k,lab,short,l|null}], nav:{lab,sub,prev,next}, unit}
+  var r=winterRange(a);
+  if(consoView==='month'){
+    if(consoWinter===null||consoWinter<r.min||consoWinter>r.max)consoWinter=r.def;
+    var per={},pe={};consoByPeriod(a,'month').forEach(function(x){per[x.k]=x.l;pe[x.k]=x.est||0;});
+    var rows=[];for(var i=0;i<9;i++){var y=consoWinter+(i<4?0:1),m=(8+i)%12,k=y+'-'+pad(m+1);
+      rows.push({k:k,lab:MONTHS_LONG[m]+' '+y,short:MONTHS[m].replace('.',''),l:per[k]===undefined?null:per[k],est:pe[k]||0,from:k+'-01',to:(m===11?(y+1)+'-01':y+'-'+pad(m+2))+'-01'});}
+    var ys=consoWinter+1, sl=null, se=0;['06','07','08'].forEach(function(mm){var v=per[ys+'-'+mm];if(v!==undefined){sl=(sl||0)+v;se+=pe[ys+'-'+mm]||0;}});
+    rows.push({k:ys+'-ete',lab:'Été (juin–août) '+ys,short:'été',l:sl,est:se,summer:true,from:ys+'-06-01',to:ys+'-09-01'});
+    return {rows:rows,unit:'mois',head:'Mois',nav:{lab:'Saison '+consoWinter,sub:winterSub(consoWinter),prev:consoWinter>r.min,next:consoWinter<r.max}};
+  }
+  var all=consoByPeriod(a,'winter'), per2={}, pe2={};all.forEach(function(x){per2[x.k]=x.l;pe2[x.k]=x.est||0;});
+  var ys=[];for(var y2=r.min;y2<=r.max;y2++)ys.push(y2);
+  var pages=Math.max(1,Math.ceil(ys.length/10));winterPage=Math.min(Math.max(winterPage,0),pages-1);
+  var endI=ys.length-winterPage*10, sl=ys.slice(Math.max(0,endI-10),endI);
+  return {rows:sl.map(function(y){return {k:String(y),lab:'Saison '+y,sub:winterSub(y),short:String(y),l:per2[y]===undefined?null:per2[y],est:pe2[y]||0,from:y+'-09-01',to:(y+1)+'-06-01'};}),unit:'saison',head:'Saison',
+    nav:{lab:sl.length>1?'Saison '+sl[0]+' – '+sl[sl.length-1]:'Saison '+sl[0],sub:sl.length>1?'sept. '+sl[0]+' – août '+(sl[sl.length-1]+1):winterSub(sl[0]),prev:winterPage<pages-1,next:winterPage>0}};
+}
+function renderConsoChart(a){
+  readColors();
+  var box=$('consoChart'), leg=$('consoLegend'), tb=$('consoTable'), hint=$('consoHint'), fp=fioulPrice();
+  var W=Math.max(300,Math.round(box.clientWidth||600)), H=Math.round(Math.min(300,Math.max(210,W*0.55)));
+  var R0=fp?54:12,L=50,R=R0+(showTemp?26:0),T=18,B=34,pw=W-L-R,ph=H-T-B;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tview]'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-tview')===consoView);});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tspread]'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-tspread')===consoSpread);});
+  hint.innerHTML='❄️ Saison AAAA = du 1er septembre AAAA au 31 août AAAA+1 (ex. Saison 2022 = sept. 2022 → août 2023). '+
+    (fp?'💶 Euros = litres × '+nfN.format(fp.prix)+' €/L ('+esc(fp.name)+', prix actuel des réglages). ':'💶 Renseigne un prix de fioul dans ⚙️ Réglages pour voir aussi la consommation en euros. ')+
+    (consoView==='month'?'📅 Les mois affichés vont de septembre à mai ; ce qui est consommé de juin à août est regroupé sur la ligne « Été » et compté dans le total de la saison. ':'')+
+    '(Répartition : ⚙️ Réglages → Ancien chauffage.) '+(consoSpread==='climat'?'🌡️ Répartition « Climat » : quand deux relevés sont espacés, les litres consommés entre les deux sont répartis selon le froid habituel de chaque mois à Metz (degrés-jours Météo-France) : un jour de janvier compte environ 30 fois plus qu\'un jour de juillet, et chaque jour d\'été garde un petit minimum (eau chaude). Le total entre deux relevés ne change pas ; plus tu fais de relevés, plus c\'est précis. ':'📏 Répartition « Uniforme » : les litres consommés entre deux relevés sont répartis à parts égales sur chaque jour. ')+
+    'Les livraisons notées sont prises en compte. « — » = pas de relevés couvrant cette période. '+
+    '▨ Hachuré = litres « estimés » : ils viennent d\'un écart de plus de '+EST_GAP+' jours entre deux relevés de niveau, leur répartition entre les mois est donc une estimation (en « Climat » comme en « Uniforme »).'+
+    (showTemp?' 🌡️ Température : moyenne extérieure de chaque '+(consoView==='month'?'mois (Été : juin à août)':'saison, calculée de septembre à mai')+'.':'');
+  var nav=$('consoNav');setXhair(box,null);
+  if(!a.g||!a.intervals.length||!winterRange(a)){
+    box.innerHTML=svgEl(W,H,txt(W/2,H/2,a.g?'Il faut deux relevés de niveau pour voir la consommation':'Renseigne d\'abord ta cuve',{size:13}));
+    leg.innerHTML='';tb.innerHTML='';nav.classList.add('hidden');return;}
+  nav.classList.remove('hidden');
+  var cd=consoData(a,fp), data=cd.rows;
+  data.forEach(function(d){d.tp=showTemp&&d.from?tempPeriod(d.from,d.to):null;});
+  $('consoNavLab').textContent=cd.nav.lab;$('consoNavSub').textContent=cd.nav.sub;
+  $('consoPrev').disabled=!cd.nav.prev;$('consoNext').disabled=!cd.nav.next;
+  var vals=data.map(function(d){return d.l||0;}), mx=niceMax(Math.max.apply(null,vals.concat([0])));
+  var s='',i;
+  for(i=0;i<=4;i++){var v=mx*i/4,y=T+ph-ph*i/4;
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="'+COL['--line']+'" stroke-width="1"/>'+txt(L-6,y+4,(v<10&&v%1?nf1.format(v):nf0.format(v))+' L',{anchor:'end',fill:COL['--accent']});
+    if(fp)s+=txt(W-R+6,y+4,(v*fp.prix<10&&(v*fp.prix)%1?nf1.format(v*fp.prix):nf0.format(v*fp.prix))+' €',{anchor:'start',fill:COL['--accent2']});}
+  var slot=pw/data.length,bw=Math.min(52,slot*0.7),every=Math.max(1,Math.ceil(data.length/Math.max(2,Math.floor(pw/(consoView==='month'?30:40)))));
+  var cx=function(j){return L+slot*j+slot/2;}, cy=function(l){return T+ph-ph*l/mx;};
+  data.forEach(function(d,j){var x=L+slot*j+(slot-bw)/2;
+    if(d.l!==null){var h=ph*d.l/mx,y=T+ph-h;
+      var tip=d.lab+' : '+fL(d.l)+(fp?' · '+fE(d.l*fp.prix):'')+(d.est>0.05?' (dont '+fL(d.est)+' estimés)':'')+(d.tp?' · 🌡️ '+fTemp(d.tp.t):'');
+      var he=d.est>0.05?ph*Math.min(d.est,d.l)/mx:0, hm=Math.max(0,h-he);
+      s+='<rect class="cbar'+(d.summer?' summer':'')+'" data-k="'+esc(d.k)+'" data-h="'+Math.max(0,h).toFixed(1)+'" x="'+x.toFixed(1)+'" y="'+(y+he).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+hm.toFixed(1)+'" rx="4" fill="'+COL['--accent']+'"'+(d.summer?' fill-opacity=".4"':'')+'><title>'+esc(tip)+'</title></rect>';
+      if(he>0)s+='<rect class="cbar-est" data-k="'+esc(d.k)+'" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+he.toFixed(1)+'" rx="4" fill="url(#hatchC)" stroke="'+COL['--accent']+'" stroke-width="1"'+(d.summer?' opacity=".5"':'')+'><title>'+esc(tip)+'</title></rect>';
+      if(d.summer)s+=txt(x+bw/2,y-5,nf0.format(d.l),{size:9,fill:COL['--muted']||COL['--text']});
+      if(data.length<=8)s+=txt(x+bw/2,y-5,nf0.format(d.l)+' L',{size:10,fill:COL['--text']});}
+    if(d.summer)s+='<line x1="'+(L+slot*j).toFixed(1)+'" x2="'+(L+slot*j).toFixed(1)+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="'+COL['--line']+'" stroke-dasharray="3 3"/>';
+    if(j%every===0||d.summer)s+=txt(cx(j),H-12,d.short,{size:10});});
+  if(fp){ // ligne € par segments continus (les périodes sans données coupent la ligne)
+    var seg=[];data.forEach(function(d,j){if(d.l===null||d.summer){seg.push(null);return;}seg.push((seg.length&&seg[seg.length-1]!==null?'L':'M')+cx(j).toFixed(1)+' '+cy(d.l).toFixed(1));});
+    var pth=seg.filter(Boolean).join('');
+    if(data.filter(function(d){return d.l!==null&&!d.summer;}).length>1)s+='<path d="'+pth+'" fill="none" stroke="'+COL['--accent2']+'" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>';
+    data.forEach(function(d,j){if(d.l===null||d.summer)return;s+='<circle cx="'+cx(j).toFixed(1)+'" cy="'+cy(d.l).toFixed(1)+'" r="3" fill="'+COL['--accent2']+'"><title>'+esc(d.lab+' : '+fE(d.l*fp.prix))+'</title></circle>';});}
+  if(showTemp)s+=tempOverlay(data.map(function(d){return d.tp?Object.assign({brk:!!d.summer},d.tp):null;}),cx,T,ph,L+pw+R0+4,function(j){return data[j].lab+(consoView==='winter'?' (sept.–mai)':'');});
+  var anyEst=data.some(function(d){return d.l!==null&&d.est>0.05;});
+  s='<defs><pattern id="hatchC" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><path d="M0 0H6V6H0Z" fill="'+COL['--accent']+'" fill-opacity=".18"/><line x1="0" y1="0" x2="0" y2="6" stroke="'+COL['--accent']+'" stroke-width="2.5"/></pattern></defs>'+s;
+  box.innerHTML=svgEl(W,H,s);
+  setXhair(box,{W:W,T:T,ph:ph,pts:data.map(function(d,j){var it=[{lab:'Consommé',col:COL['--accent'],val:d.l===null?'—':fL(d.l),sq:true}];
+    if(d.l!==null&&d.est>0.05)it.push({lab:'dont estimé',col:COL['--accent'],bg:'repeating-linear-gradient(45deg,'+COL['--accent']+' 0 2px,transparent 2px 4px)',val:fL(Math.min(d.est,d.l)),sq:true});
+    if(fp&&d.l!==null)it.push({lab:'Euros',col:COL['--accent2'],val:fE(d.l*fp.prix),y:d.summer?null:cy(d.l)});
+    if(d.tp)it.push({lab:'Temp. moy.',col:TEMP_COL,val:fTemp(d.tp.t),y:tempY(d.tp.t,T,ph)});
+    return {x:cx(j),x0:L+slot*j+1,x1:L+slot*(j+1)-1,title:d.lab.charAt(0).toUpperCase()+d.lab.slice(1)+(d.sub?' · '+d.sub:''),items:it};})});
+  leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres consommés par '+cd.unit+' (axe gauche)</span>'+
+    (anyEst?'<span class="hatch"><i style="background:repeating-linear-gradient(45deg,'+COL['--accent']+' 0 2px,transparent 2px 5px)"></i>dont litres estimés (écart &gt; '+EST_GAP+' j entre relevés)</span>':'')+
+    (fp?'<span><i style="background:'+COL['--accent2']+'"></i>Euros (axe droit)</span>':'')+
+    (showTemp?tempLegend(data.map(function(d){return d.tp;}),consoView==='winter'?'saison = moyenne sept.–mai':null):'');
+  var tl=0;data.forEach(function(d){if(d.l!==null)tl+=d.l;});
+  var dash='<span style="color:var(--muted)">—</span>';
+  var tc=showTemp?'<td class="tcell">':'';
+  tb.innerHTML='<table class="ptable'+(showTemp?' has-t':'')+'" id="consoTbl"><thead><tr><th>'+cd.head+'</th><th>Litres</th>'+(fp?'<th>Euros</th>':'')+(showTemp?'<th>°C</th>':'')+'</tr></thead><tbody>'+
+    data.map(function(d){return '<tr'+(d.summer?' class="summer"':'')+(d.l!==null&&d.est>0.05?' data-est="1"':'')+'><td>'+esc(d.lab)+(d.sub?'<small>'+esc(d.sub)+'</small>':'')+'</td><td>'+(d.l===null?dash:fL(d.l)+(d.est>0.05?'<small>'+(d.est>=d.l-0.05?'estimé':'dont '+fL(d.est)+' estimés')+'</small>':''))+'</td>'+(fp?'<td>'+(d.l===null?dash:fE(d.l*fp.prix))+'</td>':'')+(showTemp?tc+(d.tp?fTemp(d.tp.t):dash)+'</td>':'')+'</tr>';}).join('')+
+    '<tr class="tot"><td>Total'+(consoView==='month'?' saison '+esc(cd.nav.lab.replace('Saison ','')):'')+'</td><td>'+fL(tl)+'</td>'+(fp?'<td>'+fE(tl*fp.prix)+'</td>':'')+(showTemp?'<td></td>':'')+'</tr></tbody></table>';
+}
+Array.prototype.forEach.call(document.querySelectorAll('[data-tview]'),function(b){
+  b.addEventListener('click',function(){consoView=b.getAttribute('data-tview');save(KEY_CVIEW,consoView);renderConsoChart(tankAnalyze());});
+});
+Array.prototype.forEach.call(document.querySelectorAll('[data-tspread]'),function(b){
+  b.addEventListener('click',function(){consoSpread=b.getAttribute('data-tspread');save(KEY_CSPREAD,consoSpread);renderConsoChart(tankAnalyze());toast('Enregistré',1200);});
+});
+$('consoPrev').addEventListener('click',function(){if(consoView==='month')consoWinter--;else winterPage++;renderConsoChart(tankAnalyze());});
+$('consoNext').addEventListener('click',function(){if(consoView==='month')consoWinter++;else winterPage--;renderConsoChart(tankAnalyze());});
+function renderTank(){var a=tankAnalyze();renderTankStats(a);renderTankList(a);if(!$('viewCuve').classList.contains('hidden'))renderTankChart(a);updateTankPreview();}
+
+// --- formulaire relevé de cuve ---
+function setTankMode(m){
+  tankMode=m;$('tkModeNiv').setAttribute('aria-pressed',m==='niveau');$('tkModeLiv').setAttribute('aria-pressed',m==='livraison');
+  $('tkValLabel').textContent=m==='niveau'?'Hauteur de fioul mesurée (cm, depuis le fond)':'Litres livrés';
+  $('tkVal').placeholder=m==='niveau'?'ex. 45':'ex. 1000';
+  $('tkModeHint').textContent=m==='niveau'
+    ?'Plonge une règle ou une jauge jusqu\'au fond et note la hauteur de fioul en cm : l\'appli calcule les litres.'
+    :'Note la quantité livrée (sur le bon de livraison) : elle ne sera pas comptée comme une consommation négative. Fais idéalement un relevé de niveau juste avant et juste après.';
+  updateTankPreview();
+}
+function updateTankPreview(){
+  var p=$('tkPreview'), v=parseNum($('tkVal').value), g=tankGeom(); p.classList.remove('warn');
+  if(isNaN(v)){p.classList.add('hidden');return;}
+  p.classList.remove('hidden');
+  if(v<0){p.classList.add('warn');p.innerHTML='⚠️ Valeur négative.';return;}
+  if(tankMode==='livraison'){
+    var fp=fioulPrice();
+    p.innerHTML='🚚 <b>+'+fL(v)+'</b> ajoutés à la cuve'+(fp?' · ≈ '+fE(v*fp.prix)+' ('+esc(fp.name)+')':'')+
+      (g&&v>g.cap?'<br>⚠️ Plus que la capacité de la cuve ('+fL(g.cap)+').':'');
+    if(g&&v>g.cap)p.classList.add('warn');return;
+  }
+  if(!g){p.classList.add('warn');p.innerHTML='⚠️ Renseigne d\'abord la forme et les dimensions de ta cuve dans ⚙️ Réglages → Ma cuve.';return;}
+  if(v>g.maxH+1e-9){p.classList.add('warn');p.innerHTML='⚠️ '+fCm(v)+' dépasse la '+(tank.shape==='hcyl'?'hauteur (diamètre)':'hauteur')+' de ta cuve ('+fCm(g.maxH)+'). Vérifie la mesure.';return;}
+  var l=g.litres(v), pct=l/g.cap*100, low=tank.reserve!==null&&l<=tank.reserve;
+  var h='<span id="tkPrevL">'+fCm(v)+' de fioul = <b>'+fL(l)+'</b></span> · '+nf1.format(pct)+' % de '+fL(g.cap)+gaugeHtml(pct,low,resPctOf(g));
+  // conso depuis le relevé précédent
+  var date=$('tkDate').value||todayIso(), prev=null, deliv=0;
+  tankSorted().forEach(function(r){if(r.date>date||r.id===tkEditId)return;if(r.type==='niveau'){prev=r;deliv=0;}else deliv+=r.litres;});
+  if(prev){var c=g.litres(prev.h)+deliv-l, d=daysBetween(prev.date,date);
+    h+='<div style="margin-top:6px">Depuis le '+fDate(prev.date)+' : '+(c<-0.5?'⚠️ le niveau a monté de '+fL(-c)+' (livraison à noter ?)':'<b>'+fL(c)+'</b> consommés'+(d>0?' · '+nf1.format(c/d)+' L/jour':''))+'</div>';}
+  if(low)h+='<div style="margin-top:6px">⚠️ Sous la réserve basse ('+fL(tank.reserve)+').</div>';
+  p.innerHTML=h;
+}
+var tankAll=false;$('btnTankAll').addEventListener('click',function(){tankAll=!tankAll;renderTankList(tankAnalyze());});
+$('tkModeNiv').addEventListener('click',function(){setTankMode('niveau');});
+$('tkModeLiv').addEventListener('click',function(){setTankMode('livraison');});
+$('tkVal').addEventListener('input',updateTankPreview);$('tkDate').addEventListener('change',updateTankPreview);
+$('tkForm').addEventListener('submit',function(ev){
+  ev.preventDefault();
+  var date=$('tkDate').value, v=parseNum($('tkVal').value), note=$('tkNote').value.trim().slice(0,80), g=tankGeom();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){toast('Choisis une date');return;}
+  var old=tkEditId?tankReads.filter(function(x){return x.id===tkEditId;})[0]:null;
+  var r={id:old?old.id:uid(),created:old?old.created:Date.now(),date:date,type:tankMode,note:note};
+  if(tankMode==='niveau'){
+    if(!g){toast('Renseigne d\'abord ta cuve (forme et dimensions)');openTankBox();return;}
+    if(isNaN(v)||v<0){toast('Entre une hauteur en cm (ex. 45 ou 45,5)');$('tkVal').focus();return;}
+    if(v>g.maxH+1e-9){toast('Hauteur supérieure à la cuve ('+fCm(g.maxH)+')');$('tkVal').focus();return;}
+    r.h=v;
+  } else {
+    if(isNaN(v)||v<=0){toast('Entre les litres livrés (ex. 1000)');$('tkVal').focus();return;}
+    r.litres=v;
+  }
+  if(old){tankReads=tankReads.map(function(x){return x.id===old.id?r:x;});}else tankReads.push(r);
+  save(KEY_TREAD,tankReads);
+  var msg=old?'Modification enregistrée ✅':(tankMode==='niveau'?'Relevé de cuve ajouté ✅':'Livraison ajoutée ✅');
+  resetTankForm();if(old)setTankMode('niveau');renderTank();renderTankChart(tankAnalyze());toast(msg);
+});
+function resetTankForm(){
+  tkEditId=null;$('tkVal').value='';$('tkNote').value='';$('tkDate').value=todayIso();$('tkPreview').classList.add('hidden');
+  $('tkFormTitle').textContent='➕ Nouveau relevé cuve';$('tkSave').textContent='Ajouter le relevé';closeTankForm();
+  Array.prototype.forEach.call(document.querySelectorAll('#tankList li.editing'),function(li){li.classList.remove('editing');});
+}
+function openTankForm(){$('tkFormBody').classList.remove('hidden');$('btnNewTank').classList.add('hidden');}
+function closeTankForm(){$('tkFormBody').classList.add('hidden');$('btnNewTank').classList.remove('hidden');}
+$('tkCancel').addEventListener('click',function(){var wasEdit=!!tkEditId;resetTankForm();setTankMode('niveau');if(wasEdit)toast('Modification annulée');});
+$('btnNewTank').addEventListener('click',function(){resetTankForm();setTankMode('niveau');openTankForm();setTimeout(function(){$('tkVal').focus();},30);});
+$('tankList').addEventListener('click',function(ev){
+  var tg=ev.target.closest('[data-ttoggle]');
+  if(tg){var tid=tg.getAttribute('data-ttoggle'),tli=tg.closest('li'),to=!tkOpen[tid];if(to)tkOpen[tid]=1;else delete tkOpen[tid];
+    tli.classList.toggle('open',to);tg.setAttribute('aria-expanded',to);tli.querySelector('.r-det').classList.toggle('hidden',!to);return;}
+  var eb=ev.target.closest('[data-tedit]');
+  if(eb){var er=tankReads.filter(function(x){return x.id===eb.getAttribute('data-tedit');})[0];if(!er)return;
+    tkEditId=er.id;setTankMode(er.type);
+    $('tkDate').value=er.date;$('tkVal').value=numStr(er.type==='niveau'?er.h:er.litres);$('tkNote').value=er.note||'';
+    $('tkFormTitle').textContent='✏️ Modifier '+(er.type==='livraison'?'la livraison':'le relevé')+' du '+fDate(er.date);
+    $('tkSave').textContent='Enregistrer la modification';openTankForm();
+    Array.prototype.forEach.call(document.querySelectorAll('#tankList li'),function(li){li.classList.toggle('editing',!!li.querySelector('[data-tedit="'+er.id+'"]'));});
+    updateTankPreview();$('tankFormCard').scrollIntoView({behavior:'smooth',block:'start'});$('tkVal').focus({preventScroll:true});return;}
+  var b=ev.target.closest('[data-tdel]');if(!b)return;var id=b.getAttribute('data-tdel');
+  var r=tankReads.filter(function(x){return x.id===id;})[0];if(!r)return;
+  if(!confirm('Supprimer '+(r.type==='livraison'?'la livraison':'le relevé de cuve')+' du '+fDate(r.date)+' ? Cette action est définitive.'))return;
+  tankReads=tankReads.filter(function(x){return x.id!==id;});save(KEY_TREAD,tankReads);if(tkEditId===id){resetTankForm();setTankMode('niveau');}renderTank();renderTankChart(tankAnalyze());toast('Supprimé');
+});
+
+// --- réglages de la cuve ---
+function showDims(shape){
+  var need=shape&&SHAPES[shape]?SHAPES[shape].dims:[];
+  Object.keys(DIM_IDS).forEach(function(k){document.querySelector('[data-dim="'+k+'"]').classList.toggle('hidden',need.indexOf(k)<0);});
+  $('tkShapeHint').textContent=!shape?'Choisis la forme pour afficher les dimensions à mesurer (dimensions intérieures si possible).':
+    shape==='hcyl'?'Cuve couchée : la hauteur maximale de fioul est égale au diamètre.':'Mesure de préférence les dimensions intérieures.';
+}
+function readTankUI(){
+  var t={shape:$('tkShape').value}, bad=null;
+  ['longueur','largeur','hauteur','diametre'].forEach(function(k){var raw=$(DIM_IDS[k]).value.trim();t[k]=raw===''?null:parseNum(raw);
+    if(t[k]!==null&&!(t[k]>0)&&SHAPES[t.shape]&&SHAPES[t.shape].dims.indexOf(k)>=0&&!bad)bad=DIM_IDS[k];});
+  [['capNom','tkCap'],['reserve','tkRes']].forEach(function(p){var raw=$(p[1]).value.trim();t[p[0]]=raw===''?null:parseNum(raw);if(t[p[0]]!==null&&!(t[p[0]]>0)&&!bad)bad=p[1];});
+  t.bad=bad;return t;
+}
+function updateCapPreview(){
+  var t=readTankUI(), g=tankGeom(t), p=$('tkCapPreview');p.classList.remove('warn');
+  if(!t.shape){p.innerHTML='Capacité totale : choisis la forme et entre les dimensions.';return;}
+  if(!g){p.innerHTML='Capacité totale : entre '+SHAPES[t.shape].dims.map(function(k){return k==='diametre'?'le diamètre':'la '+k;}).join(', ')+' (en cm).';return;}
+  p.innerHTML='Capacité totale calculée : <b id="tkCapCalc">'+fL(g.geomFull)+'</b>'+(g.scaled?'<br>Capacité nominale utilisée : <b>'+fL(g.cap)+'</b> (litres recalés × '+nfN.format(g.cap/g.geomFull)+')':'')+
+    '<br>Hauteur maximale de fioul : '+fCm(g.maxH);
+  if(g.scaled&&Math.abs(g.cap/g.geomFull-1)>0.25){p.classList.add('warn');p.innerHTML+='<br>⚠️ Grosse différence entre la capacité calculée et la capacité nominale : vérifie les dimensions.';}
+}
+function fillTank(){
+  $('tkShape').value=tank.shape||'';
+  Object.keys(DIM_IDS).forEach(function(k){$(DIM_IDS[k]).value=numStr(tank[k]);});
+  $('tkCap').value=numStr(tank.capNom);$('tkRes').value=numStr(tank.reserve);
+  showDims(tank.shape);updateCapPreview();
+}
+function openTankBox(){openSettings('secOld','tkShape');}
+$('tkShape').addEventListener('change',function(){showDims(this.value);updateCapPreview();});
+['tkLongueur','tkLargeur','tkHauteur','tkDiametre','tkCap','tkRes'].forEach(function(id){$(id).addEventListener('input',updateCapPreview);});
+$('btnGoTank').addEventListener('click',openTankBox);
+var tankT=null;
+function scheduleTank(ms){clearTimeout(tankT);tankT=setTimeout(function(){tankT=null;trySaveTank();},ms||0);}
+function tankMsg(t){var el=$('tkStatus');el.textContent=t?'⚠️ Cuve pas encore enregistrée : '+t:'';el.classList.toggle('hidden',!t);return t?{err:t}:null;}
+function trySaveTank(){ // mêmes règles qu'avant (bouton « Enregistrer la cuve »)
+  var t=readTankUI();
+  if(!SHAPES[t.shape])return tankMsg('choisis la forme de la cuve');
+  if(t.bad)return tankMsg('valeur invalide : '+labelOf(t.bad));
+  var miss=SHAPES[t.shape].dims.filter(function(k){return t[k]===null;})[0];
+  if(miss)return tankMsg('renseigne '+labelOf(DIM_IDS[miss]));
+  var n=normalizeTank(t);
+  // on ne garde que les dimensions utiles à la forme choisie
+  Object.keys(DIM_IDS).forEach(function(k){if(SHAPES[n.shape].dims.indexOf(k)<0)n[k]=null;});
+  var g=tankGeom(n);
+  if(n.reserve!==null&&n.reserve>=g.cap)return tankMsg('la réserve basse doit être inférieure à la capacité ('+fL(g.cap)+')');
+  tankMsg('');
+  if(JSON.stringify(n)===JSON.stringify(tank))return null;
+  tank=n;save(KEY_TANK,tank);renderTank();if(!$('viewCuve').classList.contains('hidden'))renderTankChart(tankAnalyze());setSpStatus('✓ Cuve enregistrée');toast('Enregistré',1200);
+  return null;
+}
+
+var tt;function toast(m,ms){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},ms||2400);}
+
+window.__pac={addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+
+fillSettings();setMode('kwh');resetForm();renderAll();setSimType('fioul');simReady=true;
+renderTempButtons();if((settings.copMode==='temp'&&settings.tReal)||showTemp)setTimeout(function(){fetchTemps(false);},300);
+fillTank();setTankMode('niveau');$('tkDate').value=todayIso();tankReady=true;renderTank();
+})();
+</script>
+</body>
+</html>
