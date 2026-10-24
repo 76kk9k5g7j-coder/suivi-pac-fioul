@@ -151,6 +151,10 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
 .wlab b{display:block;font-size:1.05rem}
 .wlab span{font-size:.8rem;color:var(--muted)}
 .wnav .icon-btn:disabled{opacity:.35;cursor:default}
+.spread-row{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:.85rem;color:var(--muted)}
+.seg-sm button{white-space:nowrap}
+.seg-sm button{min-height:34px;font-size:.82rem}
+.ptable tr.summer td{color:var(--muted);font-style:italic}
 .ptable td.sub{font-size:.78rem;color:var(--muted);display:block;padding-top:0;border-top:0}
 .ptable td small{display:block;font-size:.75rem;color:var(--muted)}
 </style>
@@ -361,6 +365,12 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
       <button class="icon-btn" type="button" id="consoPrev" aria-label="Précédent">◀</button>
       <div class="wlab"><b id="consoNavLab">—</b><span id="consoNavSub"></span></div>
       <button class="icon-btn" type="button" id="consoNext" aria-label="Suivant">▶</button>
+    </div>
+    <div class="spread-row"><span>Répartition :</span>
+      <div class="seg seg-sm" role="group" aria-label="Répartition entre deux relevés">
+        <button type="button" data-tspread="climat" aria-pressed="true">Climat (degrés-jours)</button>
+        <button type="button" data-tspread="uniform" aria-pressed="false">Uniforme</button>
+      </div>
     </div>
     <div class="chart-wrap" id="consoChart"></div>
     <div class="legend" id="consoLegend"></div>
@@ -981,8 +991,8 @@ function normalizeTankReadings(arr){
       if(r.type==='niveau')n.h=r.h;else n.litres=r.litres;return n;});
 }
 var tank=normalizeTank(load(KEY_TANK,{})), tankReads=normalizeTankReadings(load(KEY_TREAD,[]));
-var KEY_CVIEW='pacFioul.consoView';
-var tankMode='niveau', tankReady=false, tkEditId=null, consoView=load(KEY_CVIEW,'month')==='winter'?'winter':'month', consoWinter=null, winterPage=0;
+var KEY_CVIEW='pacFioul.consoView', KEY_CSPREAD='pacFioul.consoSpread';
+var tankMode='niveau', tankReady=false, tkEditId=null, consoView=load(KEY_CVIEW,'month')==='winter'?'winter':'month', consoWinter=null, winterPage=0, consoSpread=load(KEY_CSPREAD,'climat')==='uniform'?'uniform':'climat';
 
 // Géométrie : volume (L) pour une hauteur de fioul h (cm)
 function tankGeom(t){
@@ -1128,14 +1138,23 @@ function renderTankChart(a){renderLevelChart(a);renderConsoChart(a);}
 // du jour du relevé précédent (inclus) au jour du relevé suivant (exclu). Ex. 25/08 → 05/09 = 11 jours : 7 en août, 4 en septembre.
 // Hiver AAAA = du 1er septembre AAAA au 31 août AAAA+1.
 function winterOf(day){var y=+day.slice(0,4),m=+day.slice(5,7);return m>=9?y:y-1;}
-function consoByPeriod(a,view){
-  var per={};
+// Répartition « Climat » : chaque jour reçoit un poids = DJU normal du mois / nombre de jours du mois,
+// avec un plancher de 0,5 par jour (eau chaude, veille : l'été n'est jamais à zéro).
+// Les litres d'un intervalle sont répartis au prorata de ces poids : le total de l'intervalle est conservé exactement.
+// DJU base 18 °C, normales 1991-2020, station Metz-Frescaty (57039001) — source : Météo-France, fiche climatologique
+// https://donneespubliques.meteofrance.fr/FichesClim/FICHECLIM_57039001.pdf (année : 2724,7 DJU)
+var DJU_METZ=[473.5,408,341.2,226.6,117.5,42.6,14.4,18.1,81,208.1,345.2,448.5], DJU_FLOOR=0.5;
+function djuWeight(d){var y=d.getFullYear(),m=d.getMonth(),n=new Date(y,m+1,0).getDate();return Math.max(DJU_METZ[m]/n,DJU_FLOOR);}
+function consoByPeriod(a,view,mode){
+  var per={};mode=mode||consoSpread;
   function add(day,l){var k=view==='day'?day:view==='month'?day.slice(0,7):view==='winter'?String(winterOf(day)):day.slice(0,4);per[k]=(per[k]||0)+l;}
   a.intervals.forEach(function(i){
     if(i.neg||!(i.conso>0))return;
     if(i.days<=0){add(i.to,i.conso);return;}
-    var q=i.conso/i.days, d=parseIso(i.from);
-    for(var k=0;k<i.days;k++){add(iso(d),q);d.setDate(d.getDate()+1);}
+    var d=parseIso(i.from),k;
+    if(mode==='uniform'){var q=i.conso/i.days;for(k=0;k<i.days;k++){add(iso(d),q);d.setDate(d.getDate()+1);}return;}
+    var ws=[],days=[],W=0;for(k=0;k<i.days;k++){var w=djuWeight(d);ws.push(w);days.push(iso(d));W+=w;d.setDate(d.getDate()+1);}
+    var done=0;for(k=0;k<days.length;k++){var part=k===days.length-1?i.conso-done:i.conso*ws[k]/W;done+=part;add(days[k],part);}
   });
   return Object.keys(per).sort().map(function(k){return {k:k,l:per[k]};});
 }
@@ -1153,8 +1172,10 @@ function consoData(a,fp){
   if(consoView==='month'){
     if(consoWinter===null||consoWinter<r.min||consoWinter>r.max)consoWinter=r.def;
     var per={};consoByPeriod(a,'month').forEach(function(x){per[x.k]=x.l;});
-    var rows=[];for(var i=0;i<12;i++){var y=consoWinter+(i<4?0:1),m=(8+i)%12,k=y+'-'+pad(m+1);
+    var rows=[];for(var i=0;i<9;i++){var y=consoWinter+(i<4?0:1),m=(8+i)%12,k=y+'-'+pad(m+1);
       rows.push({k:k,lab:MONTHS_LONG[m]+' '+y,short:MONTHS[m].replace('.',''),l:per[k]===undefined?null:per[k]});}
+    var ys=consoWinter+1, sl=null;['06','07','08'].forEach(function(mm){var v=per[ys+'-'+mm];if(v!==undefined)sl=(sl||0)+v;});
+    rows.push({k:ys+'-ete',lab:'Été (juin–août) '+ys,short:'été',l:sl,summer:true});
     return {rows:rows,unit:'mois',head:'Mois',nav:{lab:'Hiver '+consoWinter,sub:winterSub(consoWinter),prev:consoWinter>r.min,next:consoWinter<r.max}};
   }
   var all=consoByPeriod(a,'winter'), per2={};all.forEach(function(x){per2[x.k]=x.l;});
@@ -1170,9 +1191,12 @@ function renderConsoChart(a){
   var W=Math.max(300,Math.round(box.clientWidth||600)), H=Math.round(Math.min(300,Math.max(210,W*0.55)));
   var L=50,R=fp?54:12,T=18,B=34,pw=W-L-R,ph=H-T-B;
   Array.prototype.forEach.call(document.querySelectorAll('[data-tview]'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-tview')===consoView);});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tspread]'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-tspread')===consoSpread);});
   hint.innerHTML='❄️ Hiver AAAA = du 1er septembre AAAA au 31 août AAAA+1 (ex. Hiver 2022 = sept. 2022 → août 2023). '+
     (fp?'💶 Euros = litres × '+nfN.format(fp.prix)+' €/L ('+esc(fp.name)+', prix actuel des Réglages). ':'💶 Renseigne un prix de fioul dans Réglages (onglet 📊 Suivi) pour voir aussi la consommation en euros. ')+
-    'Une consommation entre deux relevés est répartie à parts égales sur chaque jour, du relevé précédent (inclus) au suivant (exclu) ; les livraisons notées sont prises en compte. « — » = pas de relevés couvrant cette période.';
+    (consoView==='month'?'📅 Les mois affichés vont de septembre à mai ; ce qui est consommé de juin à août est regroupé sur la ligne « Été » et compté dans le total de l\'hiver. ':'')+
+    (consoSpread==='climat'?'🌡️ Répartition « Climat » : quand deux relevés sont espacés, les litres consommés entre les deux sont répartis selon le froid habituel de chaque mois à Metz (degrés-jours Météo-France) : un jour de janvier compte environ 30 fois plus qu\'un jour de juillet, et chaque jour d\'été garde un petit minimum (eau chaude). Le total entre deux relevés ne change pas ; plus tu fais de relevés, plus c\'est précis. ':'📏 Répartition « Uniforme » : les litres consommés entre deux relevés sont répartis à parts égales sur chaque jour. ')+
+    'Les livraisons notées sont prises en compte. « — » = pas de relevés couvrant cette période.';
   var nav=document.querySelector('.wnav');
   if(!a.g||!a.intervals.length||!winterRange(a)){
     box.innerHTML=svgEl(W,H,txt(W/2,H/2,a.g?'Il faut deux relevés de niveau pour voir la consommation':'Renseigne d\'abord ta cuve',{size:13}));
@@ -1191,25 +1215,30 @@ function renderConsoChart(a){
   data.forEach(function(d,j){var x=L+slot*j+(slot-bw)/2;
     if(d.l!==null){var h=ph*d.l/mx,y=T+ph-h;
       var tip=d.lab+' : '+fL(d.l)+(fp?' · '+fE(d.l*fp.prix):'');
-      s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="4" fill="'+COL['--accent']+'"><title>'+esc(tip)+'</title></rect>';
+      s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="4" fill="'+COL['--accent']+'"'+(d.summer?' fill-opacity=".4" class="summer"':'')+'><title>'+esc(tip)+'</title></rect>';
+      if(d.summer)s+=txt(x+bw/2,y-5,nf0.format(d.l),{size:9,fill:COL['--muted']||COL['--text']});
       if(data.length<=8)s+=txt(x+bw/2,y-5,nf0.format(d.l)+' L',{size:10,fill:COL['--text']});}
-    if(j%every===0)s+=txt(cx(j),H-12,d.short,{size:10});});
+    if(d.summer)s+='<line x1="'+(L+slot*j).toFixed(1)+'" x2="'+(L+slot*j).toFixed(1)+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="'+COL['--line']+'" stroke-dasharray="3 3"/>';
+    if(j%every===0||d.summer)s+=txt(cx(j),H-12,d.short,{size:10});});
   if(fp){ // ligne € par segments continus (les périodes sans données coupent la ligne)
-    var seg=[];data.forEach(function(d,j){if(d.l===null){seg.push(null);return;}seg.push((seg.length&&seg[seg.length-1]!==null?'L':'M')+cx(j).toFixed(1)+' '+cy(d.l).toFixed(1));});
+    var seg=[];data.forEach(function(d,j){if(d.l===null||d.summer){seg.push(null);return;}seg.push((seg.length&&seg[seg.length-1]!==null?'L':'M')+cx(j).toFixed(1)+' '+cy(d.l).toFixed(1));});
     var pth=seg.filter(Boolean).join('');
-    if(data.filter(function(d){return d.l!==null;}).length>1)s+='<path d="'+pth+'" fill="none" stroke="'+COL['--accent2']+'" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>';
-    data.forEach(function(d,j){if(d.l===null)return;s+='<circle cx="'+cx(j).toFixed(1)+'" cy="'+cy(d.l).toFixed(1)+'" r="3" fill="'+COL['--accent2']+'"><title>'+esc(d.lab+' : '+fE(d.l*fp.prix))+'</title></circle>';});}
+    if(data.filter(function(d){return d.l!==null&&!d.summer;}).length>1)s+='<path d="'+pth+'" fill="none" stroke="'+COL['--accent2']+'" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>';
+    data.forEach(function(d,j){if(d.l===null||d.summer)return;s+='<circle cx="'+cx(j).toFixed(1)+'" cy="'+cy(d.l).toFixed(1)+'" r="3" fill="'+COL['--accent2']+'"><title>'+esc(d.lab+' : '+fE(d.l*fp.prix))+'</title></circle>';});}
   box.innerHTML=svgEl(W,H,s);
   leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres consommés par '+cd.unit+' (axe gauche)</span>'+
     (fp?'<span><i style="background:'+COL['--accent2']+'"></i>Euros (axe droit)</span>':'');
   var tl=0;data.forEach(function(d){if(d.l!==null)tl+=d.l;});
   var dash='<span style="color:var(--muted)">—</span>';
   tb.innerHTML='<table class="ptable" id="consoTbl"><thead><tr><th>'+cd.head+'</th><th>Litres</th>'+(fp?'<th>Euros</th>':'')+'</tr></thead><tbody>'+
-    data.map(function(d){return '<tr><td>'+esc(d.lab)+(d.sub?'<small>'+esc(d.sub)+'</small>':'')+'</td><td>'+(d.l===null?dash:fL(d.l))+'</td>'+(fp?'<td>'+(d.l===null?dash:fE(d.l*fp.prix))+'</td>':'')+'</tr>';}).join('')+
+    data.map(function(d){return '<tr'+(d.summer?' class="summer"':'')+'><td>'+esc(d.lab)+(d.sub?'<small>'+esc(d.sub)+'</small>':'')+'</td><td>'+(d.l===null?dash:fL(d.l))+'</td>'+(fp?'<td>'+(d.l===null?dash:fE(d.l*fp.prix))+'</td>':'')+'</tr>';}).join('')+
     '<tr class="tot"><td>Total'+(consoView==='month'?' hiver '+esc(cd.nav.lab.replace('Hiver ','')):'')+'</td><td>'+fL(tl)+'</td>'+(fp?'<td>'+fE(tl*fp.prix)+'</td>':'')+'</tr></tbody></table>';
 }
 Array.prototype.forEach.call(document.querySelectorAll('[data-tview]'),function(b){
   b.addEventListener('click',function(){consoView=b.getAttribute('data-tview');save(KEY_CVIEW,consoView);renderConsoChart(tankAnalyze());});
+});
+Array.prototype.forEach.call(document.querySelectorAll('[data-tspread]'),function(b){
+  b.addEventListener('click',function(){consoSpread=b.getAttribute('data-tspread');save(KEY_CSPREAD,consoSpread);renderConsoChart(tankAnalyze());});
 });
 $('consoPrev').addEventListener('click',function(){if(consoView==='month')consoWinter--;else winterPage++;renderConsoChart(tankAnalyze());});
 $('consoNext').addEventListener('click',function(){if(consoView==='month')consoWinter++;else winterPage--;renderConsoChart(tankAnalyze());});
@@ -1340,7 +1369,7 @@ $('tkSaveTank').addEventListener('click',function(){
 
 var tt;function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2400);}
 
-window.__pac={consoByPeriod:function(v){return consoByPeriod(tankAnalyze(),v);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 
 fillSettings();setMode('kwh');resetForm();renderAll();setSimType('fioul');simReady=true;
 fillTank();setTankMode('niveau');$('tkDate').value=todayIso();tankReady=true;renderTank();
