@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0f766e">
+<title>Suivi PAC → Fioul économisé</title>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#ffffff; --text:#14202b; --muted:#5d6b78; --line:#e1e6eb;
+  --accent:#0f766e; --accent2:#e07a1f; --accent-soft:#d9f2ee; --danger:#c0392b; --ok:#1e8e3e;
+  --input:#f8fafb; --accent3:#6d4bd8; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e1419; --card:#172028; --text:#e8eef3; --muted:#93a3b1; --line:#26323d;
+    --accent:#2dd4bf; --accent2:#f59e4b; --accent-soft:#123a36; --danger:#ef6b5b; --ok:#4ade80;
+    --input:#111a21; --accent3:#a78bfa; --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:760px;margin:0 auto;padding:16px 14px calc(40px + env(safe-area-inset-bottom))}
+header{padding:6px 2px 12px}
+h1{font-size:1.45rem;margin:0 0 2px}
+h2{font-size:1.1rem;margin:0 0 12px}
+.sub{color:var(--muted);font-size:.92rem;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px;box-shadow:var(--shadow)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.grid{grid-template-columns:1fr}
+@media (min-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.stat h3{margin:0 0 6px;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.stat .big{font-size:1.35rem;font-weight:700;color:var(--accent);line-height:1.15}
+.stat .row{font-size:.86rem;color:var(--muted);margin-top:3px}
+.stat .eur{font-weight:700;color:var(--text)}
+.stat .eur.neg{color:var(--danger)}
+label{display:block;font-size:.9rem;font-weight:600;margin:10px 0 5px}
+input,textarea{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--input);color:var(--text)}
+textarea{min-height:48px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:.83rem;color:var(--muted);margin:5px 0 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);font-size:1rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){.btn.primary{color:#062a26}}
+.btn.danger{color:var(--danger)}
+.btn.small{min-height:44px;padding:0 12px;font-size:.9rem}
+.btn.block{width:100%}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.actions .btn{flex:1 1 auto}
+.seg{display:flex;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;min-height:42px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.95rem;font-weight:600;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.preview{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--accent-soft);font-size:.92rem}
+.preview.warn{background:rgba(224,122,31,.15)}
+ul.list{list-style:none;margin:0;padding:0}
+ul.list li{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+ul.list li:first-child{border-top:0}
+.li-main{flex:1;min-width:0}
+.li-top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.li-date{font-weight:700}
+.li-kwh{font-weight:700;color:var(--accent)}
+.li-sub{font-size:.85rem;color:var(--muted)}
+.li-note{font-size:.88rem;margin-top:3px;word-break:break-word}
+.li-btns{display:flex;flex-direction:column;gap:6px}
+.icon-btn{min-width:44px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:1.05rem;cursor:pointer}
+.icon-btn.del{color:var(--danger)}
+.empty{color:var(--muted);text-align:center;padding:14px 0}
+.welcome{border:2px dashed var(--accent);text-align:center}
+.welcome p{margin:0 0 12px}
+.formula{font-size:.88rem;color:var(--muted);background:var(--input);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px}
+.formula b{color:var(--text)}
+.chart-wrap{width:100%;margin-top:10px}
+.chart-wrap svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:420px){.settings-grid{grid-template-columns:1fr}}
+.note{font-size:.8rem;color:var(--muted);margin-top:12px;line-height:1.5}
+.note a{color:var(--accent)}
+details>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:32px}
+details>summary::-webkit-details-marker{display:none}
+details>summary h2{margin:0}
+details>summary::after{content:"▾";color:var(--muted);font-size:1.2rem}
+details[open]>summary::after{content:"▴"}
+details[open]>summary{margin-bottom:6px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--text);color:var(--bg);
+  padding:12px 18px;border-radius:12px;font-size:.95rem;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90vw;z-index:10}
+.toast.show{opacity:1}
+.hidden{display:none!important}
+.stat .unit{font-size:.85rem;font-weight:500;color:var(--muted)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.cmp .col{background:var(--input);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.86rem;min-width:0}
+.cmp .ch{font-weight:700;font-size:.82rem;margin-bottom:4px;overflow-wrap:anywhere}
+.cmp .pr{font-weight:500;color:var(--muted)}
+.cmp .kv{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;color:var(--muted)}
+.cmp .kv b{color:var(--text)}
+.cmp .kv b.net{color:var(--ok)}
+.cmp .kv b.neg{color:var(--danger)}
+.cmp .missing{color:var(--muted);font-style:italic;font-size:.8rem}
+.diff{font-size:.84rem;color:var(--muted);margin-top:6px}
+.diff b{color:var(--text)}
+.banner{border:2px dashed var(--accent2)}
+.banner p{margin:0 0 10px}
+.sh{font-size:.95rem;margin:18px 0 6px;color:var(--accent)}
+.opt{font-weight:400;color:var(--muted)}
+.hcinfo{font-weight:600;margin:12px 0 0}
+.tag{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--text);margin-left:6px;vertical-align:1px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🔥 Fioul économisé grâce à la PAC</h1>
+    <p class="sub">Chaque kWh consommé par ta pompe à chaleur, c'est du fioul que la chaudière n'a pas brûlé.</p>
+  </header>
+
+  <section id="welcome" class="card welcome hidden">
+    <p><b>Bienvenue !</b> Aucun relevé pour l'instant.</p>
+    <button class="btn primary block" id="btnFirst" type="button">Ajouter mon premier relevé : 150 kWh au 24/10/2026</button>
+    <p class="hint" style="margin-top:10px">Ou saisis ton propre relevé ci‑dessous.</p>
+  </section>
+
+  <section aria-label="Tableau de bord">
+    <div class="card banner hidden" id="priceBanner"><p>💶 Pour voir les économies en euros, renseigne tes deux prix de fioul (A et B) dans les Réglages. Les litres évités s'affichent déjà.</p><button class="btn primary block" type="button" id="btnGoSettings">Renseigner mes prix</button></div>
+    <div class="grid" id="stats"></div>
+  </section>
+
+  <section class="card" id="formCard" style="margin-top:14px">
+    <h2 id="formTitle">➕ Nouveau relevé</h2>
+    <div class="seg" role="group" aria-label="Mode de saisie">
+      <button type="button" id="modeKwh" aria-pressed="true">kWh de la période</button>
+      <button type="button" id="modeIndex" aria-pressed="false">Index compteur</button>
+    </div>
+    <p class="hint" id="modeHint"></p>
+    <form id="form" autocomplete="off" novalidate>
+      <label for="fDate">Date</label>
+      <input type="date" id="fDate" required>
+      <label for="fVal" id="fValLabel">kWh électriques consommés par la PAC</label>
+      <input type="text" id="fVal" inputmode="decimal" placeholder="ex. 30" required>
+      <label for="fNote">Note <span style="font-weight:400;color:var(--muted)">(facultatif)</span></label>
+      <input type="text" id="fNote" placeholder="ex. semaine froide, PAC en continu">
+      <div class="preview hidden" id="preview"></div>
+      <div class="actions">
+        <button class="btn primary" type="submit" id="btnSave">Ajouter le relevé</button>
+        <button class="btn hidden" type="button" id="btnCancel">Annuler</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>📈 Évolution</h2>
+    <div class="seg" role="group" aria-label="Type de graphique">
+      <button type="button" data-view="cumul" aria-pressed="true">Cumul</button>
+      <button type="button" data-view="week" aria-pressed="false">Semaine</button>
+      <button type="button" data-view="month" aria-pressed="false">Mois</button>
+      <button type="button" data-view="year" aria-pressed="false">Année</button>
+    </div>
+    <div class="chart-wrap" id="chart"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="card">
+    <h2>🗒️ Relevés</h2>
+    <ul class="list" id="list"></ul>
+  </section>
+
+  <section class="card">
+    <details id="settingsBox">
+      <summary><h2>⚙️ Réglages</h2></summary>
+      <h3 class="sh">Prix du fioul (à comparer)</h3>
+      <p class="hint" style="margin-top:0">Aucun prix n'est pré-rempli : mets les deux prix que tu veux comparer (ex. ton prix actuel et un achat moins cher). Les litres évités ne dépendent pas du prix.</p>
+      <div class="settings-grid">
+        <div><label for="sLabelA">Nom du prix A <span class="opt">(facultatif)</span></label><input type="text" id="sLabelA" maxlength="40" placeholder="ex. Prix actuel"></div>
+        <div><label for="sPrixA">Prix fioul A (€/L)</label><input type="text" inputmode="decimal" id="sPrixA" placeholder="ex. 1,90"></div>
+        <div><label for="sLabelB">Nom du prix B <span class="opt">(facultatif)</span></label><input type="text" id="sLabelB" maxlength="40" placeholder="ex. Achat moins cher"></div>
+        <div><label for="sPrixB">Prix fioul B (€/L)</label><input type="text" inputmode="decimal" id="sPrixB" placeholder="ex. 1,40"></div>
+      </div>
+      <p class="note" style="margin-top:8px">ℹ️ Pour info seulement (non pré-rempli) : prix moyen national du fioul 1,9308 €/L TTC au 16/10/2026 (ministère de la Transition écologique, livraison 2 000 à 4 999 L, publié le 22/10/2026, via <a href="https://www.comparonslenergie.com/chauffage/fioul/" target="_blank" rel="noopener">comparonslenergie.com</a>).</p>
+
+      <h3 class="sh">Électricité</h3>
+      <div class="seg" role="group" aria-label="Option tarifaire">
+        <button type="button" id="elecBase" aria-pressed="true">Base (prix unique)</button>
+        <button type="button" id="elecHphc" aria-pressed="false">Heures pleines / creuses</button>
+      </div>
+      <div id="boxBase">
+        <label for="sElec">Prix électricité (€/kWh)</label><input type="text" inputmode="decimal" id="sElec">
+        <p class="note" style="margin-top:6px">Par défaut 0,2001 €/kWh TTC : Tarif Bleu EDF option Base 3 et 6 kVA, en vigueur depuis le 01/08/2026 (0,1985 € de 9 à 15 kVA). Source : <a href="https://particulier.edf.fr/fr/accueil/electricite-gaz/tarif-bleu.html" target="_blank" rel="noopener">EDF, Tarif Bleu</a> (vérifié le 24/10/2026). L'abonnement n'est pas compté.</p>
+      </div>
+      <div id="boxHphc" class="hidden">
+        <p class="hcinfo">🌙 Heures creuses : 22 h – 7 h</p>
+        <div class="settings-grid">
+          <div><label for="sHP">Prix heures pleines (€/kWh)</label><input type="text" inputmode="decimal" id="sHP" placeholder="ex. 0,2142"></div>
+          <div><label for="sHC">Prix heures creuses (€/kWh)</label><input type="text" inputmode="decimal" id="sHC" placeholder="ex. 0,1589"></div>
+        </div>
+        <label for="sPct">% de la conso PAC en heures creuses</label>
+        <div style="display:flex;gap:8px"><input type="text" inputmode="decimal" id="sPct" placeholder="ex. 37,5" style="flex:1"><button class="btn small" type="button" id="btnPct">Utiliser 37,5 %</button></div>
+        <p class="hint">Suggestion : 22 h – 7 h = 9 h sur 24 = 37,5 % si la PAC tourne de façon régulière toute la journée. Ajuste si elle tourne surtout la nuit ou le jour.</p>
+        <p class="note" style="margin-top:6px">Pour info : Tarif Bleu EDF Heures Creuses au 01/08/2026 = HP 0,2142 €, HC 0,1589 € TTC/kWh (<a href="https://particulier.edf.fr/fr/accueil/electricite-gaz/tarif-bleu.html" target="_blank" rel="noopener">EDF</a>). Pour Tempo, mets tes prix moyens HP/HC.</p>
+        <p class="hint" id="elecAvg"></p>
+      </div>
+
+      <h3 class="sh">Calcul</h3>
+      <div class="settings-grid">
+        <div><label for="sCop">COP de la PAC</label><input type="text" inputmode="decimal" id="sCop"></div>
+        <div><label for="sPci">PCI fioul (kWh/L)</label><input type="text" inputmode="decimal" id="sPci"></div>
+        <div><label for="sRend">Rendement chaudière (%)</label><input type="text" inputmode="decimal" id="sRend"></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="button" id="btnSaveSettings">Enregistrer les réglages</button>
+        <button class="btn" type="button" id="btnResetSettings">Valeurs par défaut</button>
+      </div>
+      <div class="formula">
+        <b>Calcul</b><br>
+        Chaleur produite = kWh élec × COP<br>
+        Litres de fioul évités = chaleur ÷ (PCI × rendement)<br>
+        Fioul évité (€) = litres × prix fioul A ou B<br>
+        Économie nette = fioul évité − kWh élec × prix élec<br>
+        Écart A − B = litres × (prix A − prix B)
+        <div id="formulaEx" style="margin-top:6px"></div>
+      </div>
+      <p class="note">COP 3, PCI 10 kWh/L et rendement 85 % : valeurs moyennes, à ajuster selon ta PAC et ta chaudière.</p>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>💾 Sauvegarde</h2>
+    <p class="hint" style="margin-top:0">Tes données restent <b>uniquement dans ce navigateur, sur cet appareil</b>. Rien n'est envoyé sur Internet. Pour passer du téléphone au PC (ou ne rien perdre si tu vides le navigateur), exporte un fichier de sauvegarde puis importe‑le sur l'autre appareil.</p>
+    <div class="actions">
+      <button class="btn" type="button" id="btnExport">⬇️ Exporter (JSON)</button>
+      <button class="btn" type="button" id="btnImport">⬆️ Importer</button>
+      <input type="file" id="fileImport" accept="application/json,.json" class="hidden">
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+var KEY_DATA='pacFioul.entries.v1', KEY_SET='pacFioul.settings.v1', KEY_WELCOME='pacFioul.welcomeDone';
+// Prix fioul A/B volontairement vides : c'est l'utilisateur qui les saisit.
+var DEFAULTS={cop:3, pci:10, rend:85, prixA:null, prixB:null, labelA:'', labelB:'',
+  elecMode:'base', prixElec:0.2001, prixHP:null, prixHC:null, pctHC:null};
+var OLD_DEFAULT_FIOUL=1.9308, HC_SUGGEST=37.5;
+
+var $=function(id){return document.getElementById(id);};
+function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){toast('Impossible d\'enregistrer (stockage indisponible)');}}
+function posNum(v){v=(v===null||v===''||v===undefined)?NaN:Number(v);return (isFinite(v)&&v>0)?v:null;}
+
+// Normalise des réglages (stockage local ou import) + migration de l'ancien prix unique
+function normalizeSettings(raw){
+  var s=Object.assign({},DEFAULTS); raw=(raw&&typeof raw==='object')?raw:{};
+  ['cop','pci','rend','prixElec'].forEach(function(k){var v=posNum(raw[k]);if(v!==null)s[k]=v;});
+  if('prixElec' in raw && raw.prixElec===null) s.prixElec=null;
+  ['prixA','prixB','prixHP','prixHC'].forEach(function(k){s[k]=posNum(raw[k]);});
+  var p=Number(raw.pctHC); s.pctHC=(raw.pctHC!==null&&raw.pctHC!==''&&isFinite(p)&&p>=0&&p<=100)?p:null;
+  s.labelA=typeof raw.labelA==='string'?raw.labelA.slice(0,40):''; s.labelB=typeof raw.labelB==='string'?raw.labelB.slice(0,40):'';
+  s.elecMode=raw.elecMode==='hphc'?'hphc':'base';
+  if(s.rend>100) s.rend=DEFAULTS.rend;
+  // v1 : un seul "prixFioul" (défaut 1,9308). On le reprend en A seulement s'il avait été modifié.
+  var old=posNum(raw.prixFioul);
+  if(old!==null && s.prixA===null && !('prixA' in raw && raw.prixA!==undefined && raw.prixA!==null) && Math.abs(old-OLD_DEFAULT_FIOUL)>1e-9) s.prixA=old;
+  return s;
+}
+
+var entries=load(KEY_DATA,[]); if(!Array.isArray(entries)) entries=[];
+var settings=normalizeSettings(load(KEY_SET,{}));
+save(KEY_SET,settings); // écrit la version migrée
+var mode='kwh', editingId=null, chartView='cumul';
+
+// ---------- formats ----------
+var nf1=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});
+var nf0=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0});
+var nfE=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});
+var nfN=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:4});
+function fKwh(x){return (Math.abs(x)<100?nf1:nf0).format(x)+' kWh';}
+function fL(x){return nf1.format(x)+' L';}
+function fE(x){return nfE.format(x);}
+function fSigned(x){return (x>0?'+':'')+nfE.format(x);}
+function parseNum(s){if(s==null)return NaN;s=String(s).trim().replace(/\s/g,'').replace(',','.');if(s==='')return NaN;return Number(s);}
+function pad(n){return (n<10?'0':'')+n;}
+function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function todayIso(){return iso(new Date());}
+function parseIso(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function fDate(s){var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function nameA(){return settings.labelA.trim()||'Fioul A';}
+function nameB(){return settings.labelB.trim()||'Fioul B';}
+
+// ---------- calcul ----------
+function elecPrice(s){
+  s=s||settings;
+  if(s.elecMode==='hphc'){
+    if(s.prixHP===null||s.prixHC===null||s.pctHC===null) return null;
+    return s.prixHP*(1-s.pctHC/100)+s.prixHC*(s.pctHC/100);
+  }
+  return s.prixElec;
+}
+function calc(kwh,s){
+  s=s||settings;
+  var chaleur=kwh*s.cop;
+  var litres=chaleur/(s.pci*s.rend/100);
+  var pe=elecPrice(s), coutElec=pe===null?null:kwh*pe;
+  function side(prix){
+    if(prix===null||prix===undefined) return null;
+    var f=litres*prix; return {prix:prix,fioul:f,net:coutElec===null?null:f-coutElec};
+  }
+  var A=side(s.prixA), B=side(s.prixB);
+  var diff=(A&&B)?A.fioul-B.fioul:null; // = écart des économies nettes A − B (même coût élec)
+  return {kwh:kwh,chaleur:chaleur,litres:litres,coutElec:coutElec,A:A,B:B,diff:diff};
+}
+function resolved(){
+  var arr=entries.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0);});
+  var lastIdx=null;
+  return arr.map(function(e){
+    var r=Object.assign({},e);
+    if(typeof e.index==='number'){
+      if(lastIdx===null){r.kwh=0;r.start=true;}
+      else{var d=e.index-lastIdx;r.kwh=Math.max(0,d);if(d<0)r.bad=true;r.prevIndex=lastIdx;}
+      lastIdx=e.index;
+    }
+    return r;
+  });
+}
+function prevIndexBefore(date,excludeId){
+  var r=null;
+  entries.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0);})
+    .forEach(function(e){if(e.id!==excludeId&&typeof e.index==='number'&&e.date<=date)r=e.index;});
+  return r;
+}
+function weekStart(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var wd=(x.getDay()+6)%7;x.setDate(x.getDate()-wd);return x;}
+function sumRange(list,from,to){var k=0;list.forEach(function(e){if((!from||e.date>=from)&&(!to||e.date<=to))k+=e.kwh;});return k;}
+
+// ---------- blocs de comparaison A / B ----------
+var MISSING='— renseigne le prix dans Réglages';
+function colHtml(name,side,c){
+  var h='<div class="col"><div class="ch">'+esc(name)+(side?' <span class="pr">'+nfN.format(side.prix)+' €/L</span>':'')+'</div>';
+  if(!side) return h+'<div class="missing">'+MISSING+'</div></div>';
+  h+='<div class="kv"><span>Fioul évité</span><b>'+fE(side.fioul)+'</b></div>';
+  if(side.net===null) h+='<div class="kv"><span>Éco. nette</span><span class="missing">— prix élec à renseigner</span></div>';
+  else h+='<div class="kv"><span>Éco. nette</span><b class="'+(side.net<0?'neg':'net')+'">'+fE(side.net)+'</b></div>';
+  return h+'</div>';
+}
+function cmpHtml(c){
+  var h='<div class="cmp">'+colHtml(nameA(),c.A,c)+colHtml(nameB(),c.B,c)+'</div>';
+  h+='<div class="diff">'+(c.diff===null?'Écart A − B : —':'Écart '+esc(nameA())+' − '+esc(nameB())+' : <b>'+fSigned(c.diff)+'</b>')+
+     (c.coutElec===null?' · Coût élec : — prix élec à renseigner':' · Coût élec PAC : '+fE(c.coutElec))+'</div>';
+  return h;
+}
+function compactLine(c){
+  function one(n,s){return esc(n)+' : '+(!s?'— prix à renseigner':(s.net===null?fE(s.fioul)+' évités':'<b>'+fE(s.net)+'</b> nets'));}
+  return one(nameA(),c.A)+' · '+one(nameB(),c.B)+(c.diff!==null?' · écart '+fSigned(c.diff):'');
+}
+
+// ---------- rendu ----------
+function renderStats(list){
+  var now=new Date(), t=iso(now);
+  var ws=iso(weekStart(now)), ms=t.slice(0,8)+'01', ys=t.slice(0,5)+'01-01';
+  var blocks=[['Cette semaine',ws,t],['Ce mois-ci',ms,t],['Cette année',ys,t],['Depuis le début',null,null]];
+  $('stats').innerHTML=blocks.map(function(b){
+    var c=calc(sumRange(list,b[1],b[2]));
+    return '<div class="stat"><h3>'+b[0]+'</h3><div class="big">'+fL(c.litres)+' <span class="unit">de fioul évités</span></div>'+
+      '<div class="row">'+fKwh(c.kwh)+' élec · '+nf0.format(c.chaleur)+' kWh de chaleur</div>'+cmpHtml(c)+'</div>';
+  }).join('');
+  $('priceBanner').classList.toggle('hidden', settings.prixA!==null||settings.prixB!==null);
+}
+function renderList(list){
+  var ul=$('list');
+  if(!list.length){ul.innerHTML='<li class="empty" style="display:block">Aucun relevé pour l\'instant.</li>';return;}
+  ul.innerHTML=list.slice().reverse().map(function(e){
+    var c=calc(e.kwh);
+    var sub=typeof e.index==='number'
+      ? 'Index '+nfN.format(e.index)+(e.start?' · point de départ':(' · '+nfN.format(e.prevIndex)+' → '+nfN.format(e.index)))+(e.bad?' · ⚠️ index inférieur au précédent':'')
+      : '';
+    return '<li><div class="li-main"><div class="li-top"><span class="li-date">'+fDate(e.date)+
+      (typeof e.index==='number'?'<span class="tag">index</span>':'')+'</span><span class="li-kwh">'+fKwh(e.kwh)+'</span></div>'+
+      '<div class="li-sub">'+fL(c.litres)+' de fioul évités</div>'+
+      '<div class="li-sub">'+compactLine(c)+'</div>'+
+      (sub?'<div class="li-sub">'+esc(sub)+'</div>':'')+
+      (e.note?'<div class="li-note">📝 '+esc(e.note)+'</div>':'')+
+      '</div><div class="li-btns"><button class="icon-btn" type="button" data-edit="'+e.id+'" aria-label="Modifier">✏️</button>'+
+      '<button class="icon-btn del" type="button" data-del="'+e.id+'" aria-label="Supprimer">🗑️</button></div></li>';
+  }).join('');
+}
+function renderWelcome(){
+  var done=load(KEY_WELCOME,false);
+  $('welcome').classList.toggle('hidden', !!done || entries.length>0);
+}
+function renderFormula(){
+  var c=calc(150), pe=elecPrice();
+  $('formulaEx').innerHTML='Exemple : 150 kWh × COP '+nfN.format(settings.cop)+' = '+nf0.format(c.chaleur)+' kWh de chaleur ÷ ('+nfN.format(settings.pci)+' × '+nfN.format(settings.rend)+' %) = <b>'+fL(c.litres)+'</b> de fioul évités'+
+    (pe===null?'':' · élec : 150 × '+nfN.format(pe)+' € = '+fE(c.coutElec))+cmpHtml(c);
+  var pm=$('elecAvg');
+  if(settings.elecMode==='hphc'){pm.textContent=pe===null?'Prix moyen : renseigne HP, HC et % d\'heures creuses.':'Prix moyen pondéré utilisé : '+nfN.format(pe)+' €/kWh';}
+}
+
+// ---------- graphique SVG ----------
+var COL={};
+function readColors(){var cs=getComputedStyle(document.documentElement);['--accent','--accent2','--accent3','--muted','--line','--text'].forEach(function(k){COL[k]=cs.getPropertyValue(k).trim()||'#888';});}
+function niceMax(v){if(v<=0)return 1;var p=Math.pow(10,Math.floor(Math.log10(v)));var n=v/p;var m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;return m*p;}
+function svgEl(w,h,inner){return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Graphique" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">'+inner+'</svg>';}
+function txt(x,y,s,o){o=o||{};return '<text x="'+x+'" y="'+y+'" font-size="'+(o.size||11)+'" fill="'+(o.fill||COL['--muted'])+'" text-anchor="'+(o.anchor||'middle')+'">'+esc(s)+'</text>';}
+var MONTHS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+
+function renderChart(list){
+  readColors();
+  var box=$('chart'); var W=Math.max(300,Math.round(box.clientWidth||600)); var H=Math.round(Math.min(320,Math.max(220,W*0.55)));
+  var c0=calc(1), hasA=!!(c0.A&&c0.A.net!==null), hasB=!!(c0.B&&c0.B.net!==null), hasE=hasA||hasB;
+  var L=46,R=(chartView==='cumul'&&hasE)?54:12,T=14,B=34, pw=W-L-R, ph=H-T-B;
+  var leg=$('legend');
+  if(!list.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,'Le graphique apparaîtra après ton premier relevé',{size:13}));leg.innerHTML='';return;}
+  var g='';
+  function gridY(max,fmt,fill){
+    var s='';for(var i=0;i<=4;i++){var v=max*i/4,y=T+ph-ph*i/4;
+      s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="'+COL['--line']+'" stroke-width="1"/>';
+      s+=txt(L-6,y+4,fmt(v),{anchor:'end',fill:fill||COL['--muted']});}
+    return s;}
+  var shortNum=function(v){return Math.abs(v)>=1000?nf1.format(v/1000)+'k':(Math.abs(v)<10&&v%1?nf1.format(v):nf0.format(v));};
+  if(chartView==='cumul'){
+    var pts=[],cl=0,ca=0,cb=0,byDate={};
+    list.forEach(function(e){var c=calc(e.kwh);cl+=c.litres;if(hasA)ca+=c.A.net;if(hasB)cb+=c.B.net;byDate[e.date]={l:cl,a:ca,b:cb};});
+    Object.keys(byDate).sort().forEach(function(d){pts.push({d:d,t:parseIso(d).getTime(),l:byDate[d].l,a:byDate[d].a,b:byDate[d].b});});
+    var t0=pts[0].t,t1=pts[pts.length-1].t; if(t1===t0){t0-=86400000*3;t1+=86400000*3;}
+    var maxL=niceMax(Math.max.apply(null,pts.map(function(p){return p.l;})));
+    var eVals=[0];pts.forEach(function(p){if(hasA)eVals.push(p.a);if(hasB)eVals.push(p.b);});
+    var maxE=niceMax(Math.max.apply(null,eVals)), minE=Math.min.apply(null,eVals); minE=minE<0?-niceMax(-minE):0; var spanE=maxE-minE||1;
+    var X=function(t){return L+pw*(t-t0)/(t1-t0);}, YL=function(v){return T+ph-ph*v/maxL;}, YE=function(v){return T+ph-ph*(v-minE)/spanE;};
+    g+=gridY(maxL,function(v){return shortNum(v)+' L';},COL['--accent']);
+    if(hasE)for(var i=0;i<=4;i++){var v=minE+spanE*i/4;g+=txt(W-R+6,T+ph-ph*i/4+4,shortNum(Math.round(v))+' €',{anchor:'start'});}
+    var nt=pts.length===1?1:4;
+    for(var k=0;k<nt;k++){var tt=nt===1?pts[0].t:t0+(t1-t0)*k/(nt-1);var dd=new Date(tt);g+=txt(nt===1?X(tt):Math.min(Math.max(X(tt),L+22),W-R-22),H-12,pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+'/'+String(dd.getFullYear()).slice(2));}
+    function path(fy){return pts.map(function(p,i){return (i?'L':'M')+X(p.t).toFixed(1)+' '+fy(p).toFixed(1);}).join('');}
+    var pathL=path(function(p){return YL(p.l);});
+    g+='<path d="'+pathL+'L'+X(pts[pts.length-1].t).toFixed(1)+' '+(T+ph)+'L'+X(pts[0].t).toFixed(1)+' '+(T+ph)+'Z" fill="'+COL['--accent']+'" opacity=".12"/>';
+    g+='<path d="'+pathL+'" fill="none" stroke="'+COL['--accent']+'" stroke-width="2.5" stroke-linejoin="round"/>';
+    if(hasA)g+='<path d="'+path(function(p){return YE(p.a);})+'" fill="none" stroke="'+COL['--accent2']+'" stroke-width="2.5" stroke-dasharray="7 4" stroke-linejoin="round"/>';
+    if(hasB)g+='<path d="'+path(function(p){return YE(p.b);})+'" fill="none" stroke="'+COL['--accent3']+'" stroke-width="2.5" stroke-dasharray="2 4" stroke-linecap="round" stroke-linejoin="round"/>';
+    pts.forEach(function(p){var x=X(p.t).toFixed(1);
+      g+='<circle cx="'+x+'" cy="'+YL(p.l).toFixed(1)+'" r="3.5" fill="'+COL['--accent']+'"><title>'+fDate(p.d)+' : '+fL(p.l)+' cumulés</title></circle>';
+      if(hasA)g+='<circle cx="'+x+'" cy="'+YE(p.a).toFixed(1)+'" r="3" fill="'+COL['--accent2']+'"><title>'+fDate(p.d)+' · '+esc(nameA())+' : '+fE(p.a)+' cumulés</title></circle>';
+      if(hasB)g+='<circle cx="'+x+'" cy="'+YE(p.b).toFixed(1)+'" r="3" fill="'+COL['--accent3']+'"><title>'+fDate(p.d)+' · '+esc(nameB())+' : '+fE(p.b)+' cumulés</title></circle>';});
+    leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres évités (cumul, axe gauche)</span>'+
+      (hasA?'<span><i style="background:'+COL['--accent2']+'"></i>'+esc(nameA())+' : € nets cumulés (axe droit)</span>':'')+
+      (hasB?'<span><i style="background:'+COL['--accent3']+'"></i>'+esc(nameB())+' : € nets cumulés (axe droit)</span>':'')+
+      (hasE?'':'<span>Renseigne un prix de fioul (et d\'électricité) dans Réglages pour voir les courbes en €.</span>');
+  } else {
+    var groups={},order=[];
+    function keyOf(d){var x=parseIso(d);
+      if(chartView==='week'){var w=weekStart(x);return {k:iso(w),lab:pad(w.getDate())+'/'+pad(w.getMonth()+1)};}
+      if(chartView==='month'){return {k:d.slice(0,7),lab:MONTHS[x.getMonth()]+' '+String(x.getFullYear()).slice(2)};}
+      return {k:d.slice(0,4),lab:d.slice(0,4)};}
+    list.forEach(function(e){var o=keyOf(e.date);if(!groups[o.k]){groups[o.k]={lab:o.lab,kwh:0};order.push(o.k);}groups[o.k].kwh+=e.kwh;});
+    order.sort(); var maxBars=chartView==='week'?Math.max(6,Math.floor(pw/34)):chartView==='month'?Math.max(6,Math.floor(pw/40)):20;
+    if(order.length>maxBars)order=order.slice(-maxBars);
+    var data=order.map(function(k){var gg=groups[k];gg.c=calc(gg.kwh);gg.l=gg.c.litres;return gg;});
+    var mx=niceMax(Math.max.apply(null,data.map(function(d){return d.l;})));
+    g+=gridY(mx,function(v){return shortNum(v)+' L';});
+    var slot=pw/data.length,bw=Math.min(56,slot*0.68), every=Math.ceil(data.length/8);
+    data.forEach(function(d,i){var h=ph*d.l/mx,x=L+slot*i+(slot-bw)/2,y=T+ph-h;
+      var tip=d.lab+' : '+fL(d.l)+(d.c.A&&d.c.A.net!==null?' · '+nameA()+' '+fE(d.c.A.net):'')+(d.c.B&&d.c.B.net!==null?' · '+nameB()+' '+fE(d.c.B.net):'');
+      g+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="5" fill="'+COL['--accent']+'"><title>'+esc(tip)+'</title></rect>';
+      if(data.length<=12)g+=txt(x+bw/2,y-5,nf1.format(d.l),{size:10,fill:COL['--text']});
+      if(i%every===0||i===data.length-1)g+=txt(x+bw/2,H-12,d.lab,{size:10});});
+    var tot=calc(data.reduce(function(a,d){return a+d.kwh;},0));
+    leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres de fioul évités par '+(chartView==='week'?'semaine (lundi)':chartView==='month'?'mois':'année')+'</span><span>Total affiché : '+compactLine(tot)+'</span>';
+  }
+  box.innerHTML=svgEl(W,H,g);
+}
+
+function renderAll(){
+  var list=resolved();
+  renderWelcome();renderStats(list);renderList(list);renderChart(list);renderFormula();
+}
+
+// ---------- formulaire ----------
+function setMode(m){
+  mode=m;
+  $('modeKwh').setAttribute('aria-pressed',m==='kwh');$('modeIndex').setAttribute('aria-pressed',m==='index');
+  $('fValLabel').textContent=m==='kwh'?'kWh électriques consommés par la PAC sur la période':'Index du compteur de la PAC (kWh, valeur cumulée)';
+  $('fVal').placeholder=m==='kwh'?'ex. 30':'ex. 1250';
+  $('modeHint').textContent=m==='kwh'
+    ?'Tape la consommation de la PAC depuis ton dernier relevé.'
+    :'Tape le chiffre affiché sur le compteur : l\'appli calcule la différence avec l\'index précédent. Le tout premier index sert de point de départ (0 kWh).';
+  updatePreview();
+}
+function updatePreview(){
+  var v=parseNum($('fVal').value), p=$('preview'); p.classList.remove('warn');
+  if(isNaN(v)){p.classList.add('hidden');return;}
+  p.classList.remove('hidden');
+  var kwh=v, head='';
+  if(mode==='index'){
+    var prev=prevIndexBefore($('fDate').value||todayIso(),editingId);
+    if(prev===null){p.innerHTML='Premier index : il servira de <b>point de départ</b> (0 kWh comptés).';return;}
+    kwh=v-prev;
+    if(kwh<0){p.classList.add('warn');p.innerHTML='⚠️ Cet index est inférieur au précédent ('+nfN.format(prev)+'). Vérifie le chiffre.';return;}
+    head='Depuis l\'index précédent ('+nfN.format(prev)+') : <b>'+fKwh(kwh)+'</b><br>';
+  }
+  if(kwh<0){p.classList.add('warn');p.innerHTML='⚠️ Valeur négative.';return;}
+  var c=calc(kwh);
+  p.innerHTML=head+'= '+nf0.format(c.chaleur)+' kWh de chaleur → <b>'+fL(c.litres)+'</b> de fioul évités'+cmpHtml(c);
+}
+function resetForm(){
+  editingId=null;$('form').reset();$('fDate').value=todayIso();
+  $('formTitle').textContent='➕ Nouveau relevé';$('btnSave').textContent='Ajouter le relevé';$('btnCancel').classList.add('hidden');
+  $('preview').classList.add('hidden');
+}
+$('form').addEventListener('submit',function(ev){
+  ev.preventDefault();
+  var date=$('fDate').value, v=parseNum($('fVal').value), note=$('fNote').value.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){toast('Choisis une date');return;}
+  if(isNaN(v)||v<0){toast('Entre un nombre positif (ex. 30 ou 12,5)');$('fVal').focus();return;}
+  var rec={date:date,note:note};
+  if(mode==='index'){rec.index=v;}else{rec.kwh=v;}
+  if(editingId){
+    entries=entries.map(function(e){if(e.id!==editingId)return e;var n={id:e.id,created:e.created,date:rec.date,note:rec.note};if('index' in rec)n.index=rec.index;else n.kwh=rec.kwh;return n;});
+    toast('Relevé modifié');
+  } else {
+    rec.id=uid();rec.created=Date.now();entries.push(rec);toast('Relevé ajouté ✅');
+  }
+  save(KEY_DATA,entries);save(KEY_WELCOME,true);resetForm();renderAll();
+});
+$('btnCancel').addEventListener('click',function(){resetForm();});
+$('modeKwh').addEventListener('click',function(){setMode('kwh');});
+$('modeIndex').addEventListener('click',function(){setMode('index');});
+$('fVal').addEventListener('input',updatePreview);$('fDate').addEventListener('change',updatePreview);
+
+$('list').addEventListener('click',function(ev){
+  var b=ev.target.closest('button'); if(!b)return;
+  var id=b.getAttribute('data-edit')||b.getAttribute('data-del');
+  var e=entries.filter(function(x){return x.id===id;})[0]; if(!e)return;
+  if(b.hasAttribute('data-del')){
+    if(confirm('Supprimer le relevé du '+fDate(e.date)+' ? Cette action est définitive.')){
+      entries=entries.filter(function(x){return x.id!==id;});save(KEY_DATA,entries);
+      if(editingId===id)resetForm();renderAll();toast('Relevé supprimé');}
+  } else {
+    editingId=id;setMode(typeof e.index==='number'?'index':'kwh');
+    $('fDate').value=e.date;$('fVal').value=String(typeof e.index==='number'?e.index:e.kwh).replace('.',',');$('fNote').value=e.note||'';
+    $('formTitle').textContent='✏️ Modifier le relevé du '+fDate(e.date);$('btnSave').textContent='Enregistrer';$('btnCancel').classList.remove('hidden');
+    updatePreview();$('formCard').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+});
+
+$('btnFirst').addEventListener('click',function(){
+  entries.push({id:uid(),created:Date.now(),date:'2026-10-24',kwh:150,note:'Premier relevé'});
+  save(KEY_DATA,entries);save(KEY_WELCOME,true);renderAll();toast('Premier relevé ajouté ✅');
+});
+$('btnGoSettings').addEventListener('click',function(){var d=$('settingsBox');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){$('sPrixA').focus();},350);});
+
+// ---------- graphique : boutons ----------
+Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(b){
+  b.addEventListener('click',function(){chartView=b.getAttribute('data-view');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(x){x.setAttribute('aria-pressed',x===b);});
+    renderChart(resolved());});
+});
+var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){renderChart(resolved());},150);});
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){renderChart(resolved());});}
+
+// ---------- réglages ----------
+var REQ={sCop:'cop',sPci:'pci',sRend:'rend'};
+var OPT={sPrixA:'prixA',sPrixB:'prixB',sElec:'prixElec',sHP:'prixHP',sHC:'prixHC'};
+var elecModeUI='base';
+function numStr(v){return v===null||v===undefined?'':String(v).replace('.',',');}
+function setElecMode(m){elecModeUI=m;$('elecBase').setAttribute('aria-pressed',m==='base');$('elecHphc').setAttribute('aria-pressed',m==='hphc');
+  $('boxBase').classList.toggle('hidden',m!=='base');$('boxHphc').classList.toggle('hidden',m!=='hphc');}
+function fillSettings(){
+  Object.keys(REQ).forEach(function(id){$(id).value=numStr(settings[REQ[id]]);});
+  Object.keys(OPT).forEach(function(id){$(id).value=numStr(settings[OPT[id]]);});
+  $('sPct').value=numStr(settings.pctHC);$('sLabelA').value=settings.labelA;$('sLabelB').value=settings.labelB;
+  setElecMode(settings.elecMode);
+}
+function labelOf(id){return $(id).previousElementSibling?$(id).previousElementSibling.textContent:id;}
+$('elecBase').addEventListener('click',function(){setElecMode('base');});
+$('elecHphc').addEventListener('click',function(){setElecMode('hphc');});
+$('btnPct').addEventListener('click',function(){$('sPct').value=numStr(HC_SUGGEST);});
+$('btnSaveSettings').addEventListener('click',function(){
+  var n=Object.assign({},settings),id,v,raw;
+  for(id in REQ){v=parseNum($(id).value);if(isNaN(v)||v<=0){toast('Valeur invalide : '+labelOf(id));$(id).focus();return;}n[REQ[id]]=v;}
+  if(n.rend>100){toast('Le rendement doit être ≤ 100 %');return;}
+  for(id in OPT){raw=$(id).value.trim();if(raw===''){n[OPT[id]]=null;continue;}v=parseNum(raw);if(isNaN(v)||v<=0){toast('Valeur invalide : '+labelOf(id));$(id).focus();return;}n[OPT[id]]=v;}
+  raw=$('sPct').value.trim();if(raw===''){n.pctHC=null;}else{v=parseNum(raw.replace('%',''));if(isNaN(v)||v<0||v>100){toast('% heures creuses : entre 0 et 100');$('sPct').focus();return;}n.pctHC=v;}
+  n.labelA=$('sLabelA').value.trim().slice(0,40);n.labelB=$('sLabelB').value.trim().slice(0,40);n.elecMode=elecModeUI;
+  settings=n;save(KEY_SET,settings);renderAll();toast('Réglages enregistrés');
+});
+$('btnResetSettings').addEventListener('click',function(){
+  if(!confirm('Remettre COP 3, PCI 10, rendement 85 % et électricité Base 0,2001 €/kWh ? Tes prix et noms de fioul A/B sont conservés.'))return;
+  settings=Object.assign({},settings,{cop:DEFAULTS.cop,pci:DEFAULTS.pci,rend:DEFAULTS.rend,elecMode:'base',prixElec:DEFAULTS.prixElec});
+  save(KEY_SET,settings);fillSettings();renderAll();toast('Valeurs par défaut remises');
+});
+
+// ---------- export / import ----------
+$('btnExport').addEventListener('click',function(){
+  var data={app:'suivi-pac-fioul',version:2,exportedAt:new Date().toISOString(),settings:settings,entries:entries};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='suivi-pac-fioul-'+todayIso()+'.json';
+  document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
+  toast('Sauvegarde exportée');
+});
+$('btnImport').addEventListener('click',function(){$('fileImport').click();});
+$('fileImport').addEventListener('change',function(){
+  var f=this.files[0]; if(!f)return; var input=this;
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var d=JSON.parse(rd.result);
+      if(!d||!Array.isArray(d.entries))throw new Error('format');
+      var clean=d.entries.filter(function(e){return e&&/^\d{4}-\d{2}-\d{2}$/.test(e.date)&&(typeof e.kwh==='number'||typeof e.index==='number');})
+        .map(function(e){var n={id:String(e.id||uid()),created:+e.created||Date.now(),date:e.date,note:String(e.note||'')};if(typeof e.index==='number')n.index=e.index;else n.kwh=e.kwh;return n;});
+      if(!confirm('Importer '+clean.length+' relevé(s) ? Ils remplaceront les '+entries.length+' relevé(s) actuels de ce navigateur.'))return;
+      entries=clean;save(KEY_DATA,entries);save(KEY_WELCOME,true);
+      if(d.settings&&typeof d.settings==='object'){settings=normalizeSettings(d.settings);save(KEY_SET,settings);fillSettings();}
+      resetForm();renderAll();toast('Import réussi ✅');
+    }catch(e){toast('Fichier invalide : ce n\'est pas une sauvegarde de cette appli');}
+    finally{input.value='';}
+  };
+  rd.readAsText(f);
+});
+
+var tt;function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2400);}
+
+window.__pac={calc:calc,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+
+fillSettings();setMode('kwh');resetForm();renderAll();
+})();
+</script>
+</body>
+</html>
