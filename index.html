@@ -151,6 +151,15 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
 .wlab b{display:block;font-size:1.05rem}
 .wlab span{font-size:.8rem;color:var(--muted)}
 .wnav .icon-btn:disabled{opacity:.35;cursor:default}
+.evol-unit{margin-top:10px}
+.evol-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.evol-tbl .ptable{font-size:.82rem}
+.evol-tbl .ptable th i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.evol-tbl .ptable th{white-space:normal;vertical-align:bottom}
+.evol-tbl tr.sel td{background:var(--accent-soft)}
+.evol-tbl tr.tot td{font-weight:700}
+.evol-tbl td.neg{color:var(--danger)}
+#evolTip{min-height:1.2em}
 .spread-row{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:.85rem;color:var(--muted)}
 .seg-sm button{white-space:nowrap}
 .seg-sm button{min-height:34px;font-size:.82rem}
@@ -223,8 +232,18 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
       <button type="button" data-view="month" aria-pressed="false">Mois</button>
       <button type="button" data-view="year" aria-pressed="false">Année</button>
     </div>
+    <div id="evolCtl" class="hidden">
+      <div class="seg seg-sm evol-unit" id="evolUnit" role="group" aria-label="Unité des barres"></div>
+      <div class="wnav" id="evolNav">
+        <button class="icon-btn" type="button" id="evolPrev" aria-label="Période précédente">◀</button>
+        <div class="wlab"><b id="evolNavLab">—</b><span id="evolNavSub"></span></div>
+        <button class="icon-btn" type="button" id="evolNext" aria-label="Période suivante">▶</button>
+      </div>
+    </div>
     <div class="chart-wrap" id="chart"></div>
     <div class="legend" id="legend"></div>
+    <p class="hint" id="evolTip"></p>
+    <div class="evol-tbl" id="evolTable"></div>
   </section>
 
   <section class="card">
@@ -414,7 +433,7 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
       <button type="button" data-tview="month" aria-pressed="true">Mois</button>
       <button type="button" data-tview="winter" aria-pressed="false">Hiver</button>
     </div>
-    <div class="wnav">
+    <div class="wnav" id="consoNav">
       <button class="icon-btn" type="button" id="consoPrev" aria-label="Précédent">◀</button>
       <div class="wlab"><b id="consoNavLab">—</b><span id="consoNavSub"></span></div>
       <button class="icon-btn" type="button" id="consoNext" aria-label="Suivant">▶</button>
@@ -780,13 +799,23 @@ var SIDE_COLS=[function(){return COL['--accent2'];},function(){return COL['--acc
 var SIDE_DASH=['7 4','2 4','10 3 2 3','4 3','12 4','3 3 8 3','6 2 2 2','9 5'];
 var MONTHS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 
+// Séries du graphique (source unique des couleurs : courbes Cumul ET barres Semaine/Mois/Année)
+function chartSeries(c0){
+  var U=volUnit(c0), out=[{key:'vol',unit:U==='kWh'?'kWh':'L',col:COL['--accent'],dash:null,name:U==='kWh'?'kWh de gaz évités':'Litres de fioul évités',short:U==='kWh'?'kWh gaz':'Litres',val:function(c){return volMain(c);}}];
+  c0.sides.forEach(function(x,i){if(x.net===null)return;
+    out.push({key:'side:'+x.id,unit:'€',idx:i,col:SIDE_COLS[i%SIDE_COLS.length](),dash:SIDE_DASH[i%SIDE_DASH.length],name:x.name+' : € nets',short:x.name,val:function(c){return c.sides[i].net;}});});
+  return out;
+}
+var KEY_EUNIT='pacFioul.evolUnit', evolUnitSel=load(KEY_EUNIT,'vol')==='eur'?'eur':'vol', evolPage=0, evolSel=null, evolLast=null;
 function renderChart(list){
   readColors();
   var box=$('chart'); var W=Math.max(300,Math.round(box.clientWidth||600)); var H=Math.round(Math.min(320,Math.max(220,W*0.55)));
   var c0=calc(1), U=volUnit(c0), eIdx=[];c0.sides.forEach(function(x,i){if(x.net!==null)eIdx.push(i);}); var hasE=eIdx.length>0;
-  function sideCol(i){return SIDE_COLS[i%SIDE_COLS.length]();} function sideDash(i){return SIDE_DASH[i%SIDE_DASH.length];}
+  var SER=chartSeries(c0), serByIdx={};SER.forEach(function(x){if(x.idx!==undefined)serByIdx[x.idx]=x;});
+  function sideCol(i){return serByIdx[i].col;} function sideDash(i){return serByIdx[i].dash;}
   var L=46,R=(chartView==='cumul'&&hasE)?54:12,T=14,B=34, pw=W-L-R, ph=H-T-B;
   var leg=$('legend');
+  $('evolCtl').classList.toggle('hidden',chartView==='cumul'||!list.length);$('evolTip').textContent='';$('evolTable').innerHTML='';evolLast=null;
   if(!list.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,'Le graphique apparaîtra après ton premier relevé',{size:13}));leg.innerHTML='';return;}
   var g='';
   function gridY(max,fmt,fill){
@@ -812,8 +841,8 @@ function renderChart(list){
     var pathL=path(function(p){return YL(p.l);});
     var volLab=U==='kWh'?'kWh de gaz évités':'Litres évités';
     g+='<path d="'+pathL+'L'+X(pts[pts.length-1].t).toFixed(1)+' '+(T+ph)+'L'+X(pts[0].t).toFixed(1)+' '+(T+ph)+'Z" fill="'+COL['--accent']+'" opacity=".12"/>';
-    g+='<path d="'+pathL+'" fill="none" stroke="'+COL['--accent']+'" stroke-width="2.5" stroke-linejoin="round"/>';
-    eIdx.forEach(function(i){g+='<path d="'+path(function(p){return YE(p.e[i]);})+'" fill="none" stroke="'+sideCol(i)+'" stroke-width="2.5" stroke-dasharray="'+sideDash(i)+'" stroke-linecap="round" stroke-linejoin="round"/>';});
+    g+='<path data-s="vol" d="'+pathL+'" fill="none" stroke="'+SER[0].col+'" stroke-width="2.5" stroke-linejoin="round"/>';
+    eIdx.forEach(function(i){g+='<path data-s="'+esc(serByIdx[i].key)+'" d="'+path(function(p){return YE(p.e[i]);})+'" fill="none" stroke="'+sideCol(i)+'" stroke-width="2.5" stroke-dasharray="'+sideDash(i)+'" stroke-linecap="round" stroke-linejoin="round"/>';});
     pts.forEach(function(p){var x=X(p.t).toFixed(1);
       g+='<circle cx="'+x+'" cy="'+YL(p.l).toFixed(1)+'" r="3.5" fill="'+COL['--accent']+'"><title>'+fDate(p.d)+' : '+(U==='kWh'?fKwhG(p.l):fL(p.l))+' cumulés</title></circle>';
       eIdx.forEach(function(i){g+='<circle cx="'+x+'" cy="'+YE(p.e[i]).toFixed(1)+'" r="3" fill="'+sideCol(i)+'"><title>'+fDate(p.d)+' · '+esc(c0.sides[i].name)+' : '+fE(p.e[i])+' cumulés</title></circle>';});});
@@ -821,27 +850,97 @@ function renderChart(list){
       eIdx.map(function(i){return '<span><i style="background:'+sideCol(i)+'"></i>'+esc(c0.sides[i].name)+' : € nets cumulés (axe droit)</span>';}).join('')+
       (hasE?'':'<span>Renseigne un prix de fioul ou de gaz (et d\'électricité) dans Réglages pour voir les courbes en €.</span>');
   } else {
-    var groups={},order=[];
-    function keyOf(d){var x=parseIso(d);
-      if(chartView==='week'){var w=weekStart(x);return {k:iso(w),lab:pad(w.getDate())+'/'+pad(w.getMonth()+1)};}
-      if(chartView==='month'){return {k:d.slice(0,7),lab:MONTHS[x.getMonth()]+' '+String(x.getFullYear()).slice(2)};}
-      return {k:d.slice(0,4),lab:d.slice(0,4)};}
-    list.forEach(function(e){var o=keyOf(e.date);if(!groups[o.k]){groups[o.k]={lab:o.lab,kwh:0,h:0};order.push(o.k);}groups[o.k].kwh+=e.kwh;groups[o.k].h+=e.kwh*e.cop;});
-    order.sort(); var maxBars=chartView==='week'?Math.max(6,Math.floor(pw/34)):chartView==='month'?Math.max(6,Math.floor(pw/40)):20;
-    if(order.length>maxBars)order=order.slice(-maxBars);
-    var data=order.map(function(k){var gg=groups[k];gg.c=calc(gg.kwh,null,(tempReady()&&gg.kwh>0)?gg.h/gg.kwh:null);gg.l=volMain(gg.c);return gg;});
-    var mx=niceMax(Math.max.apply(null,data.map(function(d){return d.l;})));
-    g+=gridY(mx,function(v){return shortNum(v)+' '+U;});
-    var slot=pw/data.length,bw=Math.min(56,slot*0.68), every=Math.ceil(data.length/8);
-    data.forEach(function(d,i){var h=ph*d.l/mx,x=L+slot*i+(slot-bw)/2,y=T+ph-h;
-      var tip=d.lab+' : '+volText(d.c)+d.c.sides.map(function(x){return x.net!==null?' · '+x.name+' '+fE(x.net):'';}).join('');
-      g+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="5" fill="'+COL['--accent']+'"><title>'+esc(tip)+'</title></rect>';
-      if(data.length<=12)g+=txt(x+bw/2,y-5,nf1.format(d.l),{size:10,fill:COL['--text']});
-      if(i%every===0||i===data.length-1)g+=txt(x+bw/2,H-12,d.lab,{size:10});});
-    var tk=data.reduce(function(a,d){return a+d.kwh;},0), th=data.reduce(function(a,d){return a+d.h;},0), tot=calc(tk,null,(tempReady()&&tk>0)?th/tk:null);
-    leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>'+(U==='kWh'?'kWh de gaz évités par ':'Litres de fioul évités par ')+(chartView==='week'?'semaine (lundi)':chartView==='month'?'mois':'année')+'</span><span>Total affiché : '+compactLine(tot)+'</span>';
+    renderBars(list,c0,SER,box,leg,W,H,L,T,ph,pw,gridY,shortNum);return;
   }
   box.innerHTML=svgEl(W,H,g);
+}
+
+// ---------- Barres groupées Semaine / Mois / Année ----------
+function evolPeriods(list,view){
+  // renvoie {keys:[...] triées, lab(k), long(k)} couvrant toutes les périodes de la 1re à la dernière donnée
+  var first=list[0].date,last=list[list.length-1].date,keys=[];
+  if(view==='week'){var w=weekStart(parseIso(first)),we=weekStart(parseIso(last));var gd=0;while(w<=we&&gd<3000){keys.push(iso(w));w.setDate(w.getDate()+7);gd++;}}
+  else if(view==='month'){var y=+first.slice(0,4),m=+first.slice(5,7)-1,y1=+last.slice(0,4),m1=+last.slice(5,7)-1;while(y<y1||(y===y1&&m<=m1)){keys.push(y+'-'+pad(m+1));m++;if(m>11){m=0;y++;}}}
+  else{for(var yy=+first.slice(0,4);yy<=+last.slice(0,4);yy++)keys.push(String(yy));}
+  return keys;
+}
+function evolKeyOf(d,view){if(view==='week')return iso(weekStart(parseIso(d)));if(view==='month')return d.slice(0,7);return d.slice(0,4);}
+function evolLab(k,view){if(view==='week')return k.slice(8,10)+'/'+k.slice(5,7);if(view==='month')return MONTHS[+k.slice(5,7)-1];return k;}
+function evolLong(k,view){if(view==='week')return 'semaine du '+fDate(k)+' au '+fDate(addDays(k,6));if(view==='month')return MONTHS_FR[+k.slice(5,7)-1]+' '+k.slice(0,4);return 'année '+k;}
+// Fenêtre affichée : {keys, page, pages, lab, sub}
+function evolWindow(all,view,nS,pw){
+  var groupMin=nS*7+10, fit=Math.max(1,Math.floor(pw/groupMin)), win=[],pages=1,lab='',sub='';
+  if(view==='month'){
+    var per=[12,6,4,3,2,1].filter(function(d){return d<=fit;})[0]||1;
+    var chunk=function(k){return (+k.slice(0,4))*12/per+Math.floor((+k.slice(5,7)-1)/per);};
+    var c0=chunk(all[0]),c1=chunk(all[all.length-1]);pages=c1-c0+1;
+    evolPage=Math.max(0,Math.min(evolPage,pages-1));var c=c1-evolPage, y=Math.floor(c*per/12), m0=(c*per)%12;
+    for(var i=0;i<per;i++)win.push(y+'-'+pad(m0+i+1));
+    lab=per===12?String(y):MONTHS[m0]+' – '+MONTHS[m0+per-1]+' '+y;sub=per===12?'janvier à décembre':per+' mois';
+  } else {
+    var n=view==='week'?Math.min(6,fit):Math.min(8,fit);
+    pages=Math.ceil(all.length/n);evolPage=Math.max(0,Math.min(evolPage,pages-1));
+    var end=all.length-evolPage*n, st=Math.max(0,end-n);win=all.slice(st,end);
+    if(view==='week'){lab=fDate(win[0]).slice(0,5)+' → '+fDate(addDays(win[win.length-1],6));sub=win.length+' semaine'+(win.length>1?'s':'');}
+    else{lab=win.length>1?win[0]+' – '+win[win.length-1]:win[0];sub=win.length+' année'+(win.length>1?'s':'');}
+  }
+  return {keys:win,page:evolPage,pages:pages,lab:lab,sub:sub};
+}
+function renderBars(list,c0,SER,box,leg,W,H,L,T,ph,pw,gridY,shortNum){
+  var view=chartView, hasEur=SER.some(function(x){return x.unit==='€';}), volU=SER[0].unit;
+  if(evolUnitSel==='eur'&&!hasEur)evolUnitSel='vol';
+  var uBox=$('evolUnit');
+  uBox.innerHTML='<button type="button" data-eunit="vol" aria-pressed="'+(evolUnitSel==='vol')+'">'+volU+'</button>'+(hasEur?'<button type="button" data-eunit="eur" aria-pressed="'+(evolUnitSel==='eur')+'">€</button>':'');
+  var unit=evolUnitSel==='eur'?'€':volU, ser=SER.filter(function(x){return x.unit===unit;});
+  // agrégation par période
+  var groups={};list.forEach(function(e){var k=evolKeyOf(e.date,view);if(!groups[k])groups[k]={kwh:0,h:0};groups[k].kwh+=e.kwh;groups[k].h+=e.kwh*e.cop;});
+  var all=evolPeriods(list,view), w=evolWindow(all,view,Math.max(1,ser.length),pw);
+  $('evolNavLab').textContent=w.lab;$('evolNavSub').textContent=[w.sub,w.pages>1?'page '+(w.pages-w.page)+'/'+w.pages:''].filter(Boolean).join(' · ');
+  $('evolPrev').disabled=w.page>=w.pages-1;$('evolNext').disabled=w.page<=0;
+  var data=w.keys.map(function(k){var gg=groups[k], c=gg?calc(gg.kwh,null,(tempReady()&&gg.kwh>0)?gg.h/gg.kwh:null):null;
+    return {k:k,lab:evolLab(k,view),long:evolLong(k,view),c:c,kwh:gg?gg.kwh:0,h:gg?gg.h:0,v:ser.map(function(x){return c?x.val(c):null;})};});
+  var per=view==='week'?'semaine':view==='month'?'mois':'année';
+  if(!ser.length){
+    box.innerHTML=svgEl(W,H,txt(W/2,H/2-8,'Aucune série en €',{size:13})+txt(W/2,H/2+12,'Renseigne un prix (fioul ou gaz) et l\'électricité dans Réglages',{size:11}));
+    leg.innerHTML='';return;}
+  var vals=[0];data.forEach(function(d){d.v.forEach(function(v){if(v!==null)vals.push(v);});});
+  var vMax=Math.max.apply(null,vals), vMin=Math.min.apply(null,vals), raw=(vMax-vMin)/4||1, p10=Math.pow(10,Math.floor(Math.log10(raw))), nr=raw/p10;
+  var step=(nr<=1?1:nr<=2?2:nr<=5?5:10)*p10, mx=Math.max(step,Math.ceil(vMax/step-1e-9)*step), mn=Math.min(0,Math.floor(vMin/step+1e-9)*step), span=mx-mn, nt=Math.round(span/step);
+  var Y=function(v){return T+ph-ph*(v-mn)/span;};
+  var g='';
+  for(var i=0;i<=nt;i++){var v=mn+step*i,y=Y(v);
+    g+='<line x1="'+L+'" x2="'+(L+pw)+'" y1="'+y+'" y2="'+y+'" stroke="'+COL['--line']+'" stroke-width="1"/>';
+    g+=txt(L-6,y+4,shortNum(Math.abs(v)<1e-9?0:v)+' '+unit,{anchor:'end'});}
+  if(mn<0)g+='<line x1="'+L+'" x2="'+(L+pw)+'" y1="'+Y(0).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="'+COL['--muted']+'" stroke-width="1.2"/>';
+  var n=data.length, slot=pw/n, nS=ser.length, gw=Math.min(slot*0.82,nS*22), bw=gw/nS;
+  var fmt=function(v,u){return v===null?'—':u==='€'?fE(v):(nf1.format(v)+' '+u);};
+  data.forEach(function(d,j){var gx=L+slot*j+(slot-gw)/2;
+    if(evolSel===j)g+='<rect x="'+(L+slot*j+1).toFixed(1)+'" y="'+T+'" width="'+(slot-2).toFixed(1)+'" height="'+ph+'" fill="'+COL['--accent']+'" opacity=".08" rx="4"/>';
+    d.v.forEach(function(v,si){if(v===null)return;var x=gx+bw*si, y0=Y(0), y1=Y(v), top=Math.min(y0,y1), hh=Math.abs(y1-y0);
+      g+='<rect class="ebar" data-s="'+esc(ser[si].key)+'" x="'+(x+0.5).toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+Math.max(1,bw-1).toFixed(1)+'" height="'+Math.max(v===0?0:1,hh).toFixed(1)+'" rx="'+Math.min(3,bw/3).toFixed(1)+'" fill="'+ser[si].col+'"><title>'+esc(d.long+' · '+ser[si].short+' : '+fmt(v,unit))+'</title></rect>';});
+    g+=txt(L+slot*j+slot/2,H-12,(view==='month'&&slot<30)?'JFMAMJJASOND'.charAt(+d.k.slice(5,7)-1):d.lab,{size:10});
+    if(n<=8&&nS===1&&d.v[0]!==null)g+=txt(L+slot*j+slot/2,Y(Math.max(0,d.v[0]))-5,unit==='€'?nf0.format(d.v[0]):nf1.format(d.v[0]),{size:10,fill:COL['--text']});
+    g+='<rect class="ehit" data-g="'+j+'" x="'+(L+slot*j).toFixed(1)+'" y="'+T+'" width="'+slot.toFixed(1)+'" height="'+(ph+B_HIT)+'" fill="transparent" style="cursor:pointer"/>';});
+  if(view==='week')g+=txt(L+pw/2,H-1,'(lundi de chaque semaine)',{size:9});
+  box.innerHTML=svgEl(W,H,g);
+  var tk=data.reduce(function(a,d){return a+d.kwh;},0), th=data.reduce(function(a,d){return a+d.h;},0), tot=calc(tk,null,(tempReady()&&tk>0)?th/tk:null);
+  leg.innerHTML=ser.map(function(x){return '<span data-s="'+esc(x.key)+'"><i style="background:'+x.col+'"></i>'+esc(x.name)+' par '+per+'</span>';}).join('')+
+    (unit!=='€'&&!hasEur?'<span>Renseigne un prix de fioul ou de gaz (et d\'électricité) dans Réglages pour voir les barres en €.</span>':'')+
+    '<span>Total affiché : '+compactLine(tot)+'</span>';
+  // tableau des valeurs de la fenêtre
+  var totV=ser.map(function(x,si){var t=null;data.forEach(function(d){if(d.v[si]!==null)t=(t||0)+d.v[si];});return t;});
+  var head=view==='week'?'Semaine du':view==='month'?'Mois':'Année';
+  $('evolTable').innerHTML='<table class="ptable" id="evolTbl"><thead><tr><th>'+head+'</th>'+ser.map(function(x){return '<th><i style="background:'+x.col+'"></i>'+esc(x.short)+'</th>';}).join('')+'</tr></thead><tbody>'+
+    data.map(function(d,j){return '<tr data-g="'+j+'"'+(evolSel===j?' class="sel"':'')+'><td>'+esc(view==='week'?fDate(d.k):view==='month'?MONTHS_FR[+d.k.slice(5,7)-1]:d.k)+'</td>'+d.v.map(function(v){return '<td'+(v!==null&&v<0?' class="neg"':'')+'>'+fmt(v,unit)+'</td>';}).join('')+'</tr>';}).join('')+
+    '<tr class="tot"><td>Total</td>'+totV.map(function(v){return '<td'+(v!==null&&v<0?' class="neg"':'')+'>'+fmt(v,unit)+'</td>';}).join('')+'</tr></tbody></table>';
+  evolLast={data:data,ser:ser,unit:unit,fmt:fmt};
+  showEvolTip();
+}
+var B_HIT=22;
+function showEvolTip(){
+  var t=$('evolTip');if(!evolLast||evolSel===null||!evolLast.data[evolSel]){t.textContent=evolLast?'👆 Touche une période pour voir ses valeurs.':'';return;}
+  var d=evolLast.data[evolSel];
+  t.textContent=(d.long.charAt(0).toUpperCase()+d.long.slice(1))+' : '+(d.c?evolLast.ser.map(function(x,si){return x.short+' '+evolLast.fmt(d.v[si],evolLast.unit);}).join(' · '):'aucun relevé');
 }
 
 function renderAll(){
@@ -928,8 +1027,13 @@ $('btnFirst').addEventListener('click',function(){
 $('btnGoSettings').addEventListener('click',function(){var d=$('settingsBox');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){var i=document.querySelector('#compList .cPrix');if(i)i.focus();},350);});
 
 // ---------- graphique : boutons ----------
+$('evolUnit').addEventListener('click',function(ev){var b=ev.target.closest('[data-eunit]');if(!b)return;evolUnitSel=b.getAttribute('data-eunit');save(KEY_EUNIT,evolUnitSel);evolPage=0;evolSel=null;renderChart(resolved());});
+$('evolPrev').addEventListener('click',function(){evolPage++;evolSel=null;renderChart(resolved());});
+$('evolNext').addEventListener('click',function(){if(evolPage>0)evolPage--;evolSel=null;renderChart(resolved());});
+$('chart').addEventListener('click',function(ev){var r=ev.target.closest&&ev.target.closest('.ehit');if(!r)return;var j=+r.getAttribute('data-g');evolSel=evolSel===j?null:j;renderChart(resolved());});
+$('evolTable').addEventListener('click',function(ev){var r=ev.target.closest('tr[data-g]');if(!r)return;var j=+r.getAttribute('data-g');evolSel=evolSel===j?null:j;renderChart(resolved());});
 Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(b){
-  b.addEventListener('click',function(){chartView=b.getAttribute('data-view');
+  b.addEventListener('click',function(){chartView=b.getAttribute('data-view');evolPage=0;evolSel=null;
     Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(x){x.setAttribute('aria-pressed',x===b);});
     renderChart(resolved());});
 });
@@ -1445,7 +1549,7 @@ function renderConsoChart(a){
     (consoView==='month'?'📅 Les mois affichés vont de septembre à mai ; ce qui est consommé de juin à août est regroupé sur la ligne « Été » et compté dans le total de l\'hiver. ':'')+
     (consoSpread==='climat'?'🌡️ Répartition « Climat » : quand deux relevés sont espacés, les litres consommés entre les deux sont répartis selon le froid habituel de chaque mois à Metz (degrés-jours Météo-France) : un jour de janvier compte environ 30 fois plus qu\'un jour de juillet, et chaque jour d\'été garde un petit minimum (eau chaude). Le total entre deux relevés ne change pas ; plus tu fais de relevés, plus c\'est précis. ':'📏 Répartition « Uniforme » : les litres consommés entre deux relevés sont répartis à parts égales sur chaque jour. ')+
     'Les livraisons notées sont prises en compte. « — » = pas de relevés couvrant cette période.';
-  var nav=document.querySelector('.wnav');
+  var nav=$('consoNav');
   if(!a.g||!a.intervals.length||!winterRange(a)){
     box.innerHTML=svgEl(W,H,txt(W/2,H/2,a.g?'Il faut deux relevés de niveau pour voir la consommation':'Renseigne d\'abord ta cuve',{size:13}));
     leg.innerHTML='';tb.innerHTML='';nav.classList.add('hidden');return;}
@@ -1617,7 +1721,7 @@ $('tkSaveTank').addEventListener('click',function(){
 
 var tt;function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2400);}
 
-window.__pac={copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 
 fillSettings();setMode('kwh');resetForm();renderAll();setSimType('fioul');simReady=true;
 if(settings.copMode==='temp'&&settings.tReal)setTimeout(function(){fetchTemps(false);},300);
