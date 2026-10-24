@@ -146,6 +146,13 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
 .ptable th{color:var(--muted);font-weight:600;font-size:.8rem;border-top:0}
 .ptable tr.tot td{font-weight:700;background:var(--accent-soft)}
 .editing{outline:2px solid var(--accent2);outline-offset:2px}
+.wnav{display:flex;align-items:center;gap:10px;margin-top:10px}
+.wlab{flex:1;text-align:center;line-height:1.25}
+.wlab b{display:block;font-size:1.05rem}
+.wlab span{font-size:.8rem;color:var(--muted)}
+.wnav .icon-btn:disabled{opacity:.35;cursor:default}
+.ptable td.sub{font-size:.78rem;color:var(--muted);display:block;padding-top:0;border-top:0}
+.ptable td small{display:block;font-size:.75rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -347,9 +354,13 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
   <section class="card">
     <h2>🔥 Consommation de fioul</h2>
     <div class="seg" role="group" aria-label="Période de consommation">
-      <button type="button" data-tview="day" aria-pressed="false">Jour</button>
       <button type="button" data-tview="month" aria-pressed="true">Mois</button>
-      <button type="button" data-tview="year" aria-pressed="false">Année</button>
+      <button type="button" data-tview="winter" aria-pressed="false">Hiver</button>
+    </div>
+    <div class="wnav">
+      <button class="icon-btn" type="button" id="consoPrev" aria-label="Précédent">◀</button>
+      <div class="wlab"><b id="consoNavLab">—</b><span id="consoNavSub"></span></div>
+      <button class="icon-btn" type="button" id="consoNext" aria-label="Suivant">▶</button>
     </div>
     <div class="chart-wrap" id="consoChart"></div>
     <div class="legend" id="consoLegend"></div>
@@ -970,7 +981,8 @@ function normalizeTankReadings(arr){
       if(r.type==='niveau')n.h=r.h;else n.litres=r.litres;return n;});
 }
 var tank=normalizeTank(load(KEY_TANK,{})), tankReads=normalizeTankReadings(load(KEY_TREAD,[]));
-var tankMode='niveau', tankReady=false, tkEditId=null, consoView='month';
+var KEY_CVIEW='pacFioul.consoView';
+var tankMode='niveau', tankReady=false, tkEditId=null, consoView=load(KEY_CVIEW,'month')==='winter'?'winter':'month', consoWinter=null, winterPage=0;
 
 // Géométrie : volume (L) pour une hauteur de fioul h (cm)
 function tankGeom(t){
@@ -1113,10 +1125,12 @@ function renderLevelChart(a){
 }
 function renderTankChart(a){renderLevelChart(a);renderConsoChart(a);}
 // Consommation par période : chaque intervalle entre deux relevés de niveau est réparti à parts égales sur ses jours,
-// du jour du relevé précédent (inclus) au jour du relevé suivant (exclu). Ex. 25/01 → 05/02 = 11 jours : 7 en janvier, 4 en février.
+// du jour du relevé précédent (inclus) au jour du relevé suivant (exclu). Ex. 25/08 → 05/09 = 11 jours : 7 en août, 4 en septembre.
+// Hiver AAAA = du 1er septembre AAAA au 31 août AAAA+1.
+function winterOf(day){var y=+day.slice(0,4),m=+day.slice(5,7);return m>=9?y:y-1;}
 function consoByPeriod(a,view){
   var per={};
-  function add(day,l){var k=view==='day'?day:view==='month'?day.slice(0,7):day.slice(0,4);per[k]=(per[k]||0)+l;}
+  function add(day,l){var k=view==='day'?day:view==='month'?day.slice(0,7):view==='winter'?String(winterOf(day)):day.slice(0,4);per[k]=(per[k]||0)+l;}
   a.intervals.forEach(function(i){
     if(i.neg||!(i.conso>0))return;
     if(i.days<=0){add(i.to,i.conso);return;}
@@ -1125,52 +1139,80 @@ function consoByPeriod(a,view){
   });
   return Object.keys(per).sort().map(function(k){return {k:k,l:per[k]};});
 }
-function periodLabel(k,view,long){
-  if(view==='year')return k;
-  if(view==='month'){var m=+k.slice(5,7)-1;return long?['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'][m]+' '+k.slice(0,4):MONTHS[m]+' '+k.slice(2,4);}
-  return long?fDate(k):k.slice(8,10)+'/'+k.slice(5,7);
+var MONTHS_LONG=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+function winterSub(y){return 'sept. '+y+' – août '+(+y+1);}
+function winterRange(a){ // hivers disponibles (min..max) : hivers avec consommation + hiver du dernier relevé
+  var ys=consoByPeriod(a,'winter').map(function(x){return +x.k;});
+  if(a.last)ys.push(winterOf(a.last.date));
+  if(!ys.length)return null;
+  return {min:Math.min.apply(null,ys),max:Math.max.apply(null,ys),def:a.last?winterOf(a.last.date):Math.max.apply(null,ys)};
+}
+function consoData(a,fp){
+  // renvoie {rows:[{k,lab,short,l|null}], nav:{lab,sub,prev,next}, unit}
+  var r=winterRange(a);
+  if(consoView==='month'){
+    if(consoWinter===null||consoWinter<r.min||consoWinter>r.max)consoWinter=r.def;
+    var per={};consoByPeriod(a,'month').forEach(function(x){per[x.k]=x.l;});
+    var rows=[];for(var i=0;i<12;i++){var y=consoWinter+(i<4?0:1),m=(8+i)%12,k=y+'-'+pad(m+1);
+      rows.push({k:k,lab:MONTHS_LONG[m]+' '+y,short:MONTHS[m].replace('.',''),l:per[k]===undefined?null:per[k]});}
+    return {rows:rows,unit:'mois',head:'Mois',nav:{lab:'Hiver '+consoWinter,sub:winterSub(consoWinter),prev:consoWinter>r.min,next:consoWinter<r.max}};
+  }
+  var all=consoByPeriod(a,'winter'), per2={};all.forEach(function(x){per2[x.k]=x.l;});
+  var ys=[];for(var y2=r.min;y2<=r.max;y2++)ys.push(y2);
+  var pages=Math.max(1,Math.ceil(ys.length/10));winterPage=Math.min(Math.max(winterPage,0),pages-1);
+  var endI=ys.length-winterPage*10, sl=ys.slice(Math.max(0,endI-10),endI);
+  return {rows:sl.map(function(y){return {k:String(y),lab:'Hiver '+y,sub:winterSub(y),short:String(y),l:per2[y]===undefined?null:per2[y]};}),unit:'hiver',head:'Hiver',
+    nav:{lab:sl.length>1?'Hiver '+sl[0]+' – Hiver '+sl[sl.length-1]:'Hiver '+sl[0],sub:sl.length>1?'sept. '+sl[0]+' – août '+(sl[sl.length-1]+1):winterSub(sl[0]),prev:winterPage<pages-1,next:winterPage>0}};
 }
 function renderConsoChart(a){
   readColors();
   var box=$('consoChart'), leg=$('consoLegend'), tb=$('consoTable'), hint=$('consoHint'), fp=fioulPrice();
   var W=Math.max(300,Math.round(box.clientWidth||600)), H=Math.round(Math.min(300,Math.max(210,W*0.55)));
   var L=50,R=fp?54:12,T=18,B=34,pw=W-L-R,ph=H-T-B;
-  hint.innerHTML=(fp?'💶 Euros = litres × '+nfN.format(fp.prix)+' €/L ('+esc(fp.name)+', prix actuel des Réglages). ':'💶 Renseigne un prix de fioul dans Réglages (onglet 📊 Suivi) pour voir aussi la consommation en euros. ')+
-    'Une consommation entre deux relevés est répartie à parts égales sur chaque jour, du relevé précédent (inclus) au suivant (exclu).';
-  var all=a.g?consoByPeriod(a,consoView):[];
-  if(!all.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,a.g?'Il faut deux relevés de niveau pour voir la consommation':'Renseigne d\'abord ta cuve',{size:13}));leg.innerHTML='';tb.innerHTML='';return;}
-  var maxBars=consoView==='day'?Math.max(7,Math.floor(pw/16)):consoView==='month'?Math.max(6,Math.floor(pw/18)):20;
-  var data=all.length>maxBars?all.slice(-maxBars):all;
-  var mx=niceMax(Math.max.apply(null,data.map(function(d){return d.l;})));
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tview]'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-tview')===consoView);});
+  hint.innerHTML='❄️ Hiver AAAA = du 1er septembre AAAA au 31 août AAAA+1 (ex. Hiver 2022 = sept. 2022 → août 2023). '+
+    (fp?'💶 Euros = litres × '+nfN.format(fp.prix)+' €/L ('+esc(fp.name)+', prix actuel des Réglages). ':'💶 Renseigne un prix de fioul dans Réglages (onglet 📊 Suivi) pour voir aussi la consommation en euros. ')+
+    'Une consommation entre deux relevés est répartie à parts égales sur chaque jour, du relevé précédent (inclus) au suivant (exclu) ; les livraisons notées sont prises en compte. « — » = pas de relevés couvrant cette période.';
+  var nav=document.querySelector('.wnav');
+  if(!a.g||!a.intervals.length||!winterRange(a)){
+    box.innerHTML=svgEl(W,H,txt(W/2,H/2,a.g?'Il faut deux relevés de niveau pour voir la consommation':'Renseigne d\'abord ta cuve',{size:13}));
+    leg.innerHTML='';tb.innerHTML='';nav.classList.add('hidden');return;}
+  nav.classList.remove('hidden');
+  var cd=consoData(a,fp), data=cd.rows;
+  $('consoNavLab').textContent=cd.nav.lab;$('consoNavSub').textContent=cd.nav.sub;
+  $('consoPrev').disabled=!cd.nav.prev;$('consoNext').disabled=!cd.nav.next;
+  var vals=data.map(function(d){return d.l||0;}), mx=niceMax(Math.max.apply(null,vals.concat([0])));
   var s='',i;
   for(i=0;i<=4;i++){var v=mx*i/4,y=T+ph-ph*i/4;
     s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="'+COL['--line']+'" stroke-width="1"/>'+txt(L-6,y+4,(v<10&&v%1?nf1.format(v):nf0.format(v))+' L',{anchor:'end',fill:COL['--accent']});
     if(fp)s+=txt(W-R+6,y+4,(v*fp.prix<10&&(v*fp.prix)%1?nf1.format(v*fp.prix):nf0.format(v*fp.prix))+' €',{anchor:'start',fill:COL['--accent2']});}
-  var slot=pw/data.length,bw=Math.min(52,slot*0.7),every=Math.max(1,Math.ceil(data.length/Math.max(2,Math.floor(pw/(consoView==='month'?52:44)))));
-  data.forEach(function(d,j){var h=ph*d.l/mx,x=L+slot*j+(slot-bw)/2,y=T+ph-h;
-    var tip=periodLabel(d.k,consoView,true)+' : '+fL(d.l)+(fp?' · '+fE(d.l*fp.prix):'');
-    s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="4" fill="'+COL['--accent']+'"><title>'+esc(tip)+'</title></rect>';
-    if(data.length<=8)s+=txt(x+bw/2,y-5,nf0.format(d.l)+' L',{size:10,fill:COL['--text']});
-    if((data.length-1-j)%every===0)s+=txt(x+bw/2,H-12,periodLabel(d.k,consoView),{size:10});});
-  if(fp&&data.length>1){
-    var pth=data.map(function(d,j){return (j?'L':'M')+(L+slot*j+slot/2).toFixed(1)+' '+(T+ph-ph*d.l/mx).toFixed(1);}).join('');
-    s+='<path d="'+pth+'" fill="none" stroke="'+COL['--accent2']+'" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>';}
-  if(fp)data.forEach(function(d,j){s+='<circle cx="'+(L+slot*j+slot/2).toFixed(1)+'" cy="'+(T+ph-ph*d.l/mx).toFixed(1)+'" r="3" fill="'+COL['--accent2']+'"><title>'+esc(periodLabel(d.k,consoView,true)+' : '+fE(d.l*fp.prix))+'</title></circle>';});
+  var slot=pw/data.length,bw=Math.min(52,slot*0.7),every=Math.max(1,Math.ceil(data.length/Math.max(2,Math.floor(pw/(consoView==='month'?30:40)))));
+  var cx=function(j){return L+slot*j+slot/2;}, cy=function(l){return T+ph-ph*l/mx;};
+  data.forEach(function(d,j){var x=L+slot*j+(slot-bw)/2;
+    if(d.l!==null){var h=ph*d.l/mx,y=T+ph-h;
+      var tip=d.lab+' : '+fL(d.l)+(fp?' · '+fE(d.l*fp.prix):'');
+      s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="4" fill="'+COL['--accent']+'"><title>'+esc(tip)+'</title></rect>';
+      if(data.length<=8)s+=txt(x+bw/2,y-5,nf0.format(d.l)+' L',{size:10,fill:COL['--text']});}
+    if(j%every===0)s+=txt(cx(j),H-12,d.short,{size:10});});
+  if(fp){ // ligne € par segments continus (les périodes sans données coupent la ligne)
+    var seg=[];data.forEach(function(d,j){if(d.l===null){seg.push(null);return;}seg.push((seg.length&&seg[seg.length-1]!==null?'L':'M')+cx(j).toFixed(1)+' '+cy(d.l).toFixed(1));});
+    var pth=seg.filter(Boolean).join('');
+    if(data.filter(function(d){return d.l!==null;}).length>1)s+='<path d="'+pth+'" fill="none" stroke="'+COL['--accent2']+'" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>';
+    data.forEach(function(d,j){if(d.l===null)return;s+='<circle cx="'+cx(j).toFixed(1)+'" cy="'+cy(d.l).toFixed(1)+'" r="3" fill="'+COL['--accent2']+'"><title>'+esc(d.lab+' : '+fE(d.l*fp.prix))+'</title></circle>';});}
   box.innerHTML=svgEl(W,H,s);
-  var unit=consoView==='day'?'jour':consoView==='month'?'mois':'année';
-  leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres consommés par '+unit+' (axe gauche)</span>'+
-    (fp?'<span><i style="background:'+COL['--accent2']+'"></i>Euros (axe droit)</span>':'')+
-    (all.length>data.length?'<span>'+data.length+' dernières périodes affichées</span>':'');
-  var tl=0;data.forEach(function(d){tl+=d.l;});
-  tb.innerHTML='<table class="ptable" id="consoTbl"><thead><tr><th>'+(consoView==='day'?'Jour':consoView==='month'?'Mois':'Année')+'</th><th>Litres</th>'+(fp?'<th>Euros</th>':'')+'</tr></thead><tbody>'+
-    data.slice().reverse().map(function(d){return '<tr><td>'+esc(periodLabel(d.k,consoView,true))+'</td><td>'+fL(d.l)+'</td>'+(fp?'<td>'+fE(d.l*fp.prix)+'</td>':'')+'</tr>';}).join('')+
-    '<tr class="tot"><td>Total'+(all.length>data.length?' affiché':'')+'</td><td>'+fL(tl)+'</td>'+(fp?'<td>'+fE(tl*fp.prix)+'</td>':'')+'</tr></tbody></table>';
+  leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres consommés par '+cd.unit+' (axe gauche)</span>'+
+    (fp?'<span><i style="background:'+COL['--accent2']+'"></i>Euros (axe droit)</span>':'');
+  var tl=0;data.forEach(function(d){if(d.l!==null)tl+=d.l;});
+  var dash='<span style="color:var(--muted)">—</span>';
+  tb.innerHTML='<table class="ptable" id="consoTbl"><thead><tr><th>'+cd.head+'</th><th>Litres</th>'+(fp?'<th>Euros</th>':'')+'</tr></thead><tbody>'+
+    data.map(function(d){return '<tr><td>'+esc(d.lab)+(d.sub?'<small>'+esc(d.sub)+'</small>':'')+'</td><td>'+(d.l===null?dash:fL(d.l))+'</td>'+(fp?'<td>'+(d.l===null?dash:fE(d.l*fp.prix))+'</td>':'')+'</tr>';}).join('')+
+    '<tr class="tot"><td>Total'+(consoView==='month'?' hiver '+esc(cd.nav.lab.replace('Hiver ','')):'')+'</td><td>'+fL(tl)+'</td>'+(fp?'<td>'+fE(tl*fp.prix)+'</td>':'')+'</tr></tbody></table>';
 }
 Array.prototype.forEach.call(document.querySelectorAll('[data-tview]'),function(b){
-  b.addEventListener('click',function(){consoView=b.getAttribute('data-tview');
-    Array.prototype.forEach.call(document.querySelectorAll('[data-tview]'),function(x){x.setAttribute('aria-pressed',x===b);});
-    renderConsoChart(tankAnalyze());});
+  b.addEventListener('click',function(){consoView=b.getAttribute('data-tview');save(KEY_CVIEW,consoView);renderConsoChart(tankAnalyze());});
 });
+$('consoPrev').addEventListener('click',function(){if(consoView==='month')consoWinter--;else winterPage++;renderConsoChart(tankAnalyze());});
+$('consoNext').addEventListener('click',function(){if(consoView==='month')consoWinter++;else winterPage--;renderConsoChart(tankAnalyze());});
 function renderTank(){var a=tankAnalyze();renderTankStats(a);renderTankList(a);if(!$('viewCuve').classList.contains('hidden'))renderTankChart(a);updateTankPreview();}
 
 // --- formulaire relevé de cuve ---
