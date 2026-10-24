@@ -281,11 +281,12 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
       <div id="boxCopTemp" class="hidden">
         <p class="hint">Le COP d'une PAC air/air baisse quand il fait froid dehors. Entre de 2 à 6 points « température extérieure → COP » (fiche de ta PAC). Entre deux points, l'appli calcule une valeur intermédiaire (ligne droite). Plus froid que ton point le plus froid ou plus chaud que ton point le plus chaud : elle garde la valeur du point le plus proche. Jamais moins de 1.</p>
         <table class="ptable ctable" id="copPtsTbl"></table>
+        <p class="hint">⚠️ COP peu fiable sous 0 °C (dégivrage).</p>
         <div class="actions">
           <button class="btn small" type="button" id="btnAddPt">+ Ajouter un point</button>
-          <button class="btn small" type="button" id="btnMidea">Remplir avec Midea PortaSplit (fiche constructeur)</button>
+          <button class="btn small" type="button" id="btnMidea">Remplir avec Midea PortaSplit (valeurs réalistes)</button>
         </div>
-        <p class="note" style="margin-top:8px">ℹ️ Midea PortaSplit : la fiche officielle donne un COP de 4,0 à +7 °C à pleine puissance (EN 14511, 3,2 kW de chaleur pour 0,8 kW d'électricité) et un SCOP de 4,0 (classe A+, climat moyen). Midea ne publie pas le COP à −10, −7, +2 et +12 °C : les points du bouton sont <b>estimés</b> pour retrouver le SCOP officiel de 4,0 (−10 °C : 2,3 · −7 °C : 2,6 · +2 °C : 3,8 · +7 °C : 5,0 · +12 °C : 6,2, à charge partielle). Sources : <a href="https://www.midea.es/wp-content/uploads/2023/04/25FPM_ES_PortaSplit.pdf" target="_blank" rel="noopener">fiche Midea MMCS-12HRN8-QRD0</a>, <a href="https://eprel.ec.europa.eu/qr/1917520" target="_blank" rel="noopener">fiche énergie EPREL 1917520</a>.</p>
+        <p class="note" style="margin-top:8px">ℹ️ Midea PortaSplit, valeurs réalistes : −10 °C : 2,5 · −7 °C : 2,8 · +2 °C : 3,9 · +7 °C : 4,5 · +12 °C : 5,0, avec 10 % de correction. Les valeurs de Midea (mesurées en laboratoire, à charge partielle, norme EN 14825) sont plus hautes : 2,70 · 3,18 · 4,35 · 5,57 · 6,78. Elles sont baissées ici surtout quand il fait doux, car cette PAC ne peut pas descendre sous environ 300 W : quand il faut peu de chaleur, elle s'arrête et redémarre, ce qui fait perdre du rendement. Elles ont aussi été comparées aux splits fixes certifiés par Eurovent et à des mesures faites chez des particuliers (COP sur la saison d'environ 2,4 à 3). Les 10 % de correction couvrent les pertes autour de la fenêtre et l'usage réel. Mets plutôt 15 % si la fenêtre est mal calfeutrée ou si la pièce est chauffée à plus de 22 °C. Sources : <a href="https://www.midea.es/wp-content/uploads/2024/05/ErP_MMCS-12HRN8-QRD0.pdf" target="_blank" rel="noopener">fiche ErP Midea</a>, <a href="https://eprel.ec.europa.eu/qr/1917520" target="_blank" rel="noopener">fiche énergie EPREL</a>, <a href="https://www.eurovent-certification.com" target="_blank" rel="noopener">catalogue Eurovent</a>, <a href="https://www.buildingscience.com/sites/default/files/migrate/pdf/BA-1407_Long-Term_Monitoring_Mini-Splits_Northeast_v2.pdf" target="_blank" rel="noopener">étude BuildingScience (mesures sur plusieurs années)</a>.</p>
         <label for="sCorr">% de correction (terrain) <span class="opt">(facultatif)</span></label>
         <input type="text" inputmode="decimal" id="sCorr" placeholder="ex. 15">
         <p class="hint">Les COP des fiches sont mesurés en laboratoire. En vrai, ils sont souvent 10 à 20 % plus bas (dégivrage, gaine, pièce…). Avec 15 %, tous les COP calculés sont multipliés par 0,85. Vide = 0 %.</p>
@@ -585,10 +586,10 @@ function calc(kwh,s,cop){
 // Températures moyennes mensuelles normales, Metz-Frescaty (57039001), 1991-2020 — Météo-France, fiche climatologique :
 // https://donneespubliques.meteofrance.fr/FichesClim/FICHECLIM_57039001.pdf
 var METZ_TNORM=[2.7,3.6,7,10.5,14.5,17.9,20.1,19.7,15.7,11.3,6.5,3.5];
-// Midea PortaSplit (MMCS-12HRN8 / PortaSplit / PortaSplit-CH). Officiel : COP 4,0 à +7 °C pleine puissance (3,2 kW / 0,8 kW, EN 14511),
-// SCOP 4,0 A+ climat moyen, Pdesignh 2,2 kW (EPREL 1917520 / 2457285). Points −10/−7/+2/+12 °C NON publiés : estimation à charge
-// partielle (méthode EN 14825, climat moyen) calée pour redonner le SCOP officiel ≈ 4,0.
-var MIDEA_PTS=[{t:-10,cop:2.3},{t:-7,cop:2.6},{t:2,cop:3.8},{t:7,cop:5},{t:12,cop:6.2}];
+// Midea PortaSplit (MMCS-12HRN8 / PortaSplit / PortaSplit-CH) — valeurs « réalistes ». Midea (labo, charge partielle EN 14825) :
+// 2,70 / 3,18 / 4,35 / 5,57 / 6,78 à −10 / −7 / +2 / +7 / +12 °C ; abaissées (modulation mini ~300 W, comparaison splits fixes
+// Eurovent et études de terrain : COP saisonnier ~2,4–3) + 10 % de correction terrain par défaut du bouton.
+var MIDEA_PTS=[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:3.9},{t:7,cop:4.5},{t:12,cop:5}], MIDEA_CORR=10;
 var KEY_TEMPS='pacFioul.temps.v1';
 var tempCache=load(KEY_TEMPS,null); if(!tempCache||typeof tempCache!=='object'||!tempCache.days||typeof tempCache.days!=='object')tempCache={loc:'',days:{}};
 var tempFetching=false, tempStatus='';
@@ -1014,9 +1015,9 @@ $('copMonthTbl').addEventListener('input',updateCopPreview);
 $('sCorr').addEventListener('input',updateCopPreview);
 $('btnMidea').addEventListener('click',function(){
   readPtsUI();var hasData=copPtsUI.some(function(p){return String(p.tRaw).trim()!==''||String(p.cRaw).trim()!=='';});
-  if(hasData&&!confirm('Remplacer tes points par ceux de la Midea PortaSplit ?'))return;
-  copPtsUI=MIDEA_PTS.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});renderPtsUI();
-  toast('Points Midea remplis : vérifie puis « Enregistrer les réglages »');});
+  if((hasData||$('sCorr').value.trim()!=='')&&!confirm('Remplacer tes points et ton % de correction par ceux de la Midea PortaSplit ?'))return;
+  copPtsUI=MIDEA_PTS.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});$('sCorr').value=numStr(MIDEA_CORR);renderPtsUI();
+  toast('Points Midea et correction 10 % remplis : vérifie puis « Enregistrer les réglages »');});
 $('btnMetz').addEventListener('click',function(){
   Array.prototype.forEach.call(document.querySelectorAll('#copMonthTbl tr[data-m]'),function(r){r.querySelector('.mT').value=numStr(METZ_TNORM[+r.getAttribute('data-m')]);});
   updateCopPreview();toast('Normales de Metz remplies : appuie sur « Enregistrer les réglages »');});
