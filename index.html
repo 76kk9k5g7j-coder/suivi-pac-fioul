@@ -75,6 +75,14 @@ ul.list li:first-child{border-top:0}
 .formula b{color:var(--text)}
 .chart-wrap{width:100%;margin-top:10px}
 .chart-wrap svg{display:block;width:100%;height:auto}
+.chart-wrap{position:relative}
+.chart-wrap.xh-on{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.xh-tip{position:absolute;left:0;top:0;z-index:6;pointer-events:none;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:5px 8px;font-size:.72rem;line-height:1.4;white-space:nowrap}
+.xh-tip b{display:block;font-size:.74rem;margin-bottom:1px}
+.xh-tip .xr{display:flex;align-items:center;gap:5px}
+.xh-tip .xr i{width:8px;height:8px;border-radius:50%;flex:none}
+.xh-tip .xr span{color:var(--muted)}
+.xh-tip .xr em{font-style:normal;font-weight:600;margin-left:auto;padding-left:8px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:6px}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
@@ -878,6 +886,40 @@ function chartSeries(c0){
   return out;
 }
 var KEY_EUNIT='pacFioul.evolUnit', evolUnitSel=load(KEY_EUNIT,'vol')==='eur'?'eur':'vol', evolPage=0, evolSel=null, evolLast=null;
+// ---------- Bulle « réticule » sur les courbes (Cumul, niveau de cuve) ----------
+// X = {W, T, ph, pts:[{x, d:'AAAA-MM-JJ', items:[{lab, col, val, y}]}]} en coordonnées du SVG (viewBox).
+var XH_KEEP=2000;
+function setXhair(box,X){box.__xh=X;box.classList.toggle('xh-on',!!X);if(!box.__xhBound)bindXhair(box);}
+function xhHide(box){clearTimeout(box.__xhT);var t=box.querySelector('.xh-tip');if(t)t.style.display='none';var g=box.querySelector('svg g.xh');if(g)g.parentNode.removeChild(g);box.__xhIdx=null;}
+function xhShow(box,cx,cy){
+  var X=box.__xh, svg=box.querySelector('svg');if(!X||!X.pts.length||!svg)return;
+  var r=svg.getBoundingClientRect();if(!r.width)return;var k=X.W/r.width, sx=(cx-r.left)*k, best=0, bd=Infinity;
+  X.pts.forEach(function(p,i){var d=Math.abs(p.x-sx);if(d<bd){bd=d;best=i;}});
+  var p=X.pts[best], g=svg.querySelector('g.xh');
+  if(!g){g=document.createElementNS('http://www.w3.org/2000/svg','g');g.setAttribute('class','xh');g.setAttribute('pointer-events','none');svg.appendChild(g);}
+  g.innerHTML='<line x1="'+p.x.toFixed(1)+'" x2="'+p.x.toFixed(1)+'" y1="'+X.T+'" y2="'+(X.T+X.ph)+'" stroke="'+COL['--muted']+'" stroke-width="1" opacity=".8"/>'+
+    p.items.map(function(it){return '<circle cx="'+p.x.toFixed(1)+'" cy="'+it.y.toFixed(1)+'" r="4.5" fill="'+it.col+'" style="stroke:var(--card)" stroke-width="1.5"/>';}).join('');
+  var tip=box.querySelector('.xh-tip');if(!tip){tip=document.createElement('div');tip.className='xh-tip';tip.setAttribute('role','status');box.appendChild(tip);}
+  tip.innerHTML='<b>'+fDate(p.d)+'</b>'+p.items.map(function(it){return '<div class="xr"><i style="background:'+it.col+'"></i><span>'+esc(it.lab)+'</span><em>'+esc(it.val)+'</em></div>';}).join('');
+  tip.style.display='block';
+  var br=box.getBoundingClientRect(), bw=tip.offsetWidth, bh=tip.offsetHeight, lx=p.x/k+(r.left-br.left), ty=cy-br.top;
+  var left=lx+12; if(left+bw>br.width)left=lx-12-bw; left=Math.max(0,Math.min(br.width-bw,left));
+  var top=ty-bh-18; top=Math.max(0,Math.min(br.height-bh,top));   // au-dessus du doigt
+  tip.style.left=left.toFixed(0)+'px';tip.style.top=top.toFixed(0)+'px';
+  box.__xhIdx=best;tip.setAttribute('data-idx',best);clearTimeout(box.__xhT);
+}
+function bindXhair(box){
+  box.__xhBound=true;var active=null;
+  box.addEventListener('pointerdown',function(e){if(!box.__xh)return;if(e.pointerType==='mouse'&&e.button!==0)return;
+    active=e.pointerId;try{box.setPointerCapture(e.pointerId);}catch(_){} xhShow(box,e.clientX,e.clientY);});
+  box.addEventListener('pointermove',function(e){if(!box.__xh)return;
+    if(active===e.pointerId||e.pointerType==='mouse')xhShow(box,e.clientX,e.clientY);});
+  function end(e){if(active!==e.pointerId)return;active=null;
+    if(e.pointerType!=='mouse'){clearTimeout(box.__xhT);box.__xhT=setTimeout(function(){xhHide(box);},XH_KEEP);}}
+  box.addEventListener('pointerup',end);box.addEventListener('pointercancel',end);
+  box.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse'&&active===null)xhHide(box);});
+  document.addEventListener('pointerdown',function(e){if(box.__xhIdx!=null&&!box.contains(e.target))xhHide(box);},true);
+}
 function renderChart(list){
   readColors();
   var box=$('chart'); var W=Math.max(300,Math.round(box.clientWidth||600)); var H=Math.round(Math.min(320,Math.max(220,W*0.55)));
@@ -887,6 +929,7 @@ function renderChart(list){
   var L=46,R=(chartView==='cumul'&&hasE)?54:12,T=14,B=34, pw=W-L-R, ph=H-T-B;
   var leg=$('legend');
   $('evolCtl').classList.toggle('hidden',chartView==='cumul'||!list.length);$('evolTip').textContent='';$('evolTable').innerHTML='';evolLast=null;
+  setXhair(box,null);
   if(!list.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,'Le graphique apparaîtra après ton premier relevé',{size:13}));leg.innerHTML='';return;}
   var g='';
   function gridY(max,fmt,fill){
@@ -920,10 +963,13 @@ function renderChart(list){
     leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>'+volLab+' (cumul, axe gauche)</span>'+
       eIdx.map(function(i){return '<span><i style="background:'+sideCol(i)+'"></i>'+esc(c0.sides[i].name)+' : € nets cumulés (axe droit)</span>';}).join('')+
       (hasE?'':'<span>Renseigne un prix de fioul ou de gaz (et d\'électricité) dans Réglages pour voir les courbes en €.</span>');
+    var xhVol=U==='kWh'?'Gaz évité':'Fioul évité';
+    var XHD={W:W,T:T,ph:ph,pts:pts.map(function(p){return {x:X(p.t),d:p.d,items:[{lab:xhVol,col:SER[0].col,val:U==='kWh'?fKwh(p.l):fL(p.l),y:YL(p.l)}].concat(eIdx.map(function(i){return {lab:c0.sides[i].name+' (net)',col:sideCol(i),val:fE(p.e[i]),y:YE(p.e[i])};}))};})};
   } else {
     renderBars(list,c0,SER,box,leg,W,H,L,T,ph,pw,gridY,shortNum);return;
   }
   box.innerHTML=svgEl(W,H,g);
+  setXhair(box,XHD);
 }
 
 // ---------- Barres groupées Semaine / Mois / Année ----------
@@ -1543,6 +1589,7 @@ function renderLevelChart(a){
   var box=$('tankChart'), leg=$('tankLegend'), W=Math.max(300,Math.round(box.clientWidth||600)), H=Math.round(Math.min(300,Math.max(210,W*0.55)));
   var L=50,R=12,T=14,B=34,pw=W-L-R,ph=H-T-B, g=a.g;
   var pts=a.rows.filter(function(r){return r.type==='niveau';});
+  setXhair(box,null);
   if(!g||!pts.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,g?'Le graphique apparaîtra après ton premier relevé':'Renseigne d\'abord ta cuve',{size:13}));leg.innerHTML='';return;}
   var dates=a.rows.map(function(r){return parseIso(r.date).getTime();});
   var t0=Math.min.apply(null,dates),t1=Math.max.apply(null,dates); if(t1===t0){t0-=86400000*3;t1+=86400000*3;}
@@ -1562,6 +1609,9 @@ function renderLevelChart(a){
   s+='<path d="'+path+'" fill="none" stroke="'+COL['--accent']+'" stroke-width="2.5" stroke-linejoin="round"/>';
   pts.forEach(function(p){s+='<circle cx="'+X(parseIso(p.date).getTime()).toFixed(1)+'" cy="'+Y(p.l).toFixed(1)+'" r="3.5" fill="'+COL['--accent']+'"><title>'+fDate(p.date)+' : '+fL(p.l)+' ('+fCm(p.h)+')</title></circle>';});
   box.innerHTML=svgEl(W,H,s);
+  var liv={};a.rows.forEach(function(r){if(r.type==='livraison')liv[r.date]=(liv[r.date]||0)+r.litres;});
+  setXhair(box,{W:W,T:T,ph:ph,pts:pts.map(function(p){var it=[{lab:'Cuve',col:COL['--accent'],val:fL(p.l)+' · '+fCm(p.h),y:Y(p.l)},{lab:'Remplie à',col:COL['--accent'],val:nf0.format(100*p.l/g.cap)+' %',y:Y(p.l)}];
+    if(liv[p.date])it.push({lab:'Livraison',col:COL['--accent3'],val:'+'+fL(liv[p.date]),y:Y(p.l)});return {x:X(parseIso(p.date).getTime()),d:p.date,items:it};})});
   leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres dans la cuve (capacité '+fL(g.cap)+')</span>'+
     (a.rows.some(function(r){return r.type==='livraison';})?'<span><i style="background:'+COL['--accent3']+'"></i>Livraison</span>':'')+
     (tank.reserve!==null?'<span><i style="background:'+COL['--accent2']+'"></i>Réserve basse '+fL(tank.reserve)+'</span>':'');
