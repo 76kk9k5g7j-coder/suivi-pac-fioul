@@ -81,6 +81,7 @@ ul.list li:first-child{border-top:0}
 .xh-tip b{display:block;font-size:.74rem;margin-bottom:1px}
 .xh-tip .xr{display:flex;align-items:center;gap:5px}
 .xh-tip .xr i{width:8px;height:8px;border-radius:50%;flex:none}
+.xh-tip .xr i.sq{border-radius:2px}
 .xh-tip .xr span{color:var(--muted)}
 .xh-tip .xr em{font-style:normal;font-weight:600;margin-left:auto;padding-left:8px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:6px}
@@ -886,8 +887,13 @@ function chartSeries(c0){
   return out;
 }
 var KEY_EUNIT='pacFioul.evolUnit', evolUnitSel=load(KEY_EUNIT,'vol')==='eur'?'eur':'vol', evolPage=0, evolSel=null, evolLast=null;
-// ---------- Bulle « réticule » sur les courbes (Cumul, niveau de cuve) ----------
-// X = {W, T, ph, pts:[{x, d:'AAAA-MM-JJ', items:[{lab, col, val, y}]}]} en coordonnées du SVG (viewBox).
+// ---------- Bulle d'info (appui prolongé / glisser / survol) : helper COMMUN à tous les graphiques ----------
+// Tout nouveau graphique doit appeler setXhair(box,null) avant de se redessiner, puis setXhair(box,X) après box.innerHTML.
+// X = {W, T, ph, pts:[...]} en coordonnées du SVG (viewBox).
+//  - courbes : pt = {x, d:'AAAA-MM-JJ', items:[...]}            → trait vertical + points sur chaque courbe
+//  - barres  : pt = {x, x0, x1, title:'libellé période', items} → bande surlignée sur le groupe de barres
+//  item = {lab, col, val, y?(point sur la courbe), sq?(pastille carrée), bg?(fond CSS de la pastille, ex. hachures)}
+function tempY(v,T,ph){v=Math.max(TEMP_MIN,Math.min(TEMP_MAX,v));return T+ph-ph*(v-TEMP_MIN)/(TEMP_MAX-TEMP_MIN);}
 var XH_KEEP=2000;
 function setXhair(box,X){box.__xh=X;box.classList.toggle('xh-on',!!X);if(!box.__xhBound)bindXhair(box);}
 function xhHide(box){clearTimeout(box.__xhT);var t=box.querySelector('.xh-tip');if(t)t.style.display='none';var g=box.querySelector('svg g.xh');if(g)g.parentNode.removeChild(g);box.__xhIdx=null;}
@@ -897,21 +903,22 @@ function xhShow(box,cx,cy){
   X.pts.forEach(function(p,i){var d=Math.abs(p.x-sx);if(d<bd){bd=d;best=i;}});
   var p=X.pts[best], g=svg.querySelector('g.xh');
   if(!g){g=document.createElementNS('http://www.w3.org/2000/svg','g');g.setAttribute('class','xh');g.setAttribute('pointer-events','none');svg.appendChild(g);}
-  g.innerHTML='<line x1="'+p.x.toFixed(1)+'" x2="'+p.x.toFixed(1)+'" y1="'+X.T+'" y2="'+(X.T+X.ph)+'" stroke="'+COL['--muted']+'" stroke-width="1" opacity=".8"/>'+
-    p.items.map(function(it){return '<circle cx="'+p.x.toFixed(1)+'" cy="'+it.y.toFixed(1)+'" r="4.5" fill="'+it.col+'" style="stroke:var(--card)" stroke-width="1.5"/>';}).join('');
+  g.innerHTML=(p.x0!=null?'<rect class="xh-band" x="'+p.x0.toFixed(1)+'" y="'+X.T+'" width="'+(p.x1-p.x0).toFixed(1)+'" height="'+X.ph+'" rx="4" fill="'+COL['--muted']+'" opacity=".16"/>'
+      :'<line x1="'+p.x.toFixed(1)+'" x2="'+p.x.toFixed(1)+'" y1="'+X.T+'" y2="'+(X.T+X.ph)+'" stroke="'+COL['--muted']+'" stroke-width="1" opacity=".8"/>')+
+    p.items.filter(function(it){return it.y!=null;}).map(function(it){return '<circle cx="'+p.x.toFixed(1)+'" cy="'+it.y.toFixed(1)+'" r="4.5" fill="'+it.col+'" style="stroke:var(--card)" stroke-width="1.5"/>';}).join('');
   var tip=box.querySelector('.xh-tip');if(!tip){tip=document.createElement('div');tip.className='xh-tip';tip.setAttribute('role','status');box.appendChild(tip);}
-  tip.innerHTML='<b>'+fDate(p.d)+'</b>'+p.items.map(function(it){return '<div class="xr"><i style="background:'+it.col+'"></i><span>'+esc(it.lab)+'</span><em>'+esc(it.val)+'</em></div>';}).join('');
+  tip.innerHTML='<b>'+(p.title!=null?esc(p.title):fDate(p.d))+'</b>'+p.items.map(function(it){return '<div class="xr"><i'+(it.sq?' class="sq"':'')+' style="background:'+(it.bg||it.col)+'"></i><span>'+esc(it.lab)+'</span><em>'+esc(it.val)+'</em></div>';}).join('');
   tip.style.display='block';
   var br=box.getBoundingClientRect(), bw=tip.offsetWidth, bh=tip.offsetHeight, lx=p.x/k+(r.left-br.left), ty=cy-br.top;
-  var left=lx+12; if(left+bw>br.width)left=lx-12-bw; left=Math.max(0,Math.min(br.width-bw,left));
+  var off=p.x0!=null?Math.max(8,(p.x1-p.x0)/2/k+4):12, left=lx+off; if(left+bw>br.width)left=lx-off-bw; left=Math.max(0,Math.min(br.width-bw,left));
   var top=ty-bh-18; top=Math.max(0,Math.min(br.height-bh,top));   // au-dessus du doigt
   tip.style.left=left.toFixed(0)+'px';tip.style.top=top.toFixed(0)+'px';
-  box.__xhIdx=best;tip.setAttribute('data-idx',best);clearTimeout(box.__xhT);
+  box.__xhIdx=best;box.__xhLast={x:cx,y:cy,t:Date.now()};tip.setAttribute('data-idx',best);clearTimeout(box.__xhT);
 }
 function bindXhair(box){
   box.__xhBound=true;var active=null;
   box.addEventListener('pointerdown',function(e){if(!box.__xh)return;if(e.pointerType==='mouse'&&e.button!==0)return;
-    active=e.pointerId;try{box.setPointerCapture(e.pointerId);}catch(_){} xhShow(box,e.clientX,e.clientY);});
+    active=e.pointerId;if(e.pointerType!=='mouse')try{box.setPointerCapture(e.pointerId);}catch(_){} xhShow(box,e.clientX,e.clientY);});
   box.addEventListener('pointermove',function(e){if(!box.__xh)return;
     if(active===e.pointerId||e.pointerType==='mouse')xhShow(box,e.clientX,e.clientY);});
   function end(e){if(active!==e.pointerId)return;active=null;
@@ -1043,6 +1050,9 @@ function renderBars(list,c0,SER,box,leg,W,H,L,T,ph,pw,gridY,shortNum){
   if(view==='week')g+=txt(L+pw/2,H-1,'(lundi de chaque semaine)',{size:9});
   if(showTemp)g+=tempOverlay(data.map(function(d){return d.tp;}),function(j){return L+slot*j+slot/2;},T,ph,L+pw+5,function(j){return data[j].long;});
   box.innerHTML=svgEl(W,H,g);
+  setXhair(box,{W:W,T:T,ph:ph,pts:data.map(function(d,j){var it=d.c?ser.map(function(x,si){return {lab:x.short,col:x.col,val:fmt(d.v[si],unit),sq:true};}):[{lab:'Aucun relevé',col:COL['--line'],val:'—',sq:true}];
+    if(d.tp)it.push({lab:'Temp. moy.',col:TEMP_COL,val:fTemp(d.tp.t),y:tempY(d.tp.t,T,ph)});
+    return {x:L+slot*j+slot/2,x0:L+slot*j+1,x1:L+slot*(j+1)-1,title:d.long.charAt(0).toUpperCase()+d.long.slice(1),items:it};})});
   var tk=data.reduce(function(a,d){return a+d.kwh;},0), th=data.reduce(function(a,d){return a+d.h;},0), tot=calc(tk,null,(tempReady()&&tk>0)?th/tk:null);
   leg.innerHTML=ser.map(function(x){return '<span data-s="'+esc(x.key)+'"><i style="background:'+x.col+'"></i>'+esc(x.name)+' par '+per+'</span>';}).join('')+
     (unit!=='€'&&!hasEur?'<span>Renseigne un prix de fioul ou de gaz (et d\'électricité) dans Réglages pour voir les barres en €.</span>':'')+
@@ -1156,7 +1166,11 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-temptoggle]'),func
   showTemp=!showTemp;save(KEY_STEMP,showTemp);renderTempButtons();rerenderBarCharts();if(showTemp)fetchTemps(false).then(function(){if(showTemp)rerenderBarCharts();});});});
 $('evolPrev').addEventListener('click',function(){evolPage++;evolSel=null;renderChart(resolved());});
 $('evolNext').addEventListener('click',function(){if(evolPage>0)evolPage--;evolSel=null;renderChart(resolved());});
-$('chart').addEventListener('click',function(ev){var r=ev.target.closest&&ev.target.closest('.ehit');if(!r)return;var j=+r.getAttribute('data-g');evolSel=evolSel===j?null:j;renderChart(resolved());});
+$('chart').addEventListener('click',function(ev){var r=ev.target.closest&&ev.target.closest('.ehit');
+  if(!r&&document.elementsFromPoint)r=document.elementsFromPoint(ev.clientX,ev.clientY).filter(function(e){return e.classList&&e.classList.contains('ehit');})[0]; // clic redirigé par la capture du pointeur
+  if(!r)return;var j=+r.getAttribute('data-g');evolSel=evolSel===j?null:j;
+  var box=$('chart'), last=box.__xhIdx!=null?box.__xhLast:null;renderChart(resolved());
+  if(last){xhShow(box,last.x,last.y);box.__xhT=setTimeout(function(){xhHide(box);},XH_KEEP);}}); // la bulle reste après le tap
 $('evolTable').addEventListener('click',function(ev){var r=ev.target.closest('tr[data-g]');if(!r)return;var j=+r.getAttribute('data-g');evolSel=evolSel===j?null:j;renderChart(resolved());});
 Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(b){
   b.addEventListener('click',function(){chartView=b.getAttribute('data-view');evolPage=0;evolSel=null;
@@ -1686,7 +1700,7 @@ function renderConsoChart(a){
     'Les livraisons notées sont prises en compte. « — » = pas de relevés couvrant cette période. '+
     '▨ Hachuré = litres « estimés » : ils viennent d\'un écart de plus de '+EST_GAP+' jours entre deux relevés de niveau, leur répartition entre les mois est donc une estimation (en « Climat » comme en « Uniforme »).'+
     (showTemp?' 🌡️ Température : moyenne extérieure de chaque '+(consoView==='month'?'mois (Été : juin à août)':'hiver, calculée de septembre à mai')+'.':'');
-  var nav=$('consoNav');
+  var nav=$('consoNav');setXhair(box,null);
   if(!a.g||!a.intervals.length||!winterRange(a)){
     box.innerHTML=svgEl(W,H,txt(W/2,H/2,a.g?'Il faut deux relevés de niveau pour voir la consommation':'Renseigne d\'abord ta cuve',{size:13}));
     leg.innerHTML='';tb.innerHTML='';nav.classList.add('hidden');return;}
@@ -1721,6 +1735,11 @@ function renderConsoChart(a){
   var anyEst=data.some(function(d){return d.l!==null&&d.est>0.05;});
   s='<defs><pattern id="hatchC" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><path d="M0 0H6V6H0Z" fill="'+COL['--accent']+'" fill-opacity=".18"/><line x1="0" y1="0" x2="0" y2="6" stroke="'+COL['--accent']+'" stroke-width="2.5"/></pattern></defs>'+s;
   box.innerHTML=svgEl(W,H,s);
+  setXhair(box,{W:W,T:T,ph:ph,pts:data.map(function(d,j){var it=[{lab:'Consommé',col:COL['--accent'],val:d.l===null?'—':fL(d.l),sq:true}];
+    if(d.l!==null&&d.est>0.05)it.push({lab:'dont estimé',col:COL['--accent'],bg:'repeating-linear-gradient(45deg,'+COL['--accent']+' 0 2px,transparent 2px 4px)',val:fL(Math.min(d.est,d.l)),sq:true});
+    if(fp&&d.l!==null)it.push({lab:'Euros',col:COL['--accent2'],val:fE(d.l*fp.prix),y:d.summer?null:cy(d.l)});
+    if(d.tp)it.push({lab:'Temp. moy.',col:TEMP_COL,val:fTemp(d.tp.t),y:tempY(d.tp.t,T,ph)});
+    return {x:cx(j),x0:L+slot*j+1,x1:L+slot*(j+1)-1,title:d.lab.charAt(0).toUpperCase()+d.lab.slice(1)+(d.sub?' · '+d.sub:''),items:it};})});
   leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres consommés par '+cd.unit+' (axe gauche)</span>'+
     (anyEst?'<span class="hatch"><i style="background:repeating-linear-gradient(45deg,'+COL['--accent']+' 0 2px,transparent 2px 5px)"></i>dont litres estimés (écart &gt; '+EST_GAP+' j entre relevés)</span>':'')+
     (fp?'<span><i style="background:'+COL['--accent2']+'"></i>Euros (axe droit)</span>':'')+
