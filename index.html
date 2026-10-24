@@ -682,7 +682,7 @@ function calcRange(list,from,to){
   return calc(k,null,(tempReady()&&k>0)?h/k:null);
 }
 // ---------- Courbe 🌡️ Température sur les graphiques en barres ----------
-var KEY_STEMP='pacFioul.showTemp', showTemp=load(KEY_STEMP,false)===true, tempFailed=false, TEMP_COL='#8c8c8c';
+var TEMP_MIN=-5, TEMP_MAX=35, KEY_STEMP='pacFioul.showTemp', showTemp=load(KEY_STEMP,false)===true, tempFailed=false, TEMP_COL='#8c8c8c';
 // Température moyenne extérieure du jour « from » (inclus) au jour « to » (exclu). Jours futurs ignorés (null si tout est futur).
 // Jour réel (cache Open-Meteo, même position que les Réglages) sinon normale mensuelle de Metz.
 function tempPeriod(from,to){
@@ -703,8 +703,8 @@ function fTemp(t){return nf1.format(t)+' °C';}
 // Axe °C (à droite) + ligne pointillée grise + points. Ne touche pas à l'échelle des barres.
 function tempOverlay(pts,cx,T,ph,xAxis,tipLab){
   var vals=pts.filter(Boolean).map(function(p){return p.t;});if(!vals.length)return '';
-  var lo=Math.floor((Math.min.apply(null,vals)-1)/5)*5, hi=Math.ceil((Math.max.apply(null,vals)+1)/5)*5; if(hi-lo<10)hi=lo+10;
-  var st=hi-lo>20?10:5, Y=function(v){return T+ph-ph*(v-lo)/(hi-lo);}, g='<g class="temp-ov">';
+  // Échelle FIXE −5 → 35 °C sur tous les graphiques (comparaisons d'une période à l'autre) ; valeurs hors plage posées au bord.
+  var lo=TEMP_MIN, hi=TEMP_MAX, st=10, Y=function(v){v=Math.max(lo,Math.min(hi,v));return T+ph-ph*(v-lo)/(hi-lo);}, g='<g class="temp-ov">';
   for(var v=lo;v<=hi+1e-9;v+=st)g+='<text class="taxis" x="'+xAxis+'" y="'+(Y(v)+3).toFixed(1)+'" font-size="9" fill="'+TEMP_COL+'" text-anchor="start">'+nf0.format(v)+'°</text>';
   var segs=[],cur='';pts.forEach(function(p,j){if(!p||p.brk){if(cur)segs.push(cur);cur='';if(!p)return;}
     cur+=(cur?'L':'M')+cx(j).toFixed(1)+' '+Y(p.t).toFixed(1);});if(cur)segs.push(cur);
