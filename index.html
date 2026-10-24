@@ -115,6 +115,22 @@ details[open]>summary{margin-bottom:6px}
 .chk input{width:24px;height:24px;min-height:24px;padding:0;margin:0;accent-color:var(--accent);flex:none}
 .comp label.sm{font-size:.82rem;margin:6px 0 4px}
 .comp input[type=text]{background:var(--card)}
+.tabs{position:sticky;top:0;z-index:5;display:flex;gap:4px;margin:0 0 14px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.tabs button{flex:1;min-height:46px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:1rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tabs button[aria-selected="true"]{background:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){.tabs button[aria-selected="true"]{color:#062a26}}
+select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--input);color:var(--text)}
+.simres{display:grid;grid-template-columns:1fr;gap:0;margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.simres .r{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 12px;border-top:1px solid var(--line);background:var(--input)}
+.simres .r:first-child{border-top:0}
+.simres .r span{color:var(--muted);font-size:.92rem}
+.simres .r b{font-size:1.05rem;text-align:right;white-space:nowrap}
+.simres .r.total{background:var(--accent-soft)}
+.simres .r.total span{color:var(--text);font-weight:700}
+.simres .r.total b{font-size:1.3rem;color:var(--ok)}
+.simres .r.total b.neg{color:var(--danger)}
+.simres .r b.miss{font-weight:500;font-style:italic;color:var(--muted);font-size:.85rem;white-space:normal}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
 .tag{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--text);margin-left:6px;vertical-align:1px}
 </style>
 </head>
@@ -125,6 +141,12 @@ details[open]>summary{margin-bottom:6px}
     <p class="sub">Chaque kWh consommé par ta pompe à chaleur, c'est du fioul que la chaudière n'a pas brûlé.</p>
   </header>
 
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button type="button" role="tab" id="tabSuivi" aria-selected="true" aria-controls="viewSuivi">📊 Suivi</button>
+    <button type="button" role="tab" id="tabSim" aria-selected="false" aria-controls="viewSim">🧮 Simulateur</button>
+  </nav>
+
+  <div id="viewSuivi" role="tabpanel" aria-labelledby="tabSuivi">
   <section id="welcome" class="card welcome hidden">
     <p><b>Bienvenue !</b> Aucun relevé pour l'instant.</p>
     <button class="btn primary block" id="btnFirst" type="button">Ajouter mon premier relevé : 150 kWh au 24/10/2026</button>
@@ -247,6 +269,33 @@ details[open]>summary{margin-bottom:6px}
       <input type="file" id="fileImport" accept="application/json,.json" class="hidden">
     </div>
   </section>
+  </div>
+
+  <div id="viewSim" role="tabpanel" aria-labelledby="tabSim" class="hidden">
+  <section class="card">
+    <h2>🧮 Et si j'avais eu une PAC ?</h2>
+    <p class="hint" style="margin-top:0">Entre une consommation de fioul ou de gaz : le simulateur calcule ce qu'une pompe à chaleur aurait consommé en électricité, et l'économie. <b>Rien n'est enregistré</b> : tes relevés et tes réglages ne sont pas modifiés.</p>
+    <label>Énergie</label>
+    <div class="seg" role="group" aria-label="Énergie simulée">
+      <button type="button" id="simFioul" aria-pressed="true">🛢️ Fioul (litres)</button>
+      <button type="button" id="simGaz" aria-pressed="false">🔵 Gaz (kWh)</button>
+    </div>
+    <label for="simQty" id="simQtyLabel">Consommation de fioul (litres)</label>
+    <input type="text" id="simQty" inputmode="decimal" placeholder="ex. 500" autocomplete="off">
+    <label for="simPeriod">Période <span class="opt">(facultatif)</span></label>
+    <input type="text" id="simPeriod" maxlength="60" placeholder="ex. hiver 2025-2026" autocomplete="off">
+    <label for="simComp">Prix à utiliser</label>
+    <select id="simComp"></select>
+    <label for="simPrix" id="simPrixLabel">Prix du fioul (€/L)</label>
+    <input type="text" id="simPrix" inputmode="decimal" placeholder="ex. 1,90" autocomplete="off">
+    <p class="hint" id="simPrixHint"></p>
+    <p class="hint" id="simParams"></p>
+    <div id="simOut"></div>
+    <div class="formula" id="simFormula"></div>
+    <p class="note">⚠️ Simplification : on suppose que la PAC couvre 100 % du chauffage avec un COP moyen constant. En réalité, par grand froid, une PAC peut avoir besoin d'un appoint (chaudière ou résistance) et son COP baisse. Les abonnements (électricité, fioul, gaz) et le coût d'achat de la PAC ne sont pas comptés.</p>
+    <div class="actions"><button class="btn" type="button" id="simBack">← Retour au suivi</button></div>
+  </section>
+  </div>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -530,6 +579,7 @@ function renderChart(list){
 function renderAll(){
   var list=resolved();
   renderWelcome();renderStats(list);renderList(list);renderChart(list);renderFormula();
+  if(simReady){simFillOptions(true);renderSim();}
 }
 
 // ---------- formulaire ----------
@@ -715,11 +765,91 @@ $('fileImport').addEventListener('change',function(){
   rd.readAsText(f);
 });
 
+// ---------- simulateur (calcul inverse, n'enregistre rien) ----------
+var nf2=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2});
+var simType='fioul', simCompSel=null, simReady=false;
+function simCompute(type,qty,prix,s){
+  s=s||settings;
+  var chaleur=type==='gaz'?qty*s.rendGaz/100:qty*s.pci*s.rend/100;
+  var kwhPac=chaleur/s.cop, pe=elecPrice(s);
+  var coutComb=(prix===null||prix===undefined)?null:qty*prix, coutElec=pe===null?null:kwhPac*pe;
+  return {chaleur:chaleur,kwhPac:kwhPac,pe:pe,coutComb:coutComb,coutElec:coutElec,eco:(coutComb===null||coutElec===null)?null:coutComb-coutElec};
+}
+function simComps(){return settings.comps.filter(function(c){return c.type===simType&&c.prix!==null;});}
+function simFillOptions(keepPrice){
+  var list=simComps(), sel=$('simComp'), unit=simType==='gaz'?' €/kWh':' €/L';
+  if(simCompSel!=='manual'&&!list.some(function(c){return c.id===simCompSel;})){
+    var first=list.filter(function(c){return c.on;})[0];
+    simCompSel=first?first.id:'manual'; keepPrice=false;
+  }
+  sel.innerHTML=list.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(compName(c))+' : '+nfN.format(c.prix)+unit+(c.on?'':' (non cochée)')+'</option>';}).join('')+
+    '<option value="manual">Autre prix (saisi ci-dessous)</option>';
+  sel.value=simCompSel;
+  if(!keepPrice||simCompSel!=='manual'){var c=list.filter(function(x){return x.id===simCompSel;})[0];$('simPrix').value=c?numStr(c.prix):'';}
+  $('simPrixHint').textContent=list.length?'Le prix sert seulement à cette simulation : il ne modifie pas tes réglages.':'Aucun prix '+(simType==='gaz'?'gaz':'fioul')+' dans tes réglages : tape un prix pour cette simulation (il ne sera pas enregistré).';
+}
+function setSimType(t){
+  simType=t;simCompSel=null;
+  $('simFioul').setAttribute('aria-pressed',t==='fioul');$('simGaz').setAttribute('aria-pressed',t==='gaz');
+  $('simQtyLabel').textContent=t==='gaz'?'Consommation de gaz (kWh)':'Consommation de fioul (litres)';
+  $('simQty').placeholder=t==='gaz'?'ex. 5000':'ex. 500';
+  $('simPrixLabel').textContent=t==='gaz'?'Prix du gaz (€/kWh)':'Prix du fioul (€/L)';
+  $('simPrix').placeholder=t==='gaz'?'ex. 0,12':'ex. 1,90';
+  simFillOptions(false);renderSim();
+}
+function renderSim(){
+  var s=settings, gaz=simType==='gaz', pe=elecPrice(s);
+  $('simParams').innerHTML='Réglages utilisés : COP '+nfN.format(s.cop)+' · '+(gaz?'rendement chaudière gaz '+nfN.format(s.rendGaz)+' %':'PCI '+nfN.format(s.pci)+' kWh/L · rendement chaudière fioul '+nfN.format(s.rend)+' %')+
+    ' · électricité '+(pe===null?'<b>prix à renseigner</b>':nfN.format(pe)+' €/kWh'+(s.elecMode==='hphc'?' (moyenne HP/HC)':' (Base)'))+
+    ' — <button type="button" class="linkbtn" id="simGoSettings">modifier dans Réglages</button>';
+  var qty=parseNum($('simQty').value), raw=$('simPrix').value.trim(), prix=raw===''?null:parseNum(raw), out=$('simOut'), fo=$('simFormula');
+  if(isNaN(qty)||qty<=0){
+    out.innerHTML=raw!==''&&(isNaN(prix)||prix<=0)?'<div class="preview warn">⚠️ Prix invalide (ex. '+(gaz?'0,12':'1,90')+').</div>':'';
+    fo.innerHTML='<b>Calcul</b><br>Chaleur utile = '+(gaz?'kWh de gaz × rendement gaz':'litres × PCI ('+nfN.format(s.pci)+' kWh/L) × rendement fioul')+'<br>kWh élec PAC = chaleur utile ÷ COP<br>Économie = coût '+(gaz?'du gaz':'du fioul')+' − coût élec PAC';
+    if(!out.innerHTML)out.innerHTML='<p class="empty">Entre une consommation pour voir le résultat.</p>';return;
+  }
+  if(prix!==null&&(isNaN(prix)||prix<=0)){out.innerHTML='<div class="preview warn">⚠️ Prix invalide (ex. '+(gaz?'0,12':'1,90')+').</div>';prix=null;}else out.innerHTML='';
+  var r=simCompute(simType,qty,prix,s), period=$('simPeriod').value.trim();
+  var miss=function(t){return '<b class="miss">'+t+'</b>';};
+  out.innerHTML+=(period?'<p class="hint" style="margin:12px 0 0">📅 '+esc(period)+'</p>':'')+'<div class="simres">'+
+    '<div class="r"><span>Consommation '+(gaz?'gaz':'fioul')+'</span><b>'+nf2.format(qty)+(gaz?' kWh':' L')+'</b></div>'+
+    '<div class="r"><span>Chaleur utile</span><b id="simChaleur">'+nf2.format(r.chaleur)+' kWh</b></div>'+
+    '<div class="r"><span>Électricité PAC</span><b id="simPac">'+nf2.format(r.kwhPac)+' kWh</b></div>'+
+    '<div class="r"><span>Coût '+(gaz?'du gaz':'du fioul')+'</span>'+(r.coutComb===null?miss('— prix à saisir'):'<b id="simCoutComb">'+fE(r.coutComb)+'</b>')+'</div>'+
+    '<div class="r"><span>Coût électricité PAC</span>'+(r.coutElec===null?miss('— prix élec à renseigner'):'<b id="simCoutElec">'+fE(r.coutElec)+'</b>')+'</div>'+
+    '<div class="r total"><span>'+(r.eco!==null&&r.eco<0?'Surcoût avec PAC':'Économie avec PAC')+'</span>'+(r.eco===null?miss('—'):'<b id="simEco" class="'+(r.eco<0?'neg':'')+'">'+fE(r.eco)+'</b>')+'</div></div>';
+  fo.innerHTML='<b>Calcul</b><br>'+
+    'Chaleur utile = '+(gaz?nf2.format(qty)+' kWh × '+nfN.format(s.rendGaz)+' %':nf2.format(qty)+' L × '+nfN.format(s.pci)+' kWh/L × '+nfN.format(s.rend)+' %')+' = <b>'+nf2.format(r.chaleur)+' kWh</b><br>'+
+    'kWh élec PAC = '+nf2.format(r.chaleur)+' ÷ COP '+nfN.format(s.cop)+' = <b>'+nf2.format(r.kwhPac)+' kWh</b><br>'+
+    (r.coutComb===null?'':'Coût '+(gaz?'gaz':'fioul')+' = '+nf2.format(qty)+(gaz?' kWh':' L')+' × '+nfN.format(prix)+(gaz?' €/kWh':' €/L')+' = <b>'+fE(r.coutComb)+'</b><br>')+
+    (r.coutElec===null?'':'Coût élec = '+nf2.format(r.kwhPac)+' kWh × '+nfN.format(r.pe)+' €/kWh = <b>'+fE(r.coutElec)+'</b><br>')+
+    (r.eco===null?'':'Économie = '+fE(r.coutComb)+' − '+fE(r.coutElec)+' = <b>'+fE(r.eco)+'</b>');
+}
+function showView(v){
+  var sim=v==='sim';
+  $('viewSuivi').classList.toggle('hidden',sim);$('viewSim').classList.toggle('hidden',!sim);
+  $('tabSuivi').setAttribute('aria-selected',!sim);$('tabSim').setAttribute('aria-selected',sim);
+  if(sim){simFillOptions(true);renderSim();} else renderChart(resolved());
+  window.scrollTo(0,0);
+}
+$('tabSuivi').addEventListener('click',function(){showView('suivi');});
+$('tabSim').addEventListener('click',function(){showView('sim');});
+$('simBack').addEventListener('click',function(){showView('suivi');});
+$('simFioul').addEventListener('click',function(){setSimType('fioul');});
+$('simGaz').addEventListener('click',function(){setSimType('gaz');});
+$('simQty').addEventListener('input',renderSim);$('simPeriod').addEventListener('input',renderSim);
+$('simPrix').addEventListener('input',function(){
+  var c=simComps().filter(function(x){return x.id===simCompSel;})[0];
+  if(c&&parseNum(this.value)!==c.prix){simCompSel='manual';$('simComp').value='manual';}
+  renderSim();});
+$('simComp').addEventListener('change',function(){simCompSel=this.value;var c=simComps().filter(function(x){return x.id===simCompSel;})[0];if(c)$('simPrix').value=numStr(c.prix);renderSim();});
+$('simParams').addEventListener('click',function(ev){if(ev.target.id!=='simGoSettings')return;showView('suivi');var d=$('settingsBox');d.open=true;setTimeout(function(){d.scrollIntoView({behavior:'smooth',block:'start'});},50);});
+
 var tt;function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2400);}
 
-window.__pac={calc:calc,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 
-fillSettings();setMode('kwh');resetForm();renderAll();
+fillSettings();setMode('kwh');resetForm();renderAll();setSimType('fioul');simReady=true;
 })();
 </script>
 </body>
