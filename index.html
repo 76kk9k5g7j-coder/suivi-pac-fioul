@@ -132,6 +132,14 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
 .simres .r b.miss{font-weight:500;font-style:italic;color:var(--muted);font-size:.85rem;white-space:normal}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
 .tag{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--text);margin-left:6px;vertical-align:1px}
+@media (max-width:420px){.tabs button{font-size:.88rem;padding:0 2px}}
+.gauge{position:relative;height:24px;border-radius:99px;background:var(--input);border:1px solid var(--line);overflow:hidden;margin-top:8px}
+.gauge>i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);opacity:.85}
+.gauge.low>i{background:var(--danger)}
+.gauge>b{position:absolute;top:0;bottom:0;width:2px;background:var(--accent2)}
+.gauge>span{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--text)}
+.tag.liv{background:rgba(224,122,31,.18)}
+.li-warn{font-size:.85rem;color:var(--danger)}
 </style>
 </head>
 <body>
@@ -144,6 +152,7 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button type="button" role="tab" id="tabSuivi" aria-selected="true" aria-controls="viewSuivi">📊 Suivi</button>
     <button type="button" role="tab" id="tabSim" aria-selected="false" aria-controls="viewSim">🧮 Simulateur</button>
+    <button type="button" role="tab" id="tabCuve" aria-selected="false" aria-controls="viewCuve">🛢️ Cuve</button>
   </nav>
 
   <div id="viewSuivi" role="tabpanel" aria-labelledby="tabSuivi">
@@ -295,6 +304,79 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
     <p class="note">⚠️ Simplification : on suppose que la PAC couvre 100 % du chauffage avec un COP moyen constant. En réalité, par grand froid, une PAC peut avoir besoin d'un appoint (chaudière ou résistance) et son COP baisse. Les abonnements (électricité, fioul, gaz) et le coût d'achat de la PAC ne sont pas comptés.</p>
     <div class="actions"><button class="btn" type="button" id="simBack">← Retour au suivi</button></div>
   </section>
+  </div>
+  <div id="viewCuve" role="tabpanel" aria-labelledby="tabCuve" class="hidden">
+  <section class="card banner hidden" id="tankBanner">
+    <p>🛢️ Commence par renseigner la forme et les dimensions de ta cuve (rien n'est pré-rempli). Ensuite, note la hauteur de fioul mesurée en cm : l'appli calcule les litres.</p>
+    <button class="btn primary block" type="button" id="btnGoTank">Renseigner ma cuve</button>
+  </section>
+
+  <section aria-label="Niveau de la cuve"><div class="grid" id="tankStats"></div></section>
+
+  <section class="card" id="tankFormCard" style="margin-top:14px">
+    <h2>➕ Nouveau relevé de cuve</h2>
+    <div class="seg" role="group" aria-label="Type de relevé">
+      <button type="button" id="tkModeNiv" aria-pressed="true">📏 Niveau (cm)</button>
+      <button type="button" id="tkModeLiv" aria-pressed="false">🚚 Livraison (L)</button>
+    </div>
+    <p class="hint" id="tkModeHint"></p>
+    <form id="tkForm" autocomplete="off" novalidate>
+      <label for="tkDate">Date</label>
+      <input type="date" id="tkDate" required>
+      <label for="tkVal" id="tkValLabel">Hauteur de fioul mesurée (cm, depuis le fond)</label>
+      <input type="text" id="tkVal" inputmode="decimal" placeholder="ex. 45" required>
+      <label for="tkNote">Note <span class="opt">(facultatif)</span></label>
+      <input type="text" id="tkNote" maxlength="80" placeholder="ex. mesuré à la jauge">
+      <div class="preview hidden" id="tkPreview"></div>
+      <div class="actions"><button class="btn primary" type="submit" id="tkSave">Ajouter le relevé</button></div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>📉 Niveau de la cuve</h2>
+    <div class="chart-wrap" id="tankChart"></div>
+    <div class="legend" id="tankLegend"></div>
+  </section>
+
+  <section class="card">
+    <h2>🗒️ Relevés de cuve</h2>
+    <ul class="list" id="tankList"></ul>
+  </section>
+
+  <section class="card">
+    <details id="tankBox">
+      <summary><h2>⚙️ Ma cuve</h2></summary>
+      <label for="tkShape">Forme de la cuve</label>
+      <select id="tkShape">
+        <option value="">— Choisis la forme —</option>
+        <option value="rect">Rectangulaire (parallélépipède)</option>
+        <option value="hcyl">Cylindre couché (horizontal)</option>
+        <option value="vcyl">Cylindre debout (vertical)</option>
+      </select>
+      <div class="settings-grid">
+        <div class="hidden" data-dim="diametre"><label for="tkDiametre">Diamètre (cm)</label><input type="text" inputmode="decimal" id="tkDiametre" placeholder="ex. 120"></div>
+        <div class="hidden" data-dim="longueur"><label for="tkLongueur">Longueur (cm)</label><input type="text" inputmode="decimal" id="tkLongueur" placeholder="ex. 150"></div>
+        <div class="hidden" data-dim="largeur"><label for="tkLargeur">Largeur (cm)</label><input type="text" inputmode="decimal" id="tkLargeur" placeholder="ex. 70"></div>
+        <div class="hidden" data-dim="hauteur"><label for="tkHauteur">Hauteur (cm)</label><input type="text" inputmode="decimal" id="tkHauteur" placeholder="ex. 140"></div>
+      </div>
+      <p class="hint" id="tkShapeHint">Choisis la forme pour afficher les dimensions à mesurer (dimensions intérieures si possible).</p>
+      <div class="settings-grid">
+        <div><label for="tkCap">Capacité nominale (L) <span class="opt">(facultatif)</span></label><input type="text" inputmode="decimal" id="tkCap" placeholder="ex. 1500"></div>
+        <div><label for="tkRes">Réserve basse (L) <span class="opt">(facultatif)</span></label><input type="text" inputmode="decimal" id="tkRes" placeholder="ex. 300"></div>
+      </div>
+      <p class="hint">Capacité nominale : celle indiquée sur la plaque ou la facture de la cuve. Si tu la renseignes, les litres calculés sont recalés proportionnellement dessus (utile si tes mesures sont extérieures). Réserve basse : seuil d'alerte pour commander avant d'être à sec.</p>
+      <div class="preview" id="tkCapPreview"></div>
+      <div class="actions"><button class="btn primary" type="button" id="tkSaveTank">Enregistrer la cuve</button></div>
+      <div class="formula">
+        <b>Calcul des litres</b> (dimensions en cm, 1 L = 1 000 cm³)<br>
+        Rectangulaire : longueur × largeur × hauteur de fioul ÷ 1 000<br>
+        Cylindre debout : π × rayon² × hauteur de fioul ÷ 1 000<br>
+        Cylindre couché : surface du segment × longueur ÷ 1 000, avec surface = r² × arccos((r − h) ÷ r) − (r − h) × √(2 r h − h²)<br>
+        Consommé entre deux relevés = niveau précédent + livraisons entre les deux − niveau actuel
+      </div>
+    </details>
+  </section>
+  <p class="note">💾 Les réglages et relevés de cuve sont inclus dans la sauvegarde « Exporter (JSON) » de l'onglet Suivi.</p>
   </div>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -580,6 +662,7 @@ function renderAll(){
   var list=resolved();
   renderWelcome();renderStats(list);renderList(list);renderChart(list);renderFormula();
   if(simReady){simFillOptions(true);renderSim();}
+  if(tankReady)renderTank();
 }
 
 // ---------- formulaire ----------
@@ -662,8 +745,8 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(b
     Array.prototype.forEach.call(document.querySelectorAll('[data-view]'),function(x){x.setAttribute('aria-pressed',x===b);});
     renderChart(resolved());});
 });
-var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){renderChart(resolved());},150);});
-if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){renderChart(resolved());});}
+var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){renderChart(resolved());if(tankReady&&!$('viewCuve').classList.contains('hidden'))renderTankChart(tankAnalyze());},150);});
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){renderChart(resolved());if(tankReady&&!$('viewCuve').classList.contains('hidden'))renderTankChart(tankAnalyze());});}
 
 // ---------- réglages ----------
 var REQ={sCop:'cop',sPci:'pci',sRend:'rend',sRendGaz:'rendGaz'};
@@ -739,7 +822,7 @@ $('btnResetSettings').addEventListener('click',function(){
 
 // ---------- export / import ----------
 $('btnExport').addEventListener('click',function(){
-  var data={app:'suivi-pac-fioul',version:3,exportedAt:new Date().toISOString(),settings:settings,entries:entries};
+  var data={app:'suivi-pac-fioul',version:4,exportedAt:new Date().toISOString(),settings:settings,entries:entries,tank:{settings:tank,readings:tankReads}};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='suivi-pac-fioul-'+todayIso()+'.json';
   document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
@@ -755,9 +838,12 @@ $('fileImport').addEventListener('change',function(){
       if(!d||!Array.isArray(d.entries))throw new Error('format');
       var clean=d.entries.filter(function(e){return e&&/^\d{4}-\d{2}-\d{2}$/.test(e.date)&&(typeof e.kwh==='number'||typeof e.index==='number');})
         .map(function(e){var n={id:String(e.id||uid()),created:+e.created||Date.now(),date:e.date,note:String(e.note||'')};if(typeof e.index==='number')n.index=e.index;else n.kwh=e.kwh;return n;});
-      if(!confirm('Importer '+clean.length+' relevé(s) ? Ils remplaceront les '+entries.length+' relevé(s) actuels de ce navigateur.'))return;
+      var hasTank=!!(d.tank&&typeof d.tank==='object'), tkClean=hasTank?normalizeTankReadings(d.tank.readings):null;
+      if(!confirm('Importer '+clean.length+' relevé(s) ? Ils remplaceront les '+entries.length+' relevé(s) actuels de ce navigateur.'+
+        (hasTank?'\nCuve : '+tkClean.length+' relevé(s) de cuve remplaceront les '+tankReads.length+' actuels.':'\n(Ancienne sauvegarde sans cuve : tes réglages et relevés de cuve actuels sont conservés.)')))return;
       entries=clean;save(KEY_DATA,entries);save(KEY_WELCOME,true);
       if(d.settings&&typeof d.settings==='object'){settings=normalizeSettings(d.settings);save(KEY_SET,settings);fillSettings();}
+      if(hasTank){tank=normalizeTank(d.tank.settings);tankReads=tkClean;save(KEY_TANK,tank);save(KEY_TREAD,tankReads);fillTank();}
       resetForm();renderAll();toast('Import réussi ✅');
     }catch(e){toast('Fichier invalide : ce n\'est pas une sauvegarde de cette appli');}
     finally{input.value='';}
@@ -826,14 +912,14 @@ function renderSim(){
     (r.eco===null?'':'Économie = '+fE(r.coutComb)+' − '+fE(r.coutElec)+' = <b>'+fE(r.eco)+'</b>');
 }
 function showView(v){
-  var sim=v==='sim';
-  $('viewSuivi').classList.toggle('hidden',sim);$('viewSim').classList.toggle('hidden',!sim);
-  $('tabSuivi').setAttribute('aria-selected',!sim);$('tabSim').setAttribute('aria-selected',sim);
-  if(sim){simFillOptions(true);renderSim();} else renderChart(resolved());
+  [['suivi','viewSuivi','tabSuivi'],['sim','viewSim','tabSim'],['cuve','viewCuve','tabCuve']].forEach(function(x){
+    $(x[1]).classList.toggle('hidden',x[0]!==v);$(x[2]).setAttribute('aria-selected',x[0]===v);});
+  if(v==='sim'){simFillOptions(true);renderSim();} else if(v==='cuve'){renderTank();renderTankChart(tankAnalyze());} else renderChart(resolved());
   window.scrollTo(0,0);
 }
 $('tabSuivi').addEventListener('click',function(){showView('suivi');});
 $('tabSim').addEventListener('click',function(){showView('sim');});
+$('tabCuve').addEventListener('click',function(){showView('cuve');});
 $('simBack').addEventListener('click',function(){showView('suivi');});
 $('simFioul').addEventListener('click',function(){setSimType('fioul');});
 $('simGaz').addEventListener('click',function(){setSimType('gaz');});
@@ -845,11 +931,281 @@ $('simPrix').addEventListener('input',function(){
 $('simComp').addEventListener('change',function(){simCompSel=this.value;var c=simComps().filter(function(x){return x.id===simCompSel;})[0];if(c)$('simPrix').value=numStr(c.prix);renderSim();});
 $('simParams').addEventListener('click',function(ev){if(ev.target.id!=='simGoSettings')return;showView('suivi');var d=$('settingsBox');d.open=true;setTimeout(function(){d.scrollIntoView({behavior:'smooth',block:'start'});},50);});
 
+// ---------- cuve à fioul (niveau en cm → litres) ----------
+var KEY_TANK='pacFioul.tank.v1', KEY_TREAD='pacFioul.tankReadings.v1', RECENT_DAYS=60;
+var SHAPES={rect:{lab:'Rectangulaire (parallélépipède)',dims:['longueur','largeur','hauteur']},
+  hcyl:{lab:'Cylindre couché (horizontal)',dims:['diametre','longueur']},
+  vcyl:{lab:'Cylindre debout (vertical)',dims:['diametre','hauteur']}};
+var DIM_IDS={longueur:'tkLongueur',largeur:'tkLargeur',hauteur:'tkHauteur',diametre:'tkDiametre'};
+function normalizeTank(raw){
+  raw=(raw&&typeof raw==='object')?raw:{};
+  var t={shape:SHAPES[raw.shape]?raw.shape:''};
+  ['longueur','largeur','hauteur','diametre','capNom','reserve'].forEach(function(k){t[k]=posNum(raw[k]);});
+  return t;
+}
+function normalizeTankReadings(arr){
+  if(!Array.isArray(arr))return [];
+  return arr.filter(function(r){return r&&/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&
+      ((r.type==='niveau'&&typeof r.h==='number'&&isFinite(r.h)&&r.h>=0)||(r.type==='livraison'&&typeof r.litres==='number'&&isFinite(r.litres)&&r.litres>0));})
+    .map(function(r){var n={id:String(r.id||uid()),created:+r.created||Date.now(),date:r.date,type:r.type,note:String(r.note||'').slice(0,80)};
+      if(r.type==='niveau')n.h=r.h;else n.litres=r.litres;return n;});
+}
+var tank=normalizeTank(load(KEY_TANK,{})), tankReads=normalizeTankReadings(load(KEY_TREAD,[]));
+var tankMode='niveau', tankReady=false;
+
+// Géométrie : volume (L) pour une hauteur de fioul h (cm)
+function tankGeom(t){
+  t=t||tank; if(!t||!SHAPES[t.shape])return null;
+  if(SHAPES[t.shape].dims.some(function(k){return !(t[k]>0);}))return null;
+  var g={shape:t.shape}, vol;
+  if(t.shape==='rect'){g.maxH=t.hauteur;vol=function(h){return t.longueur*t.largeur*h/1000;};}
+  else if(t.shape==='vcyl'){var r=t.diametre/2;g.maxH=t.hauteur;vol=function(h){return Math.PI*r*r*h/1000;};}
+  else {var R=t.diametre/2;g.maxH=t.diametre;
+    vol=function(h){var a=R*R*Math.acos((R-h)/R)-(R-h)*Math.sqrt(Math.max(0,2*R*h-h*h));return a*t.longueur/1000;};}
+  g.vol=function(h){return vol(Math.min(Math.max(h,0),g.maxH));};
+  g.geomFull=g.vol(g.maxH);
+  var k=(t.capNom>0)?t.capNom/g.geomFull:1;
+  g.cap=g.geomFull*k; g.scaled=k!==1;
+  g.litres=function(h){return g.vol(h)*k;};
+  return g;
+}
+function tankSorted(){return tankReads.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0);});}
+function daysBetween(a,b){var x=parseIso(a),y=parseIso(b);return Math.round((Date.UTC(y.getFullYear(),y.getMonth(),y.getDate())-Date.UTC(x.getFullYear(),x.getMonth(),x.getDate()))/86400000);}
+function addDays(s,n){var d=parseIso(s);d.setDate(d.getDate()+Math.round(n));return iso(d);}
+function fioulPrice(){var c=settings.comps.filter(function(x){return x.type==='fioul'&&x.prix!==null;})[0];return c?{prix:c.prix,name:compName(c)}:null;}
+function tankAnalyze(){
+  var g=tankGeom(), rows=[], prev=null, deliv=0, delivList=[], intervals=[], total=0, totalDeliv=0;
+  tankSorted().forEach(function(r){
+    var x=Object.assign({},r);
+    if(r.type==='livraison'){deliv+=r.litres;totalDeliv+=r.litres;delivList.push(r);rows.push(x);return;}
+    x.l=g?g.litres(r.h):null; x.pct=g?x.l/g.cap*100:null; x.over=g?r.h>g.maxH+1e-9:false;
+    if(prev&&g){
+      var d=daysBetween(prev.date,r.date);
+      x.prevDate=prev.date;x.deliv=deliv;x.days=d;x.conso=prev.l+deliv-x.l;x.perDay=d>0?x.conso/d:null;x.neg=x.conso<-0.5;
+      intervals.push({from:prev.date,to:r.date,conso:x.conso,days:d,neg:x.neg});
+      if(!x.neg)total+=Math.max(0,x.conso);
+    }
+    prev=x;deliv=0;delivList=[];rows.push(x);
+  });
+  var a={g:g,rows:rows,last:prev,intervals:intervals,total:total,totalDeliv:totalDeliv,delivAfter:deliv,delivAfterList:delivList};
+  if(!g||!prev)return a;
+  // consommation moyenne récente : intervalles finissant dans les 60 derniers jours (hors anomalies)
+  var lim=addDays(prev.date,-RECENT_DAYS), sc=0, sd=0, ac=0, ad=0;
+  intervals.forEach(function(i){if(i.neg||i.days<=0)return;ac+=i.conso;ad+=i.days;if(i.to>lim){sc+=i.conso;sd+=i.days;}});
+  a.rate=sd>0?sc/sd:null; a.rateDays=sd; a.allRate=ad>0?ac/ad:null;
+  // niveau actuel : dernier relevé (+ livraisons notées après, moins la conso estimée jusqu'à la livraison)
+  var ref=prev.date, cur=prev.l;
+  if(deliv>0){var ld=delivList[delivList.length-1].date;ref=ld;
+    cur=Math.max(0,cur-(a.rate?a.rate*daysBetween(prev.date,ld):0))+deliv;cur=Math.min(g.cap,cur);a.estimated=true;}
+  a.ref=ref;a.cur=cur;a.curPct=cur/g.cap*100;
+  var res=tank.reserve; a.low=res!==null&&cur<=res;
+  if(a.rate&&a.rate>0){
+    a.daysLeft=cur/a.rate;a.emptyDate=addDays(ref,a.daysLeft);
+    if(res!==null&&cur>res){a.daysRes=(cur-res)/a.rate;a.resDate=addDays(ref,a.daysRes);}
+  }
+  return a;
+}
+function gaugeHtml(pct,low,resPct){
+  var p=Math.max(0,Math.min(100,pct));
+  return '<div class="gauge'+(low?' low':'')+'" role="img" aria-label="Remplissage '+nf0.format(pct)+' %"><i style="width:'+p.toFixed(1)+'%"></i>'+
+    (resPct!==null&&resPct>0&&resPct<100?'<b style="left:'+resPct.toFixed(1)+'%" title="Réserve basse"></b>':'')+'<span>'+nf0.format(pct)+' %</span></div>';
+}
+function resPctOf(g){return (g&&tank.reserve!==null)?tank.reserve/g.cap*100:null;}
+function fCm(x){return nfN.format(x)+' cm';}
+function fDays(n){return n<1?'moins d\'1 jour':'≈ '+nf0.format(n)+' jour'+(Math.round(n)>1?'s':'');}
+
+function renderTankStats(a){
+  var g=a.g, box=$('tankStats'), fp=fioulPrice();
+  $('tankBanner').classList.toggle('hidden',!!g);
+  if(!g){box.innerHTML='';return;}
+  if(!a.last){box.innerHTML='<div class="stat"><h3>Ma cuve</h3><div class="big">'+fL(g.cap)+' <span class="unit">de capacité</span></div><div class="row">'+esc(SHAPES[tank.shape].lab)+
+    '</div><div class="row">Ajoute un premier relevé de hauteur ci-dessous pour voir le niveau.</div></div>';return;}
+  var h='';
+  h+='<div class="stat"><h3>Niveau actuel'+(a.estimated?' (estimé)':'')+'</h3><div class="big" id="tkCur">'+fL(a.cur)+'</div>'+
+    '<div class="row">sur '+fL(g.cap)+' · '+(a.estimated?'après la livraison du '+fDate(a.ref):'relevé du '+fDate(a.last.date)+' ('+fCm(a.last.h)+')')+'</div>'+
+    gaugeHtml(a.curPct,a.low,resPctOf(g))+(a.low?'<div class="row li-warn">⚠️ Sous la réserve basse ('+fL(tank.reserve)+') : pense à commander.</div>':'')+'</div>';
+  if(a.rate){
+    h+='<div class="stat"><h3>Consommation moyenne</h3><div class="big" id="tkRate">'+nf1.format(a.rate)+' <span class="unit">L / jour</span></div>'+
+      '<div class="row">≈ '+nf0.format(a.rate*30)+' L par mois · sur les '+nf0.format(a.rateDays)+' derniers jours mesurés</div>'+
+      (fp?'<div class="row">Coût ≈ <span class="eur">'+fE(a.rate*fp.prix)+'</span> / jour, <span class="eur">'+fE(a.rate*30*fp.prix)+'</span> / mois ('+esc(fp.name)+' à '+nfN.format(fp.prix)+' €/L)</div>':'')+'</div>';
+    h+='<div class="stat"><h3>Autonomie estimée</h3><div class="big" id="tkDays">'+fDays(a.daysLeft)+'</div>'+
+      '<div class="row">Cuve vide vers le <b>'+fDate(a.emptyDate)+'</b></div>'+
+      (tank.reserve!==null?(a.daysRes!=null?'<div class="row">Réserve basse ('+fL(tank.reserve)+') atteinte vers le <b id="tkResDate">'+fDate(a.resDate)+'</b> ('+fDays(a.daysRes)+')</div>':'<div class="row li-warn">Déjà sous la réserve basse</div>'):'')+
+      '<div class="row">Projection au rythme moyen récent, à partir du '+fDate(a.ref)+'.</div></div>';
+  } else {
+    h+='<div class="stat"><h3>Consommation</h3><div class="big">—</div><div class="row">Il faut au moins deux relevés de niveau à des dates différentes pour calculer la consommation et l\'autonomie.</div></div>';
+  }
+  h+='<div class="stat"><h3>Depuis le premier relevé</h3><div class="big" id="tkTotal">'+fL(a.total)+' <span class="unit">consommés</span></div>'+
+    (a.totalDeliv>0?'<div class="row">Livraisons notées : '+fL(a.totalDeliv)+'</div>':'')+
+    (fp&&a.total>0?'<div class="row">≈ <span class="eur">'+fE(a.total*fp.prix)+'</span> de fioul ('+esc(fp.name)+')</div>':'')+
+    (a.allRate&&a.rate&&Math.abs(a.allRate-a.rate)>0.05?'<div class="row">Moyenne sur toute la période : '+nf1.format(a.allRate)+' L/jour</div>':'')+'</div>';
+  box.innerHTML=h;
+}
+function renderTankList(a){
+  var ul=$('tankList'), fp=fioulPrice();
+  if(!a.rows.length){ul.innerHTML='<li class="empty" style="display:block">Aucun relevé de cuve pour l\'instant.</li>';return;}
+  ul.innerHTML=a.rows.slice().reverse().map(function(r){
+    var top,sub='';
+    if(r.type==='livraison'){
+      top='<span class="li-date">'+fDate(r.date)+'<span class="tag liv">livraison</span></span><span class="li-kwh">🚚 +'+fL(r.litres)+'</span>';
+      if(fp)sub='<div class="li-sub">≈ '+fE(r.litres*fp.prix)+' au prix '+esc(fp.name)+'</div>';
+    } else {
+      top='<span class="li-date">'+fDate(r.date)+'<span class="tag">niveau</span></span><span class="li-kwh">'+(r.l===null?fCm(r.h):fL(r.l))+'</span>';
+      sub='<div class="li-sub">Hauteur '+fCm(r.h)+(r.pct!==null?' · '+nf0.format(r.pct)+' % de la cuve':'')+'</div>';
+      if(r.prevDate){
+        sub+='<div class="li-sub">Depuis le '+fDate(r.prevDate)+' : <b>'+fL(r.conso)+'</b> consommés en '+r.days+' j'+(r.perDay!==null&&!r.neg?' · '+nf1.format(r.perDay)+' L/jour':'')+
+          (r.deliv>0?' (livraison +'+fL(r.deliv)+' comptée)':'')+(fp&&!r.neg&&r.conso>0?' · ≈ '+fE(r.conso*fp.prix):'')+'</div>';
+        if(r.neg)sub+='<div class="li-warn">⚠️ Le niveau a monté : une livraison manque ? (ajoute-la en « Livraison »)</div>';
+      }
+      if(r.over)sub+='<div class="li-warn">⚠️ Hauteur supérieure à la hauteur de la cuve</div>';
+    }
+    return '<li><div class="li-main"><div class="li-top">'+top+'</div>'+sub+(r.note?'<div class="li-note">📝 '+esc(r.note)+'</div>':'')+
+      '</div><div class="li-btns"><button class="icon-btn del" type="button" data-tdel="'+esc(r.id)+'" aria-label="Supprimer">🗑️</button></div></li>';
+  }).join('');
+}
+function renderTankChart(a){
+  readColors();
+  var box=$('tankChart'), leg=$('tankLegend'), W=Math.max(300,Math.round(box.clientWidth||600)), H=Math.round(Math.min(300,Math.max(210,W*0.55)));
+  var L=50,R=12,T=14,B=34,pw=W-L-R,ph=H-T-B, g=a.g;
+  var pts=a.rows.filter(function(r){return r.type==='niveau';});
+  if(!g||!pts.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,g?'Le graphique apparaîtra après ton premier relevé':'Renseigne d\'abord ta cuve',{size:13}));leg.innerHTML='';return;}
+  var dates=a.rows.map(function(r){return parseIso(r.date).getTime();});
+  var t0=Math.min.apply(null,dates),t1=Math.max.apply(null,dates); if(t1===t0){t0-=86400000*3;t1+=86400000*3;}
+  var maxL=Math.max(g.cap,Math.max.apply(null,pts.map(function(p){return p.l;})));
+  var X=function(t){return L+pw*(t-t0)/(t1-t0);}, Y=function(v){return T+ph-ph*v/maxL;};
+  var s='',i;
+  for(i=0;i<=4;i++){var v=maxL*i/4,y=T+ph-ph*i/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="'+COL['--line']+'" stroke-width="1"/>'+txt(L-6,y+4,nf0.format(v)+' L',{anchor:'end'});}
+  var nt=pts.length===1&&a.rows.length===1?1:4;
+  for(i=0;i<nt;i++){var tt=nt===1?parseIso(pts[0].date).getTime():t0+(t1-t0)*i/(nt-1);var dd=new Date(tt);
+    s+=txt(nt===1?X(tt):Math.min(Math.max(X(tt),L+22),W-R-22),H-12,pad(dd.getDate())+'/'+pad(dd.getMonth()+1)+'/'+String(dd.getFullYear()).slice(2));}
+  if(tank.reserve!==null&&tank.reserve<maxL){var yr=Y(tank.reserve).toFixed(1);
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yr+'" y2="'+yr+'" stroke="'+COL['--accent2']+'" stroke-width="1.5" stroke-dasharray="6 4"/>';}
+  a.rows.forEach(function(r){if(r.type!=='livraison')return;var x=X(parseIso(r.date).getTime()).toFixed(1);
+    s+='<line x1="'+x+'" x2="'+x+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="'+COL['--accent3']+'" stroke-width="1.5" stroke-dasharray="3 3"><title>'+fDate(r.date)+' : livraison +'+fL(r.litres)+'</title></line>';});
+  var path=pts.map(function(p,j){return (j?'L':'M')+X(parseIso(p.date).getTime()).toFixed(1)+' '+Y(p.l).toFixed(1);}).join('');
+  if(pts.length>1)s+='<path d="'+path+'L'+X(parseIso(pts[pts.length-1].date).getTime()).toFixed(1)+' '+(T+ph)+'L'+X(parseIso(pts[0].date).getTime()).toFixed(1)+' '+(T+ph)+'Z" fill="'+COL['--accent']+'" opacity=".12"/>';
+  s+='<path d="'+path+'" fill="none" stroke="'+COL['--accent']+'" stroke-width="2.5" stroke-linejoin="round"/>';
+  pts.forEach(function(p){s+='<circle cx="'+X(parseIso(p.date).getTime()).toFixed(1)+'" cy="'+Y(p.l).toFixed(1)+'" r="3.5" fill="'+COL['--accent']+'"><title>'+fDate(p.date)+' : '+fL(p.l)+' ('+fCm(p.h)+')</title></circle>';});
+  box.innerHTML=svgEl(W,H,s);
+  leg.innerHTML='<span><i style="background:'+COL['--accent']+'"></i>Litres dans la cuve (capacité '+fL(g.cap)+')</span>'+
+    (a.rows.some(function(r){return r.type==='livraison';})?'<span><i style="background:'+COL['--accent3']+'"></i>Livraison</span>':'')+
+    (tank.reserve!==null?'<span><i style="background:'+COL['--accent2']+'"></i>Réserve basse '+fL(tank.reserve)+'</span>':'');
+}
+function renderTank(){var a=tankAnalyze();renderTankStats(a);renderTankList(a);if(!$('viewCuve').classList.contains('hidden'))renderTankChart(a);updateTankPreview();}
+
+// --- formulaire relevé de cuve ---
+function setTankMode(m){
+  tankMode=m;$('tkModeNiv').setAttribute('aria-pressed',m==='niveau');$('tkModeLiv').setAttribute('aria-pressed',m==='livraison');
+  $('tkValLabel').textContent=m==='niveau'?'Hauteur de fioul mesurée (cm, depuis le fond)':'Litres livrés';
+  $('tkVal').placeholder=m==='niveau'?'ex. 45':'ex. 1000';
+  $('tkModeHint').textContent=m==='niveau'
+    ?'Plonge une règle ou une jauge jusqu\'au fond et note la hauteur de fioul en cm : l\'appli calcule les litres.'
+    :'Note la quantité livrée (sur le bon de livraison) : elle ne sera pas comptée comme une consommation négative. Fais idéalement un relevé de niveau juste avant et juste après.';
+  updateTankPreview();
+}
+function updateTankPreview(){
+  var p=$('tkPreview'), v=parseNum($('tkVal').value), g=tankGeom(); p.classList.remove('warn');
+  if(isNaN(v)){p.classList.add('hidden');return;}
+  p.classList.remove('hidden');
+  if(v<0){p.classList.add('warn');p.innerHTML='⚠️ Valeur négative.';return;}
+  if(tankMode==='livraison'){
+    var fp=fioulPrice();
+    p.innerHTML='🚚 <b>+'+fL(v)+'</b> ajoutés à la cuve'+(fp?' · ≈ '+fE(v*fp.prix)+' ('+esc(fp.name)+')':'')+
+      (g&&v>g.cap?'<br>⚠️ Plus que la capacité de la cuve ('+fL(g.cap)+').':'');
+    if(g&&v>g.cap)p.classList.add('warn');return;
+  }
+  if(!g){p.classList.add('warn');p.innerHTML='⚠️ Renseigne d\'abord la forme et les dimensions de ta cuve dans « Ma cuve ».';return;}
+  if(v>g.maxH+1e-9){p.classList.add('warn');p.innerHTML='⚠️ '+fCm(v)+' dépasse la '+(tank.shape==='hcyl'?'hauteur (diamètre)':'hauteur')+' de ta cuve ('+fCm(g.maxH)+'). Vérifie la mesure.';return;}
+  var l=g.litres(v), pct=l/g.cap*100, low=tank.reserve!==null&&l<=tank.reserve;
+  var h='<span id="tkPrevL">'+fCm(v)+' de fioul = <b>'+fL(l)+'</b></span> · '+nf1.format(pct)+' % de '+fL(g.cap)+gaugeHtml(pct,low,resPctOf(g));
+  // conso depuis le relevé précédent
+  var date=$('tkDate').value||todayIso(), prev=null, deliv=0;
+  tankSorted().forEach(function(r){if(r.date>date)return;if(r.type==='niveau'){prev=r;deliv=0;}else deliv+=r.litres;});
+  if(prev){var c=g.litres(prev.h)+deliv-l, d=daysBetween(prev.date,date);
+    h+='<div style="margin-top:6px">Depuis le '+fDate(prev.date)+' : '+(c<-0.5?'⚠️ le niveau a monté de '+fL(-c)+' (livraison à noter ?)':'<b>'+fL(c)+'</b> consommés'+(d>0?' · '+nf1.format(c/d)+' L/jour':''))+'</div>';}
+  if(low)h+='<div style="margin-top:6px">⚠️ Sous la réserve basse ('+fL(tank.reserve)+').</div>';
+  p.innerHTML=h;
+}
+$('tkModeNiv').addEventListener('click',function(){setTankMode('niveau');});
+$('tkModeLiv').addEventListener('click',function(){setTankMode('livraison');});
+$('tkVal').addEventListener('input',updateTankPreview);$('tkDate').addEventListener('change',updateTankPreview);
+$('tkForm').addEventListener('submit',function(ev){
+  ev.preventDefault();
+  var date=$('tkDate').value, v=parseNum($('tkVal').value), note=$('tkNote').value.trim().slice(0,80), g=tankGeom();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){toast('Choisis une date');return;}
+  var r={id:uid(),created:Date.now(),date:date,type:tankMode,note:note};
+  if(tankMode==='niveau'){
+    if(!g){toast('Renseigne d\'abord ta cuve (forme et dimensions)');openTankBox();return;}
+    if(isNaN(v)||v<0){toast('Entre une hauteur en cm (ex. 45 ou 45,5)');$('tkVal').focus();return;}
+    if(v>g.maxH+1e-9){toast('Hauteur supérieure à la cuve ('+fCm(g.maxH)+')');$('tkVal').focus();return;}
+    r.h=v;
+  } else {
+    if(isNaN(v)||v<=0){toast('Entre les litres livrés (ex. 1000)');$('tkVal').focus();return;}
+    r.litres=v;
+  }
+  tankReads.push(r);save(KEY_TREAD,tankReads);
+  $('tkVal').value='';$('tkNote').value='';$('tkPreview').classList.add('hidden');
+  renderTank();renderTankChart(tankAnalyze());toast(tankMode==='niveau'?'Relevé de cuve ajouté ✅':'Livraison ajoutée ✅');
+});
+$('tankList').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-tdel]');if(!b)return;var id=b.getAttribute('data-tdel');
+  var r=tankReads.filter(function(x){return x.id===id;})[0];if(!r)return;
+  if(!confirm('Supprimer '+(r.type==='livraison'?'la livraison':'le relevé de cuve')+' du '+fDate(r.date)+' ? Cette action est définitive.'))return;
+  tankReads=tankReads.filter(function(x){return x.id!==id;});save(KEY_TREAD,tankReads);renderTank();renderTankChart(tankAnalyze());toast('Supprimé');
+});
+
+// --- réglages de la cuve ---
+function showDims(shape){
+  var need=shape&&SHAPES[shape]?SHAPES[shape].dims:[];
+  Object.keys(DIM_IDS).forEach(function(k){document.querySelector('[data-dim="'+k+'"]').classList.toggle('hidden',need.indexOf(k)<0);});
+  $('tkShapeHint').textContent=!shape?'Choisis la forme pour afficher les dimensions à mesurer (dimensions intérieures si possible).':
+    shape==='hcyl'?'Cuve couchée : la hauteur maximale de fioul est égale au diamètre.':'Mesure de préférence les dimensions intérieures.';
+}
+function readTankUI(){
+  var t={shape:$('tkShape').value}, bad=null;
+  ['longueur','largeur','hauteur','diametre'].forEach(function(k){var raw=$(DIM_IDS[k]).value.trim();t[k]=raw===''?null:parseNum(raw);
+    if(t[k]!==null&&!(t[k]>0)&&SHAPES[t.shape]&&SHAPES[t.shape].dims.indexOf(k)>=0&&!bad)bad=DIM_IDS[k];});
+  [['capNom','tkCap'],['reserve','tkRes']].forEach(function(p){var raw=$(p[1]).value.trim();t[p[0]]=raw===''?null:parseNum(raw);if(t[p[0]]!==null&&!(t[p[0]]>0)&&!bad)bad=p[1];});
+  t.bad=bad;return t;
+}
+function updateCapPreview(){
+  var t=readTankUI(), g=tankGeom(t), p=$('tkCapPreview');p.classList.remove('warn');
+  if(!t.shape){p.innerHTML='Capacité totale : choisis la forme et entre les dimensions.';return;}
+  if(!g){p.innerHTML='Capacité totale : entre '+SHAPES[t.shape].dims.map(function(k){return k==='diametre'?'le diamètre':'la '+k;}).join(', ')+' (en cm).';return;}
+  p.innerHTML='Capacité totale calculée : <b id="tkCapCalc">'+fL(g.geomFull)+'</b>'+(g.scaled?'<br>Capacité nominale utilisée : <b>'+fL(g.cap)+'</b> (litres recalés × '+nfN.format(g.cap/g.geomFull)+')':'')+
+    '<br>Hauteur maximale de fioul : '+fCm(g.maxH);
+  if(g.scaled&&Math.abs(g.cap/g.geomFull-1)>0.25){p.classList.add('warn');p.innerHTML+='<br>⚠️ Grosse différence entre la capacité calculée et la capacité nominale : vérifie les dimensions.';}
+}
+function fillTank(){
+  $('tkShape').value=tank.shape||'';
+  Object.keys(DIM_IDS).forEach(function(k){$(DIM_IDS[k]).value=numStr(tank[k]);});
+  $('tkCap').value=numStr(tank.capNom);$('tkRes').value=numStr(tank.reserve);
+  showDims(tank.shape);updateCapPreview();
+}
+function openTankBox(){var d=$('tankBox');d.open=true;setTimeout(function(){d.scrollIntoView({behavior:'smooth',block:'start'});},50);}
+$('tkShape').addEventListener('change',function(){showDims(this.value);updateCapPreview();});
+['tkLongueur','tkLargeur','tkHauteur','tkDiametre','tkCap','tkRes'].forEach(function(id){$(id).addEventListener('input',updateCapPreview);});
+$('btnGoTank').addEventListener('click',openTankBox);
+$('tkSaveTank').addEventListener('click',function(){
+  var t=readTankUI();
+  if(!SHAPES[t.shape]){toast('Choisis la forme de la cuve');$('tkShape').focus();return;}
+  if(t.bad){toast('Valeur invalide : '+labelOf(t.bad));$(t.bad).focus();return;}
+  var miss=SHAPES[t.shape].dims.filter(function(k){return t[k]===null;})[0];
+  if(miss){toast('Renseigne : '+labelOf(DIM_IDS[miss]));$(DIM_IDS[miss]).focus();return;}
+  var n=normalizeTank(t);
+  // on ne garde que les dimensions utiles à la forme choisie
+  Object.keys(DIM_IDS).forEach(function(k){if(SHAPES[n.shape].dims.indexOf(k)<0)n[k]=null;});
+  var g=tankGeom(n);
+  if(n.reserve!==null&&n.reserve>=g.cap){toast('La réserve basse doit être inférieure à la capacité ('+fL(g.cap)+')');$('tkRes').focus();return;}
+  tank=n;save(KEY_TANK,tank);fillTank();renderTank();renderTankChart(tankAnalyze());toast('Cuve enregistrée ✅');
+});
+
 var tt;function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2400);}
 
-window.__pac={calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 
 fillSettings();setMode('kwh');resetForm();renderAll();setSimType('fioul');simReady=true;
+fillTank();setTankMode('niveau');$('tkDate').value=todayIso();tankReady=true;renderTank();
 })();
 </script>
 </body>
