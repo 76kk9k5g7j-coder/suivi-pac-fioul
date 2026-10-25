@@ -303,6 +303,7 @@ ul.rlist li{display:block;padding:0}
   --sg-on:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08));--sg-on-bd:rgba(255,255,255,.24);--sg-on-sh:0 2px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.30),inset 0 -1px 1px rgba(45,212,191,.16)}}
 .seg{background-color:var(--input);background-image:var(--sg-bg);box-shadow:var(--sg-in);border-radius:14px;padding:4px;gap:4px}
 .seg button{border:1px solid transparent;border-radius:11px;transition:background-color .2s,color .2s,box-shadow .2s,transform .12s;-webkit-tap-highlight-color:transparent}
+.cv-seg button{line-height:1.2;white-space:normal}
 .seg button[aria-pressed="true"]{background:var(--sg-on);border-color:var(--sg-on-bd);color:var(--accent);box-shadow:var(--sg-on-sh);font-weight:700}
 .seg button:active{transform:scale(.96)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -708,6 +709,14 @@ html.ks-open{overflow:hidden}
       <p class="hint">Le même COP pour tous les relevés.</p>
     </div>
     <div id="boxCopTemp" class="hidden">
+      <h4 class="sh4">Courbe de COP</h4>
+      <div class="seg cv-seg" role="group" aria-label="Courbe de COP toute faite" id="copCurveSeg">
+        <button type="button" id="cvReddit" data-cv="reddit" aria-pressed="false">Midea PortaSplit Reddit</button>
+        <button type="button" id="cvR32" data-cv="r32" aria-pressed="false">Moyenne R32 officielle</button>
+      </div>
+      <p class="hint" id="cvState"></p>
+      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint"><b>Midea PortaSplit Reddit</b> : valeurs <b>non officielles</b>, reprises d'un tableau partagé sur Reddit (ce sont les COP de laboratoire à charge partielle, donc plutôt optimistes). <b>Moyenne R32 officielle</b> : moyenne des COP publiés par les fabricants pour 5 climatiseurs split R32 (Samsung AR12TXFC et AR09TX, Mitsubishi HR25VF, Midea MOB02-18HFN8, Daikin FTXF/RXF25E). Aucun n'en publie à −10 °C : 2,5 est une estimation (0,1 de moins par degré sous −7 °C, comme la courbe Midea « réaliste »). Ces deux courbes sont utilisées telles quelles, sans % de correction. Un « COP forcé » sur un mois reste prioritaire. Touche à nouveau le bouton actif pour revenir à tes points. Le Simulateur garde sa propre courbe.</p></details>
+      <div id="boxMyCurve">
       <p class="hint">Entre de 2 à 6 points « température extérieure → COP » (fiche de ta PAC).</p>
       <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Le COP d'une PAC air/air baisse quand il fait froid dehors. Entre deux points, l'appli calcule une valeur intermédiaire (ligne droite). Plus froid que ton point le plus froid ou plus chaud que ton point le plus chaud : elle garde la valeur du point le plus proche. Jamais moins de 1. ⚠️ COP peu fiable sous 0 °C (dégivrage).</p></details>
       <table class="ptable ctable" id="copPtsTbl"></table>
@@ -718,10 +727,11 @@ html.ks-open{overflow:hidden}
       <label for="sCorr">% de correction (terrain) <span class="opt">(facultatif)</span></label>
       <input type="text" inputmode="decimal" id="sCorr" placeholder="ex. 15">
       <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Les COP des fiches sont mesurés en laboratoire. En vrai, ils sont souvent 10 à 20 % plus bas (dégivrage, gaine, pièce…). Avec 15 %, tous les COP calculés sont multipliés par 0,85. Vide = 0 %.</p></details>
+      </div>
       <h4 class="sh4">Température extérieure moyenne par mois</h4>
       <div class="actions" style="margin-top:6px"><button class="btn small" type="button" id="btnMetz">Normales Metz (Météo-France 1991-2020)</button></div>
       <table class="ptable ctable" id="copMonthTbl"></table>
-      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">« COP calculé » vient de la température du mois, de tes points et du % de correction. Pour imposer un COP sur un mois, remplis « COP forcé » (vide = calculé). Pour un relevé qui couvre plusieurs mois, le COP est la moyenne des mois, pondérée par le nombre de jours dans chaque mois. Pour utiliser les températures réelles : ⚙️ Général → Météo.</p></details>
+      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">« COP calculé » vient de la température du mois et de la courbe choisie (ou de tes points et du % de correction). Pour imposer un COP sur un mois, remplis « COP forcé » (vide = calculé). Pour un relevé qui couvre plusieurs mois, le COP est la moyenne des mois, pondérée par le nombre de jours dans chaque mois. Pour utiliser les températures réelles : ⚙️ Général → Météo.</p></details>
     </div>
     </div>
   </details>
@@ -859,7 +869,7 @@ var KEY_DATA='pacFioul.entries.v1', KEY_SET='pacFioul.settings.v1', KEY_WELCOME=
 var DEFAULTS={cop:3, pci:10, rend:85, rendGaz:90, ecsOn:false, ecsPers:null, ecsKwh:800,
   comps:[{id:'f1',type:'fioul',label:'',prix:null,on:true}],
   elecMode:'base', prixElec:null, prixHP:null, prixHC:null, pctHC:null,
-  copMode:'fixe', copPts:[], copCorr:null, tMonths:[null,null,null,null,null,null,null,null,null,null,null,null], copOver:[null,null,null,null,null,null,null,null,null,null,null,null], tReal:false, lat:null, lon:null, pacPrix:null, pacAides:null, pacDate:null, pacEnt:null};
+  copMode:'fixe', copPts:[], copCorr:null, copCurve:null, tMonths:[null,null,null,null,null,null,null,null,null,null,null,null], copOver:[null,null,null,null,null,null,null,null,null,null,null,null], tReal:false, lat:null, lon:null, pacPrix:null, pacAides:null, pacDate:null, pacEnt:null};
 var MAX_COMPS=8;
 var OLD_DEFAULT_FIOUL=1.9308, HC_SUGGEST=33.3;
 
@@ -903,6 +913,7 @@ function normalizeSettings(raw){
   s.copMode=raw.copMode==='temp'?'temp':'fixe';
   s.copPts=Array.isArray(raw.copPts)?raw.copPts.map(function(p){return {t:finOrNull(p&&p.t,-50,50),cop:finOrNull(p&&p.cop,0.01,20)};}).filter(function(p){return p.t!==null&&p.cop!==null;}).slice(0,6):[];
   s.copCorr=finOrNull(raw.copCorr,0,90);
+  s.copCurve=(raw.copCurve==='reddit'||raw.copCurve==='r32')?raw.copCurve:null; // v23 : courbe toute faite (null = mes points)
   s.tMonths=[];s.copOver=[];
   for(var mi=0;mi<12;mi++){s.tMonths.push(finOrNull(Array.isArray(raw.tMonths)?raw.tMonths[mi]:null,-50,50));s.copOver.push(finOrNull(Array.isArray(raw.copOver)?raw.copOver[mi]:null,1,20));}
   s.tReal=raw.tReal===true;
@@ -977,6 +988,15 @@ var METZ_TNORM=[2.7,3.6,7,10.5,14.5,17.9,20.1,19.7,15.7,11.3,6.5,3.5];
 // 2,70 / 3,18 / 4,35 / 5,57 / 6,78 à −10 / −7 / +2 / +7 / +12 °C ; abaissées (modulation mini ~300 W, comparaison splits fixes
 // Eurovent et études de terrain : COP saisonnier ~2,4–3) + 10 % de correction terrain par défaut du bouton.
 var MIDEA_PTS=[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:3.9},{t:7,cop:4.5},{t:12,cop:5}], MIDEA_CORR=10;
+// v23 : courbes toutes faites, appliquées telles quelles (sans % de correction). « COP forcé » d'un mois reste prioritaire.
+// reddit : tableau non officiel partagé sur Reddit (mêmes chiffres que les valeurs labo à charge partielle EN 14825 ci-dessus).
+// r32 : moyenne des COP officiels de 5 splits R32 (Samsung AR12TXFC, AR09TX, Mitsubishi HR25VF, Midea MOB02-18HFN8, Daikin FTXF/RXF25E)
+//       à −7/+2/+7/+12 °C ; −10 °C non publié : 2,5 = 2,8 − 3 × 0,1 (même pente de 0,1 par °C que MIDEA_PTS sous −7 °C).
+var COP_CURVES={reddit:{name:'Midea PortaSplit Reddit',pts:[{t:-10,cop:2.7},{t:-7,cop:3.18},{t:2,cop:4.35},{t:7,cop:5.57},{t:12,cop:6.78}]},
+  r32:{name:'Moyenne R32 officielle',pts:[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:4.1},{t:7,cop:5.2},{t:12,cop:6.2}]}};
+function curveOf(s){return (s&&s.copCurve&&COP_CURVES[s.copCurve])||null;}
+function curvePts(s){var c=curveOf(s);return c?c.pts:s.copPts;}
+function curveCorr(s){return curveOf(s)?0:s.copCorr;}
 var KEY_TEMPS='pacFioul.temps.v1';
 var tempCache=load(KEY_TEMPS,null); if(!tempCache||typeof tempCache!=='object'||!tempCache.days||typeof tempCache.days!=='object')tempCache={loc:'',days:{}};
 var tempFetching=false, tempStatus='';
@@ -989,8 +1009,8 @@ function copInterp(t,pts,corr){
   else for(var i=1;i<pts.length;i++){if(t<=pts[i].t){var a=pts[i-1],b=pts[i];c=a.cop+(b.cop-a.cop)*(t-a.t)/(b.t-a.t);break;}}
   return Math.max(1,c*(1-(corr||0)/100));
 }
-function tempReady(s){s=s||settings;return s.copMode==='temp'&&copPtsSorted(s.copPts).length>=2;}
-function monthCop(m,s){s=s||settings;if(s.copOver[m]!==null)return Math.max(1,s.copOver[m]);if(s.tMonths[m]===null)return null;return copInterp(s.tMonths[m],s.copPts,s.copCorr);}
+function tempReady(s){s=s||settings;return s.copMode==='temp'&&copPtsSorted(curvePts(s)).length>=2;}
+function monthCop(m,s){s=s||settings;if(s.copOver[m]!==null)return Math.max(1,s.copOver[m]);if(s.tMonths[m]===null)return null;return copInterp(s.tMonths[m],curvePts(s),curveCorr(s));}
 function locOf(s){return (s.lat!==null&&s.lon!==null)?s.lat.toFixed(2)+','+s.lon.toFixed(2):'';}
 // COP d'une période : du jour « from » (inclus) au jour « to » (exclu). Sans période connue : le jour « to » seul.
 function copFor(from,to,s){
@@ -1003,7 +1023,7 @@ function copFor(from,to,s){
     var sum=0,n=0,real=0;
     days.forEach(function(k){var v=tempCache.days[k];
       if(typeof v==='number'){sum+=v;n++;real++;}else{var tn=s.tMonths[+k.slice(5,7)-1];if(tn!==null){sum+=tn;n++;}}});
-    if(real>0){var tm=sum/n;return {cop:copInterp(tm,s.copPts,s.copCorr),src:real===days.length?'reel':'mixte',t:tm};}
+    if(real>0){var tm=sum/n;return {cop:copInterp(tm,curvePts(s),curveCorr(s)),src:real===days.length?'reel':'mixte',t:tm};}
   }
   var tot=0,cnt=0;days.forEach(function(k){var c=monthCop(+k.slice(5,7)-1,s);if(c!==null){tot+=c;cnt++;}});
   if(cnt)return {cop:tot/cnt,src:'mois'};
@@ -1644,7 +1664,7 @@ var ROI_MAX_DAYS=6*365, ROI_SPREAD=0.12, ROI_SPREAD_ROUGH=0.25;
 function djuNorm(y,m){return DJU_METZ[m]/new Date(y,m+1,0).getDate();}
 function djuDay(d,useReal){if(useReal){var v=tempCache.days[d];if(typeof v==='number')return Math.max(0,18-v);}return djuNorm(+d.slice(0,4),+d.slice(5,7)-1);}
 // COP à une température donnée (courbe + correction en mode température, sinon COP fixe)
-function copAtT(T,s){return tempReady(s)?copInterp(T,s.copPts,s.copCorr):s.cop;}
+function copAtT(T,s){return tempReady(s)?copInterp(T,curvePts(s),curveCorr(s)):s.cop;}
 function tDay(d,useReal){if(useReal){var v=tempCache.days[d];if(typeof v==='number')return v;}return METZ_TNORM[+d.slice(5,7)-1];}
 // Calibrage : chaleur PAC ÷ degrés-jours, période de relevé par période. Avec une puissance électrique max (kwe), le plafond d'une période
 // = somme sur ses jours de kwe × 24 h × COP(température du jour) ; une période en moyenne au plafond (≥ 98 %) ne dit pas tout le besoin
@@ -1805,7 +1825,13 @@ $('compList').addEventListener('click',function(ev){
   compsUI=compsUI.filter(function(x){return x.id!==id;});renderCompsUI();scheduleSave(0);
 });
 // --- COP selon la température : brouillon d'interface ---
-var copModeUI='fixe', copPtsUI=[];
+var copModeUI='fixe', copPtsUI=[], copCurveUI=null;
+function setCurveUI(k){copCurveUI=(k&&COP_CURVES[k])?k:null;
+  Array.prototype.forEach.call(document.querySelectorAll('#copCurveSeg button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-cv')===copCurveUI));});
+  $('boxMyCurve').classList.toggle('hidden',!!copCurveUI);
+  var c=copCurveUI?COP_CURVES[copCurveUI]:null;
+  $('cvState').textContent=c?'Utilisée telle quelle : '+c.pts.map(function(p){return (p.t>0?'+':p.t<0?'−':'')+nf0.format(Math.abs(p.t))+' °C → '+nf2.format(p.cop);}).join(' · '):'Aucune choisie : tes points ci-dessous.';
+  updateCopPreview();}
 function setCopMode(m){copModeUI=m;$('copFixe').setAttribute('aria-pressed',m==='fixe');$('copTemp').setAttribute('aria-pressed',m==='temp');
   $('boxCopFixe').classList.toggle('hidden',m!=='fixe');$('boxCopTemp').classList.toggle('hidden',m!=='temp');}
 function readPtsUI(){Array.prototype.forEach.call(document.querySelectorAll('#copPtsTbl tr[data-i]'),function(r){var i=+r.getAttribute('data-i');if(copPtsUI[i]){copPtsUI[i].tRaw=r.querySelector('.pT').value;copPtsUI[i].cRaw=r.querySelector('.pC').value;}});}
@@ -1827,12 +1853,15 @@ function renderMonthUI(){
 function uiPts(){readPtsUI();var a=[];copPtsUI.forEach(function(p){var t=parseNum(p.tRaw),c=parseNum(p.cRaw);if(isFinite(t)&&c>0)a.push({t:t,cop:c});});return a;}
 function updateCopPreview(){
   var pts=uiPts(), corr=parseNum($('sCorr').value);if(!isFinite(corr)||corr<0)corr=0;
+  if(copCurveUI){pts=COP_CURVES[copCurveUI].pts;corr=0;}
   for(var m=0;m<12;m++){var cell=$('mc'+m);if(!cell)continue;var r=document.querySelector('#copMonthTbl tr[data-m="'+m+'"]');
     var t=parseNum(r.querySelector('.mT').value), o=parseNum(r.querySelector('.mO').value), c=(pts.length>=2&&isFinite(t))?copInterp(t,pts,corr):null;
     cell.textContent=c===null?'—':nf2.format(c);cell.classList.toggle('forced',o>0&&c!==null);}
 }
 function showTReal(){$('boxTReal').classList.toggle('hidden',!$('sTReal').checked);}
 $('copFixe').addEventListener('click',function(){setCopMode('fixe');scheduleSave(0);});
+$('copCurveSeg').addEventListener('click',function(ev){var b=ev.target.closest('button[data-cv]');if(!b)return;var k=b.getAttribute('data-cv');
+  setCurveUI(copCurveUI===k?null:k);toast(copCurveUI?'Courbe : '+COP_CURVES[copCurveUI].name:'Courbe : tes points');scheduleSave(0);});
 $('copTemp').addEventListener('click',function(){setCopMode('temp');scheduleSave(0);});
 $('btnAddPt').addEventListener('click',function(){readPtsUI();if(copPtsUI.length>=6){toast('6 points maximum');return;}copPtsUI.push({tRaw:'',cRaw:''});renderPtsUI();
   var r=document.querySelectorAll('#copPtsTbl .pT');if(r.length)r[r.length-1].focus();});
@@ -1866,7 +1895,7 @@ function fillSettings(){
   setCopMode(settings.copMode);
   copPtsUI=settings.copPts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});
   $('sCorr').value=numStr(settings.copCorr);
-  renderMonthUI();renderPtsUI();
+  renderMonthUI();renderPtsUI();setCurveUI(settings.copCurve);
   $('sTReal').checked=settings.tReal;$('sLat').value=numStr(settings.lat);$('sLon').value=numStr(settings.lon);showTReal();
   $('sPacPrix').value=numStr(settings.pacPrix);$('sPacAides').value=numStr(settings.pacAides);$('sPacEnt').value=numStr(settings.pacEnt);$('sPacKw').value=numStr(settings.pacKw);renderPacKwLimit();
   $('sPacDate').value=settings.pacDate||'';
@@ -1895,7 +1924,8 @@ function collectSettings(){ // mêmes règles qu'avant (bouton « Enregistrer »
     var t=parseNum(tr),c=parseNum(cr);if(!isFinite(t)||t<-50||t>50||!(c>0)||c>20){badPt=true;return;}pts.push({t:t,cop:c});});
   pts.sort(function(a,b){return a.t-b.t;});
   var dup=pts.some(function(p,i){return i&&p.t===pts[i-1].t;});
-  if(strict){
+  n.copCurve=copCurveUI;
+  if(strict&&!copCurveUI){
     if(badPt)return {err:'Point de COP invalide (ex. 7 °C → 3,5)'};
     if(pts.length<2||pts.length>6)return {err:'COP selon la température : mets de 2 à 6 points'};
     if(dup)return {err:'Deux points ont la même température'};
@@ -2677,7 +2707,7 @@ function trySaveTank(){ // mêmes règles qu'avant (bouton « Enregistrer la cuv
 
 var tt;function toast(m,ms){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},ms||2400);}
 
-window.__pac={kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){setCurveUI(k);},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 
 fillSettings();setMode('kwh');resetForm();renderAll();setSimType(simSt.type);simReady=true;
 renderTempButtons();if((settings.copMode==='temp'&&settings.tReal)||showTemp)setTimeout(function(){fetchTemps(false);},300);
