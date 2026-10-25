@@ -253,11 +253,8 @@ details.info{margin-top:18px}
 .roi-main{flex:1;min-width:0}
 .roi-main .pct{font-size:1.05rem;font-weight:800;color:var(--accent)}
 .roi-main .linkbtn{text-align:left;font-size:.84rem}
-.roi-pick{flex:none;display:flex;gap:4px;max-width:60%;overflow-x:auto}
-.roi-pick .vs{color:var(--muted);font-size:.78rem;white-space:nowrap}
-.roi-pick button{min-height:30px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);background:var(--input);color:var(--muted);font-size:.76rem;font-weight:600;white-space:nowrap;cursor:pointer}
-.roi-pick button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
-.roi-pick select{width:auto;max-width:150px;min-height:30px;padding:2px 6px;font-size:16px;border-radius:8px}
+.roi-pick{flex:0 1 auto;display:flex;min-width:0;max-width:55%;overflow:hidden}
+.roi-pick .vs{color:var(--muted);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .roi-bar{position:relative;height:6px;border-radius:99px;background:var(--input);border:1px solid var(--line);overflow:hidden;margin:5px 0 4px}
 .roi-bar>i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:99px}
 /* Style de barre interchangeable : #roiBar[data-bar="…"] + variable --p (0 → 1) posée par renderRoi. v17 : « classic » (= v16). */
@@ -304,6 +301,11 @@ ul.rlist li{display:block;padding:0}
 .seg{background-color:var(--input);background-image:var(--sg-bg);box-shadow:var(--sg-in);border-radius:14px;padding:4px;gap:4px}
 .seg button{border:1px solid transparent;border-radius:11px;transition:background-color .2s,color .2s,box-shadow .2s,transform .12s;-webkit-tap-highlight-color:transparent}
 .cv-seg button{line-height:1.2;white-space:normal}
+/* v24 : 4 courbes en grille 2 × 2, nom + SCOP indicatif */
+.seg.cv-seg{display:grid;grid-template-columns:1fr 1fr}
+.cv-seg button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;padding:6px 8px;font-size:.88rem}
+.cv-seg .cv-s{font-size:.72rem;font-weight:500;opacity:.8}
+.cv-seg button[aria-pressed="true"] .cv-s{opacity:1}
 .seg button[aria-pressed="true"]{background:var(--sg-on);border-color:var(--sg-on-bd);color:var(--accent);box-shadow:var(--sg-on-sh);font-weight:700}
 .seg button:active{transform:scale(.96)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -338,16 +340,12 @@ header.top .sub{margin-top:4px}
 .stat .stat-more .cmp{margin-top:6px}
 .roi .ib{margin-left:auto}
 .roi-l1 .roi-pick{margin-left:8px}
-/* v22b : pastilles de comparaison (même relief que Semaine/Mois/Année) */
+/* v24 : pastilles de comparaison retirées (le Suivi montre le favori ⭐) */
 #stats,#stats .stat{min-width:0}
-.seg.cmp-chips{max-width:100%;min-width:0;display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 0 8px;border-radius:999px}
-.seg.cmp-chips::-webkit-scrollbar{display:none}
-.seg.cmp-chips button{flex:1 0 auto;min-height:38px;padding:0 12px;border-radius:999px;font-size:.86rem;white-space:nowrap;max-width:62%;overflow:hidden;text-overflow:ellipsis}
 /* v22c : favori */
 .comp-head .cFav{margin-left:auto;font-size:1.15rem;color:var(--muted)}
 .comp-head .cFav+.cDel{margin-left:0}
 .comp-head .cFav.on{color:inherit}
-.seg.cmp-chips .fv{font-size:.72rem;margin-left:3px}
 /* v22 : feuille « détail du calcul » */
 .ksheet{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,16,22,.45)}
 .ksheet.hidden{display:none}
@@ -709,13 +707,6 @@ html.ks-open{overflow:hidden}
       <p class="hint">Le même COP pour tous les relevés.</p>
     </div>
     <div id="boxCopTemp" class="hidden">
-      <h4 class="sh4">Courbe de COP</h4>
-      <div class="seg cv-seg" role="group" aria-label="Courbe de COP toute faite" id="copCurveSeg">
-        <button type="button" id="cvReddit" data-cv="reddit" aria-pressed="false">Midea PortaSplit Reddit</button>
-        <button type="button" id="cvR32" data-cv="r32" aria-pressed="false">Moyenne R32 officielle</button>
-      </div>
-      <p class="hint" id="cvState"></p>
-      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint"><b>Midea PortaSplit Reddit</b> : valeurs <b>non officielles</b>, reprises d'un tableau partagé sur Reddit (ce sont les COP de laboratoire à charge partielle, donc plutôt optimistes). <b>Moyenne R32 officielle</b> : moyenne des COP publiés par les fabricants pour 5 climatiseurs split R32 (Samsung AR12TXFC et AR09TX, Mitsubishi HR25VF, Midea MOB02-18HFN8, Daikin FTXF/RXF25E). Aucun n'en publie à −10 °C : 2,5 est une estimation (0,1 de moins par degré sous −7 °C, comme la courbe Midea « réaliste »). Ces deux courbes sont utilisées telles quelles, sans % de correction. Un « COP forcé » sur un mois reste prioritaire. Touche à nouveau le bouton actif pour revenir à tes points. Le Simulateur garde sa propre courbe.</p></details>
       <div id="boxMyCurve">
       <p class="hint">Entre de 2 à 6 points « température extérieure → COP » (fiche de ta PAC).</p>
       <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Le COP d'une PAC air/air baisse quand il fait froid dehors. Entre deux points, l'appli calcule une valeur intermédiaire (ligne droite). Plus froid que ton point le plus froid ou plus chaud que ton point le plus chaud : elle garde la valeur du point le plus proche. Jamais moins de 1. ⚠️ COP peu fiable sous 0 °C (dégivrage).</p></details>
@@ -724,6 +715,14 @@ html.ks-open{overflow:hidden}
         <button class="btn small" type="button" id="btnAddPt">+ Ajouter un point</button>
         <button class="btn small" type="button" id="btnMidea">Remplir avec Midea PortaSplit (valeurs réalistes)</button>
       </div>
+      <div class="seg cv-seg" style="margin-top:10px" role="group" aria-label="Courbes de COP toutes faites (une seule active)" id="copCurveSeg">
+        <button type="button" id="cvReddit" data-cv="reddit" aria-pressed="false"><span class="cv-n">Midea PortaSplit Reddit</span><span class="cv-s">SCOP ≈ 4,5</span></button>
+        <button type="button" id="cvR32" data-cv="r32" aria-pressed="false"><span class="cv-n">Moyenne R32 officielle</span><span class="cv-s">SCOP ≈ 4,2</span></button>
+        <button type="button" id="cvPorta" data-cv="porta" aria-pressed="false"><span class="cv-n">PortaSplit estimée</span><span class="cv-s">SCOP ≈ 3,6</span></button>
+        <button type="button" id="cvMidea" data-cv="midea" aria-pressed="false"><span class="cv-n">Midea réaliste (ancienne)</span><span class="cv-s">SCOP ≈ 3,9</span></button>
+      </div>
+      <p class="hint" id="cvState"></p>
+      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Une seule courbe active à la fois (aucune par défaut). Le bouton met la courbe dans le tableau ; ton « % de correction » s'applique par-dessus (COP × (1 − correction)). Touche à nouveau le bouton actif, ou modifie un point, pour la désactiver. Un « COP forcé » sur un mois reste prioritaire. Le Simulateur garde sa propre courbe.</p><p class="hint">• <b>Midea PortaSplit Reddit</b> — SCOP ≈ 4,5. Valeurs <b>non officielles</b> reprises d'un tableau partagé sur Reddit (COP de laboratoire à charge partielle) : <b>plutôt optimistes</b>.</p><p class="hint">• <b>Moyenne R32 officielle</b> — SCOP ≈ 4,2. Moyenne des COP <b>publiés par les fabricants</b> pour 5 splits R32 (Samsung AR12TXFC et AR09TX, Mitsubishi HR25VF, Midea MOB02-18HFN8, Daikin FTXF/RXF25E) : chiffres officiels mais mesurés en laboratoire. Aucun n'en publie à −10 °C : 2,5 y est une estimation (0,1 de moins par degré sous −7 °C).</p><p class="hint">• <b>PortaSplit estimée</b> — SCOP ≈ 3,6. Estimation issue d'une <b>réponse d'IA</b>, <b>non vérifiée</b> par des mesures indépendantes. À rapprocher d'une vraie mesure chez toi (idéalement par 4 à 10 °C dehors).</p><p class="hint">• <b>Midea réaliste (ancienne)</b> — SCOP ≈ 3,9. Ta courbe d'avant : les mêmes points que le bouton « Remplir avec Midea PortaSplit (valeurs réalistes) » (valeurs Midea baissées pour tenir compte des arrêts-redémarrages quand il fait doux). Ce bouton-ci ne change pas ton % de correction.</p><p class="hint">SCOP = calcul théorique simplifié sur le climat moyen de la norme EN 14825, avant ta correction : c'est un repère pour comparer les courbes, pas une mesure.</p></details>
       <label for="sCorr">% de correction (terrain) <span class="opt">(facultatif)</span></label>
       <input type="text" inputmode="decimal" id="sCorr" placeholder="ex. 15">
       <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Les COP des fiches sont mesurés en laboratoire. En vrai, ils sont souvent 10 à 20 % plus bas (dégivrage, gaine, pièce…). Avec 15 %, tous les COP calculés sont multipliés par 0,85. Vide = 0 %.</p></details>
@@ -913,7 +912,7 @@ function normalizeSettings(raw){
   s.copMode=raw.copMode==='temp'?'temp':'fixe';
   s.copPts=Array.isArray(raw.copPts)?raw.copPts.map(function(p){return {t:finOrNull(p&&p.t,-50,50),cop:finOrNull(p&&p.cop,0.01,20)};}).filter(function(p){return p.t!==null&&p.cop!==null;}).slice(0,6):[];
   s.copCorr=finOrNull(raw.copCorr,0,90);
-  s.copCurve=(raw.copCurve==='reddit'||raw.copCurve==='r32')?raw.copCurve:null; // v23 : courbe toute faite (null = mes points)
+  s.copCurve=(raw.copCurve==='reddit'||raw.copCurve==='r32'||raw.copCurve==='porta'||raw.copCurve==='midea')?raw.copCurve:null; // v23/v24 : courbe toute faite (null = mes points)
   s.tMonths=[];s.copOver=[];
   for(var mi=0;mi<12;mi++){s.tMonths.push(finOrNull(Array.isArray(raw.tMonths)?raw.tMonths[mi]:null,-50,50));s.copOver.push(finOrNull(Array.isArray(raw.copOver)?raw.copOver[mi]:null,1,20));}
   s.tReal=raw.tReal===true;
@@ -988,15 +987,20 @@ var METZ_TNORM=[2.7,3.6,7,10.5,14.5,17.9,20.1,19.7,15.7,11.3,6.5,3.5];
 // 2,70 / 3,18 / 4,35 / 5,57 / 6,78 à −10 / −7 / +2 / +7 / +12 °C ; abaissées (modulation mini ~300 W, comparaison splits fixes
 // Eurovent et études de terrain : COP saisonnier ~2,4–3) + 10 % de correction terrain par défaut du bouton.
 var MIDEA_PTS=[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:3.9},{t:7,cop:4.5},{t:12,cop:5}], MIDEA_CORR=10;
-// v23 : courbes toutes faites, appliquées telles quelles (sans % de correction). « COP forcé » d'un mois reste prioritaire.
+// v23/v24 : courbes toutes faites ; le bouton les met dans le tableau de points, le % de correction s'applique par-dessus. « COP forcé » d'un mois reste prioritaire.
 // reddit : tableau non officiel partagé sur Reddit (mêmes chiffres que les valeurs labo à charge partielle EN 14825 ci-dessus).
 // r32 : moyenne des COP officiels de 5 splits R32 (Samsung AR12TXFC, AR09TX, Mitsubishi HR25VF, Midea MOB02-18HFN8, Daikin FTXF/RXF25E)
 //       à −7/+2/+7/+12 °C ; −10 °C non publié : 2,5 = 2,8 − 3 × 0,1 (même pente de 0,1 par °C que MIDEA_PTS sous −7 °C).
 var COP_CURVES={reddit:{name:'Midea PortaSplit Reddit',pts:[{t:-10,cop:2.7},{t:-7,cop:3.18},{t:2,cop:4.35},{t:7,cop:5.57},{t:12,cop:6.78}]},
-  r32:{name:'Moyenne R32 officielle',pts:[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:4.1},{t:7,cop:5.2},{t:12,cop:6.2}]}};
+  r32:{name:'Moyenne R32 officielle',pts:[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:4.1},{t:7,cop:5.2},{t:12,cop:6.2}]},
+  // porta (v24) : estimation issue d'une réponse d'IA, non vérifiée par des mesures indépendantes ; cohérente avec un SCOP ≈ 4,0.
+  porta:{name:'PortaSplit estimée',pts:[{t:-10,cop:2.1},{t:-7,cop:2.4},{t:2,cop:3.4},{t:7,cop:4.6},{t:12,cop:5.4}]},
+  // midea (v24) : l'ancienne courbe « Midea réaliste » (= bouton « Remplir avec Midea PortaSplit (valeurs réalistes) », sans changer le % de correction).
+  midea:{name:'Midea réaliste (ancienne)',pts:MIDEA_PTS.map(function(p){return {t:p.t,cop:p.cop};})}};
+// SCOP théorique simplifié (climat moyen EN 14825), affiché sous chaque bouton — indicatif, avant ta correction %.
 function curveOf(s){return (s&&s.copCurve&&COP_CURVES[s.copCurve])||null;}
 function curvePts(s){var c=curveOf(s);return c?c.pts:s.copPts;}
-function curveCorr(s){return curveOf(s)?0:s.copCorr;}
+function curveCorr(s){return s.copCorr;} // v24 : la correction % s'applique aussi par-dessus une courbe toute faite
 var KEY_TEMPS='pacFioul.temps.v1';
 var tempCache=load(KEY_TEMPS,null); if(!tempCache||typeof tempCache!=='object'||!tempCache.days||typeof tempCache.days!=='object')tempCache={loc:'',days:{}};
 var tempFetching=false, tempStatus='';
@@ -1174,15 +1178,11 @@ function statRange(){
   return {week:['Cette semaine',ws,t],month:['Ce mois-ci',ms,t],year:['Cette année',ys,t],all:['Depuis le début',null,null]}[statPeriod];
 }
 var statMoreOpen=false;
-// pastille touchée : pour la session en cours seulement (pas enregistrée) ; à l'ouverture = la comparaison ⭐ favorite des Réglages
-var statSide=null;try{localStorage.removeItem('pacFioul.statSide');}catch(e){}
+// v24 : plus de pastilles dans le Suivi. Les tuiles montrent la comparaison ⭐ favorite des Réglages ; les autres sont dans « Toutes les valeurs ».
+var statSide=null;try{localStorage.removeItem('pacFioul.statSide');}catch(e){} // gardé à null (compatibilité)
 function favId(){var f=settings.comps.filter(function(c){return c.fav;})[0];return f?f.id:null;}
-// comparaison qui alimente les tuiles : pastille de la session, sinon favori (activé, avec prix), sinon le repli habituel (mainSide)
-function statMain(c){var ps=pricedSides(c),pick=function(id){return id?ps.filter(function(x){return x.id===id;})[0]:null;};return pick(statSide)||pick(favId())||mainSide(c);}
-function chipsHtml(c,ms){var ps=pricedSides(c);if(ps.length<2)return '';
-  return '<div class="seg cmp-chips" id="cmpChips" role="group" aria-label="Comparaison utilisée pour les chiffres">'+ps.map(function(x){
-    var fv=x.id===favId();
-    return '<button type="button" data-ssel="'+esc(x.id)+'" aria-pressed="'+(ms&&ms.id===x.id)+'"'+(fv?' aria-label="'+esc(x.name)+' (favori)"':'')+'>'+(x.type==='gaz'?'🔵 ':'🛢️ ')+esc(x.name)+(fv?'<span class="fv" aria-hidden="true">⭐</span>':'')+'</button>';}).join('')+'</div>';}
+// comparaison qui alimente les tuiles : favori (activé, avec prix), sinon le repli habituel (mainSide : choix de la carte Rentabilité, sinon la 1re)
+function statMain(c){var ps=pricedSides(c),fid=favId(),f=fid?ps.filter(function(x){return x.id===fid;})[0]:null;return f||mainSide(c);}
 function renderStats(list){
   var b=statRange();
   Array.prototype.forEach.call(document.querySelectorAll('[data-sp]'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-sp')===statPeriod);});
@@ -1193,7 +1193,7 @@ function renderStats(list){
   function tile(k,cls,lab,val,sub){return '<button type="button" class="kpi '+cls+'" data-kpi="'+k+'" aria-label="'+esc(lab.replace(/^\S+\s/,''))+' : voir le calcul"><span class="ki" aria-hidden="true">ⓘ</span><span class="kl">'+lab+'</span>'+val+(sub?'<span class="ks">'+sub+'</span>':'')+'</button>';}
   var na=function(t){return '<b class="kv na">'+t+'</b>';};
   var fuelLab=(ms?ms.type==='gaz':gasOnly)?'gaz':'fioul';
-  var h='<div class="stat"><h3><span>'+b[0]+'</span><span class="pd">'+esc(pd)+'</span></h3>'+chipsHtml(c,ms)+'<div class="kpis">'+
+  var h='<div class="stat"><h3><span>'+b[0]+'</span><span class="pd">'+esc(pd)+'</span></h3>'+'<div class="kpis">'+
     tile('vol','k-vol',gasOnly?'🔵 Gaz évité':'🛢️ Fioul évité','<b class="kv big">'+(gasOnly?fKwh(c.kwhGaz):fL(c.litres))+'</b>',
       (c.hasGaz&&c.hasFioul?'ou '+fKwhG(c.kwhGaz)+'<br>':'')+'≈ '+nf0.format(c.chaleur)+' kWh de chaleur')+
     tile('net','k-net','✅ Économie nette',ms&&ms.net!==null?'<b class="kv'+(ms.net<0?' neg':'')+'">'+fE(ms.net)+'</b>':na(ms?'prix élec à renseigner':'prix à renseigner'),ms?'vs '+esc(ms.name):'')+
@@ -1283,16 +1283,13 @@ function openKpi(kind,opener){
 function closeKpi(){if(kpiKind===null)return;kpiKind=null;$('kpiSheet').classList.add('hidden');document.documentElement.classList.remove('ks-open');
   if(kpiOpener&&document.body.contains(kpiOpener)){try{kpiOpener.focus({preventScroll:true});}catch(e){}}kpiOpener=null;}
 $('stats').addEventListener('click',function(ev){
-  var ch=ev.target.closest('[data-ssel]');
-  if(ch){var sl=$('cmpChips').scrollLeft;statSide=ch.getAttribute('data-ssel');renderStats(resolved());
-    var nc=$('cmpChips');if(nc){nc.scrollLeft=sl;var nb=nc.querySelector('[data-ssel="'+statSide+'"]');if(nb){try{nb.focus({preventScroll:true});}catch(e){}if(nb.scrollIntoView)nb.scrollIntoView({block:'nearest',inline:'nearest'});}}return;}
   var k=ev.target.closest('[data-kpi]');if(k)openKpi(k.getAttribute('data-kpi'),k);});
 $('kpiClose').addEventListener('click',closeKpi);
 $('kpiSheet').addEventListener('click',function(ev){if(ev.target===$('kpiSheet'))closeKpi();});
 document.addEventListener('keydown',function(ev){if(kpiKind!==null&&ev.key==='Escape')closeKpi();});
 $('hdrInfo').addEventListener('click',function(){var o=this.getAttribute('aria-expanded')!=='true';this.setAttribute('aria-expanded',o);$('hdrSub').classList.toggle('hidden',!o);});
 $('roiCard').addEventListener('click',function(ev){
-  if(ev.target.closest('[data-roic],[data-roiset],select,.roi-pick'))return;
+  if(ev.target.closest('[data-roiset]'))return;
   if($('roiInfo').classList.contains('hidden'))return;
   openKpi('roi',$('roiInfo'));});
 var listAll=false, openRows={}, LIST_N=5;
@@ -1303,7 +1300,7 @@ function renderList(list){
   var rows=list.slice().reverse(), shown=listAll?rows:rows.slice(0,LIST_N);
   more.classList.toggle('hidden',rows.length<=LIST_N);more.textContent=listAll?'Voir moins':'Voir tout ('+rows.length+')';
   ul.innerHTML=shown.map(function(e){
-    var c=calc(e.kwh,null,e.cop), ms=mainSide(c), op=!!openRows[e.id];
+    var c=calc(e.kwh,null,e.cop), ms=statMain(c), op=!!openRows[e.id]; // v24 : même comparaison que le Suivi et la Rentabilité (⭐ favori)
     var sub=typeof e.index==='number'
       ? 'Index '+nfN.format(e.index)+(e.start?' · point de départ':(' · '+nfN.format(e.prevIndex)+' → '+nfN.format(e.index)))+(e.bad?' · ⚠️ index inférieur au précédent':'')
       : '';
@@ -1639,7 +1636,7 @@ function roiCompute(list){
   var s=settings;
   if(s.pacPrix===null)return {state:'noprice'};
   var opts=roiOptions(); if(!opts.length)return {state:'nocomp'};
-  var side=opts.filter(function(x){return x.id===roiSel;})[0]||opts[0];
+  var fid=favId(), side=(fid&&opts.filter(function(x){return x.id===fid;})[0])||opts.filter(function(x){return x.id===roiSel;})[0]||opts[0]; // v24 : ⭐ favori d'abord
   var cost=Math.max(0,s.pacPrix-(s.pacAides||0)), r={state:'ok',opts:opts,side:side,cost:cost};
   if(side.net===null){r.state='noelec';return r;}
   var d0=s.pacDate||(list.length?list[0].date:null);r.d0=d0;
@@ -1738,9 +1735,8 @@ function renderRoi(list){
     sub.innerHTML='<span id="roiRec">'+(r.rec<0?'Pas d\'économie pour l\'instant ('+fEur0(r.rec)+')':fEur0(r.rec)+' récupérés sur '+fEur0(r.cost))+'</span> · '+eta;
   }
   sub.title='Prévision saisonnière : chaleur mesurée par degré-jour, projetée avec les températures normales des mois à venir (comparée à '+r.side.name+'). Détails : ⚙️ Réglages → Général → Comment c\'est calculé.';
-  if(r.opts.length===1)pick.innerHTML='<span class="vs">vs '+esc(r.side.name)+'</span>';
-  else if(r.opts.length<=3)pick.innerHTML=r.opts.map(function(o){return '<button type="button" data-roic="'+esc(o.id)+'" aria-pressed="'+(o.id===r.side.id)+'">'+esc(o.name)+'</button>';}).join('');
-  else pick.innerHTML='<select id="roiSelect" aria-label="Comparer avec">'+r.opts.map(function(o){return '<option value="'+esc(o.id)+'"'+(o.id===r.side.id?' selected':'')+'>vs '+esc(o.name)+'</option>';}).join('')+'</select>';
+  // v24 : plus de pastilles ; on indique discrètement la comparaison utilisée (⭐ favori des Réglages)
+  pick.innerHTML='<span class="vs" id="roiVs">vs '+esc(r.side.name)+(r.opts.length>1&&favId()===r.side.id?' ⭐':'')+'</span>';
 }
 // Barre E : plus la part récupérée est grande, plus c'est doré/vert et lumineux (couleurs calculées ici : pas de color-mix, compatible vieux Safari)
 var roiGrown=false;
@@ -1751,11 +1747,8 @@ function roiBarStyle(bar,p,done){var t=p/100, st=bar.style;
   st.setProperty('--br',(0.75+0.4*t).toFixed(3));st.setProperty('--hl',(0.08+0.3*t).toFixed(3));st.setProperty('--gl',(t*12).toFixed(1)+'px');st.setProperty('--gc','rgba(201,240,107,'+(t*0.6).toFixed(3)+')');
   var em=$('roiPctIn'), lab=Math.round(Math.max(0,p))+' %';em.textContent=lab;
   if(p>=15){em.className='';em.style.left='calc('+p.toFixed(1)+'% - 41px)';}else{em.className='out';em.style.left='calc('+Math.max(0,p).toFixed(1)+'% + 5px)';}}
-function setRoiSel(id){roiSel=id;save(KEY_ROI,id);var l=resolved();renderRoi(l);renderList(l);renderStats(l);}
 $('roiCard').addEventListener('click',function(ev){
-  var b=ev.target.closest('[data-roic]');if(b){setRoiSel(b.getAttribute('data-roic'));return;}
   var f=ev.target.closest('[data-roiset]');if(f){var t=f.getAttribute('data-roiset');openSettings(t==='compList'?'secOld':'secPac',t==='compList'?null:t);}});
-$('roiCard').addEventListener('change',function(ev){if(ev.target.id==='roiSelect')setRoiSel(ev.target.value);});
 
 // ---------- graphique : boutons ----------
 $('evolUnit').addEventListener('click',function(ev){var b=ev.target.closest('[data-eunit]');if(!b)return;evolUnitSel=b.getAttribute('data-eunit');save(KEY_EUNIT,evolUnitSel);evolPage=0;evolSel=null;renderChart(resolved());});
@@ -1828,9 +1821,8 @@ $('compList').addEventListener('click',function(ev){
 var copModeUI='fixe', copPtsUI=[], copCurveUI=null;
 function setCurveUI(k){copCurveUI=(k&&COP_CURVES[k])?k:null;
   Array.prototype.forEach.call(document.querySelectorAll('#copCurveSeg button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-cv')===copCurveUI));});
-  $('boxMyCurve').classList.toggle('hidden',!!copCurveUI);
   var c=copCurveUI?COP_CURVES[copCurveUI]:null;
-  $('cvState').textContent=c?'Utilisée telle quelle : '+c.pts.map(function(p){return (p.t>0?'+':p.t<0?'−':'')+nf0.format(Math.abs(p.t))+' °C → '+nf2.format(p.cop);}).join(' · '):'Aucune choisie : tes points ci-dessous.';
+  $('cvState').textContent=c?'Courbe active (avant % de correction) : '+c.pts.map(function(p){return (p.t>0?'+':p.t<0?'−':'')+nf0.format(Math.abs(p.t))+' °C → '+nf2.format(p.cop);}).join(' · '):'';$('cvState').classList.toggle('hidden',!c);
   updateCopPreview();}
 function setCopMode(m){copModeUI=m;$('copFixe').setAttribute('aria-pressed',m==='fixe');$('copTemp').setAttribute('aria-pressed',m==='temp');
   $('boxCopFixe').classList.toggle('hidden',m!=='fixe');$('boxCopTemp').classList.toggle('hidden',m!=='temp');}
@@ -1853,26 +1845,33 @@ function renderMonthUI(){
 function uiPts(){readPtsUI();var a=[];copPtsUI.forEach(function(p){var t=parseNum(p.tRaw),c=parseNum(p.cRaw);if(isFinite(t)&&c>0)a.push({t:t,cop:c});});return a;}
 function updateCopPreview(){
   var pts=uiPts(), corr=parseNum($('sCorr').value);if(!isFinite(corr)||corr<0)corr=0;
-  if(copCurveUI){pts=COP_CURVES[copCurveUI].pts;corr=0;}
+  if(copCurveUI)pts=COP_CURVES[copCurveUI].pts;
   for(var m=0;m<12;m++){var cell=$('mc'+m);if(!cell)continue;var r=document.querySelector('#copMonthTbl tr[data-m="'+m+'"]');
     var t=parseNum(r.querySelector('.mT').value), o=parseNum(r.querySelector('.mO').value), c=(pts.length>=2&&isFinite(t))?copInterp(t,pts,corr):null;
     cell.textContent=c===null?'—':nf2.format(c);cell.classList.toggle('forced',o>0&&c!==null);}
 }
 function showTReal(){$('boxTReal').classList.toggle('hidden',!$('sTReal').checked);}
 $('copFixe').addEventListener('click',function(){setCopMode('fixe');scheduleSave(0);});
+function samePts(a,b){a=copPtsSorted(a);b=copPtsSorted(b);return a.length===b.length&&a.every(function(p,i){return Math.abs(p.t-b[i].t)<1e-9&&Math.abs(p.cop-b[i].cop)<1e-9;});}
+function curvePtsUI(k){return COP_CURVES[k].pts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});}
+// un point modifié à la main → la courbe toute faite n'est plus active (ce sont tes points)
+function curveCheckUI(){if(copCurveUI&&!samePts(uiPts(),COP_CURVES[copCurveUI].pts))setCurveUI(null);}
 $('copCurveSeg').addEventListener('click',function(ev){var b=ev.target.closest('button[data-cv]');if(!b)return;var k=b.getAttribute('data-cv');
+  if(copCurveUI!==k){var cur=uiPts(),known=!cur.length||samePts(cur,MIDEA_PTS)||Object.keys(COP_CURVES).some(function(x){return samePts(cur,COP_CURVES[x].pts);});
+    if(!known&&!confirm('Remplacer tes points par la courbe « '+COP_CURVES[k].name+' » ? (ton % de correction est gardé)'))return;
+    copPtsUI=curvePtsUI(k);renderPtsUI();}
   setCurveUI(copCurveUI===k?null:k);toast(copCurveUI?'Courbe : '+COP_CURVES[copCurveUI].name:'Courbe : tes points');scheduleSave(0);});
 $('copTemp').addEventListener('click',function(){setCopMode('temp');scheduleSave(0);});
 $('btnAddPt').addEventListener('click',function(){readPtsUI();if(copPtsUI.length>=6){toast('6 points maximum');return;}copPtsUI.push({tRaw:'',cRaw:''});renderPtsUI();
   var r=document.querySelectorAll('#copPtsTbl .pT');if(r.length)r[r.length-1].focus();});
-$('copPtsTbl').addEventListener('click',function(ev){var b=ev.target.closest('.pDel');if(!b)return;readPtsUI();copPtsUI.splice(+b.closest('tr').getAttribute('data-i'),1);renderPtsUI();scheduleSave(0);});
-$('copPtsTbl').addEventListener('input',updateCopPreview);
+$('copPtsTbl').addEventListener('click',function(ev){var b=ev.target.closest('.pDel');if(!b)return;readPtsUI();copPtsUI.splice(+b.closest('tr').getAttribute('data-i'),1);renderPtsUI();curveCheckUI();scheduleSave(0);});
+$('copPtsTbl').addEventListener('input',function(){curveCheckUI();updateCopPreview();});
 $('copMonthTbl').addEventListener('input',updateCopPreview);
 $('sCorr').addEventListener('input',updateCopPreview);
 $('btnMidea').addEventListener('click',function(){
   readPtsUI();var hasData=copPtsUI.some(function(p){return String(p.tRaw).trim()!==''||String(p.cRaw).trim()!=='';});
   if((hasData||$('sCorr').value.trim()!=='')&&!confirm('Remplacer tes points et ton % de correction par ceux de la Midea PortaSplit ?'))return;
-  copPtsUI=MIDEA_PTS.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});$('sCorr').value=numStr(MIDEA_CORR);renderPtsUI();
+  copPtsUI=MIDEA_PTS.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});$('sCorr').value=numStr(MIDEA_CORR);renderPtsUI();curveCheckUI();
   scheduleSave(0);});
 $('btnMetz').addEventListener('click',function(){
   Array.prototype.forEach.call(document.querySelectorAll('#copMonthTbl tr[data-m]'),function(r){r.querySelector('.mT').value=numStr(METZ_TNORM[+r.getAttribute('data-m')]);});
@@ -1895,6 +1894,7 @@ function fillSettings(){
   setCopMode(settings.copMode);
   copPtsUI=settings.copPts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});
   $('sCorr').value=numStr(settings.copCorr);
+  if(curveOf(settings)&&!samePts(settings.copPts,curveOf(settings).pts))copPtsUI=curvePtsUI(settings.copCurve);
   renderMonthUI();renderPtsUI();setCurveUI(settings.copCurve);
   $('sTReal').checked=settings.tReal;$('sLat').value=numStr(settings.lat);$('sLon').value=numStr(settings.lon);showTReal();
   $('sPacPrix').value=numStr(settings.pacPrix);$('sPacAides').value=numStr(settings.pacAides);$('sPacEnt').value=numStr(settings.pacEnt);$('sPacKw').value=numStr(settings.pacKw);renderPacKwLimit();
