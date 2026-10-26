@@ -283,6 +283,7 @@ ul.rlist li{display:block;padding:0}
 .sim-cop-row input{flex:0 0 108px;width:108px;font-size:16px;text-align:center;font-weight:700}
 .sim-cop-row select{flex:1;min-width:0}
 .seg.presets button{font-size:.86rem;padding:0 4px;white-space:nowrap}
+.seg.presets{display:grid;grid-template-columns:1fr 1fr}.seg.presets button{min-height:44px}
 .roi-q{white-space:nowrap}
 /* v18 : barre « E » (choisie par Alexandre) : épaisse, gris-bleu terne -> or -> vert, de plus en plus lumineuse ; couleurs calculées en JS (--c2, --c3…) */
 .roi-bar[data-bar="E"]{height:14px;margin:6px 0 5px;background:var(--input)}
@@ -527,11 +528,10 @@ html.ks-open{overflow:hidden}
       <button type="button" data-simp="fav" aria-pressed="false">😊 Favorable</button>
       <button type="button" data-simp="neu" aria-pressed="true">😐 Neutre</button>
       <button type="button" data-simp="def" aria-pressed="false">🥶 Défavorable</button>
+      <button type="button" data-simp="tdef" aria-pressed="false">🧊 Très défavorable</button>
     </div>
-    <label for="simCorr">Correction du COP (%) <span class="opt">(facultatif)</span></label>
-    <input type="text" id="simCorr" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="0">
-    <details class="ihelp ifo" id="simCorrHelp"><summary>ⓘ À quoi sert la correction ?</summary><p class="hint">Même principe que le % de correction des Réglages : baisse le COP de ce pourcentage (pertes autour de la fenêtre, usage réel, démarrages…). Reste indépendant du Suivi. De 0 à 50 % ; vide = 0.</p></details>
     <p class="hint" id="simCopHint"></p>
+    <p class="hint" id="simCopPts"></p>
 
     <h3 class="sh">⚡ Tarif d'électricité</h3>
     <div class="seg" role="group" aria-label="Tarif d'électricité" id="simTarSeg">
@@ -581,7 +581,7 @@ html.ks-open{overflow:hidden}
     <div id="simOut"></div>
     <details class="ihelp hidden" id="simMonthsBox"><summary>📅 Détail mois par mois</summary><div id="simMonths"></div></details>
     <details class="ihelp ifo" id="simFormulaBox"><summary>🧮 Calcul détaillé</summary><div class="formula" id="simFormula"></div></details>
-    <details class="ihelp ifo"><summary>⚠️ Hypothèses et simplifications</summary><p class="note">⚠️ Simplifications : la PAC couvre 100 % du chauffage. Le chauffage est réparti sur les mois de la période selon les degrés-jours normaux (Météo-France, Metz) ; pour les machines « air », le COP de chaque mois suit une courbe type selon la température moyenne du mois (normales de Metz), réglée pour qu'en moyenne sur une année il soit égal au SCOP choisi. Favorable / Défavorable = SCOP ×1,2 / ×0,8. Si l'eau chaude est cochée, sa part reste faite par la chaudière et n'est pas remplacée. Les abonnements et le prix d'achat de la PAC ne sont pas comptés.</p></details>
+    <details class="ihelp ifo"><summary>⚠️ Hypothèses et simplifications</summary><p class="note">⚠️ Simplifications : la PAC couvre 100 % du chauffage. Le chauffage est réparti sur les mois de la période selon les degrés-jours normaux (Météo-France, Metz) ; pour les machines « air », le COP de chaque mois suit une courbe type selon la température moyenne du mois (normales de Metz), réglée pour qu'en moyenne sur une année il soit égal au SCOP choisi. Favorable / Défavorable / Très défavorable = SCOP ×1,2 / ×0,9 / ×0,8. Si l'eau chaude est cochée, sa part reste faite par la chaudière et n'est pas remplacée. Les abonnements et le prix d'achat de la PAC ne sont pas comptés.</p></details>
   </section>
   </div>
 
@@ -2016,7 +2016,7 @@ $('fileImport').addEventListener('change',function(){
 
 // ---------- simulateur v20 : entièrement indépendant du Suivi et des réglages ----------
 var KEY_SIM='pacFioul.sim.v1';
-var SIM_DEF={type:'fioul',per:'annee',perFrom:9,perTo:3,ecsOn:false,ecsPers:null,ecsKwh:800,pci:10,rendF:85,rendG:90,mach:'aeau',cop:null,preset:'neu',tar:'base',hcFrom:22,hcTo:6,pctHc:null,tdB:300,tdW:43,tdR:22,redOn:true,corr:0};
+var SIM_DEF={type:'fioul',per:'annee',perFrom:9,perTo:3,ecsOn:false,ecsPers:null,ecsKwh:800,pci:10,rendF:85,rendG:90,mach:'aeau',cop:null,preset:'neu',tar:'base',hcFrom:22,hcTo:6,pctHc:null,tdB:300,tdW:43,tdR:22,redOn:true};
 // Machines de référence : SCOP moyens documentés (sources dans « src », affichées sous le choix)
 var SIM_MACH={
   aeau:{name:'PAC air-eau – moyenne mesurée en France',scop:2.9,curve:true,src:'Source : ADEME 2024, mesures sur 100 maisons (90 PAC air-eau posées à la place d\'une chaudière fioul ou gaz) : COP saisonnier réel moyen 2,9, de moins de 2 à plus de 4 selon la pose et les réglages.'},
@@ -2029,7 +2029,7 @@ var SIM_MACH={
 };
 var SIM_ORDER=['aeau','aeauPl','geo','aair','midea','mine','perso'];
 (function(sh){Object.keys(sh).forEach(function(k){SIM_MACH[k].short=sh[k];});})({aeau:'Source : ADEME 2024 (mesures, 100 maisons)',aeauPl:'Source : ADEME 2024 (plancher chauffant)',geo:'Source : ADEME 2024 (géothermie)',aair:'Source : étiquette énergie UE (A+)',midea:'Source : fiche Midea (EPREL)',mine:'Source : ta fiche produit',perso:'COP saisi à la main'});
-var SIM_PRESETS={fav:{f:1.2,name:'Favorable'},neu:{f:1,name:'Neutre'},def:{f:0.8,name:'Défavorable'}};
+var SIM_PRESETS={fav:{f:1.2,name:'Favorable'},neu:{f:1,name:'Neutre'},def:{f:0.9,name:'Défavorable'},tdef:{f:0.8,name:'Très défavorable'}};
 var SIM_MDAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
 var SIM_CURVE=[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:3.9},{t:7,cop:4.5},{t:12,cop:5}]; // forme type d'une PAC air (même courbe que le Suivi)
 var simType='fioul', simReady=false, simCopUser=false;
@@ -2042,7 +2042,6 @@ function normSim(raw){raw=raw&&typeof raw==='object'?raw:{};var o={};
   o.mach=SIM_MACH[raw.mach]?raw.mach:'aeau';o.cop=simNum(raw.cop,1,10,null);o.preset=SIM_PRESETS[raw.preset]?raw.preset:'neu';
   o.tar=['base','hphc','tempo'].indexOf(raw.tar)>=0?raw.tar:'base';o.hcFrom=Math.round(simNum(raw.hcFrom,0,23,22));o.hcTo=Math.round(simNum(raw.hcTo,0,23,6));
   o.pctHc=simNum(raw.pctHc,0,100,null);o.tdB=simNum(raw.tdB,0,366,300);o.tdW=simNum(raw.tdW,0,366,43);o.tdR=simNum(raw.tdR,0,366,22);o.redOn=raw.redOn!==false;
-  o.corr=simNum(raw.corr,0,50,0); // v26 : correction du COP propre au Simulateur (0 à 50 %, invalide → 0)
   if(SIM_MACH[o.mach].scop!==null&&o.cop===null)o.cop=SIM_MACH[o.mach].scop;
   return o;}
 // v19 → v20 : l'eau chaude réglée dans ⚙️ passe dans le Simulateur (une seule fois)
@@ -2052,10 +2051,13 @@ simType=simSt.type;
 function saveSim(){save(KEY_SIM,simSt);}
 // --- calculs purs (testés) ---
 function simMonthList(per,from,to){if(per==='hiver')return [9,10,11,0,1,2,3];if(per==='autre'){var l=[],m=from;for(var g=0;g<12;g++){l.push(m);if(m===to)break;m=(m+1)%12;}return l;}return [0,1,2,3,4,5,6,7,8,9,10,11];}
-function simShape(){ // COP relatif de chaque mois, moyenne annuelle pondérée chauffage = 1
+function simScale(){ // facteur qui ramène la courbe type à une moyenne annuelle pondérée chauffage = 1
   var c=METZ_TNORM.map(function(t){return copInterp(t,SIM_CURVE,0);}),dA=0,inv=0;
   for(var m=0;m<12;m++){dA+=DJU_METZ[m];inv+=DJU_METZ[m]/c[m];}
-  var sc=dA/inv;return c.map(function(x){return x/sc;});}
+  return dA/inv;}
+function simShape(){ // COP relatif de chaque mois, moyenne annuelle pondérée chauffage = 1
+  var c=METZ_TNORM.map(function(t){return copInterp(t,SIM_CURVE,0);}),sc=simScale();return c.map(function(x){return x/sc;});}
+function simPts(cop){var sc=simScale();return SIM_CURVE.map(function(p){return {t:p.t,cop:cop*p.cop/sc};});}
 function simHours(a,b){return ((b-a)%24+24)%24;}
 function simElecPrice(o){ // o:{tar,base,hp,hc,pctHc(0-100),tempo:{bHP..},tdB,tdW,tdR} → {pe,miss}
   var ok=function(v){return typeof v==='number'&&isFinite(v)&&v>0;},pc=(o.pctHc===null||o.pctHc===undefined?100/3:o.pctHc)/100;
@@ -2099,8 +2101,6 @@ function ecsYear(st){st=st||simSt;return (st.ecsOn&&st.ecsPers>0&&st.ecsKwh>0)?s
 function simPriceIn(id){var r=$(id).value.trim();if(r==='')return null;var v=parseNum(r);return (isFinite(v)&&v>0)?v:NaN;}
 function simPerLabel(l){var MA=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'],M3=function(m){return MA[m];};
   return l.length===12?'12 mois':(l.length===1?MONTHS_FR[l[0]]:M3(l[0])+' → '+M3(l[l.length-1])+' ('+l.length+' mois)');}
-function simCorrRaw(){var r=$('simCorr').value.trim();if(r==='')return 0;var v=parseNum(r);return (isFinite(v)&&v>=0&&v<=50)?v:NaN;}
-function simCorrVal(){var v=simCorrRaw();return isNaN(v)?0:v;} // vide ou invalide → 0
 function simCopVal(){var v=parseNum($('simCopIn').value);return (isFinite(v)&&v>=1&&v<=10)?v:null;}
 function simFillStatic(){
   $('simMach').innerHTML=SIM_ORDER.map(function(k){var x=SIM_MACH[k];return '<option value="'+k+'">'+esc(x.name)+(x.scop!==null?' · SCOP '+nfN.format(x.scop):'')+(k==='aeau'?' (par défaut)':'')+'</option>';}).join('');
@@ -2113,7 +2113,7 @@ function simFillFromState(){var s=simSt;
   $('simPci').value=numStr(s.pci);$('simRend').value=numStr(simType==='gaz'?s.rendG:s.rendF);
   $('simMach').value=s.mach;$('simCopIn').value=s.cop===null?'':nfCop.format(s.cop);
   $('simHcFrom').value=s.hcFrom;$('simHcTo').value=s.hcTo;$('simPctHc').value=s.pctHc===null?'':numStr(s.pctHc);
-  $('simTdB').value=numStr(s.tdB);$('simTdW').value=numStr(s.tdW);$('simTdR').value=numStr(s.tdR);$('simRedOn').checked=s.redOn;$('simCorr').value=numStr(s.corr);}
+  $('simTdB').value=numStr(s.tdB);$('simTdW').value=numStr(s.tdW);$('simTdR').value=numStr(s.tdR);$('simRedOn').checked=s.redOn;}
 function simReadState(){var s=simSt,v;
   s.type=simType;s.ecsOn=$('simEcsOn').checked;v=parseNum($('simEcsPers').value);s.ecsPers=(v>=1&&v<=30)?v:null;
   v=parseNum($('simEcsKwh').value);s.ecsKwh=(v>0&&v<=20000)?v:($('simEcsKwh').value.trim()===''?800:s.ecsKwh);
@@ -2122,7 +2122,7 @@ function simReadState(){var s=simSt,v;
   s.mach=$('simMach').value;s.cop=simCopVal();s.hcFrom=+$('simHcFrom').value;s.hcTo=+$('simHcTo').value;
   var pr=$('simPctHc').value.trim();v=parseNum(pr);s.pctHc=pr===''?null:((v>=0&&v<=100)?v:s.pctHc);
   ['tdB','tdW','tdR'].forEach(function(k){var x=parseNum($('sim'+k.charAt(0).toUpperCase()+k.slice(1)).value);if(x>=0&&x<=366)s[k]=Math.round(x);});
-  s.redOn=$('simRedOn').checked;s.corr=simCorrVal();saveSim();}
+  s.redOn=$('simRedOn').checked;saveSim();}
 function simPctDefault(){return (simSt.tar==='tempo'?8:simHours(simSt.hcFrom,simSt.hcTo))/24*100;}
 function renderSim(){
   var s=simSt, gaz=simType==='gaz', uq=gaz?' kWh':' L', fuel=gaz?'gaz':'fioul';
@@ -2134,10 +2134,11 @@ function renderSim(){
   $('simPerBox').classList.toggle('hidden',s.per!=='autre');
   var months=simMonthList(s.per,s.perFrom,s.perTo);
   // machine
-  var mc=SIM_MACH[s.mach], cop=s.cop, f=SIM_PRESETS[s.preset].f, copScen=cop===null?null:Math.round(cop*f*100)/100, corr=s.corr||0, kc=1-corr/100, copUse=copScen===null?null:(corr>0?copScen*kc:copScen);
+  var mc=SIM_MACH[s.mach], cop=s.cop, f=SIM_PRESETS[s.preset].f, copUse=cop===null?null:Math.round(cop*f*100)/100;
   $('simMachHint').textContent=mc.src;$('simSrcSum').textContent='ⓘ '+(mc.short||'Source du COP');
   Array.prototype.forEach.call(document.querySelectorAll('[data-simp]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-simp')===s.preset);});
-  $('simCopHint').innerHTML=(isNaN(simCorrRaw())?'⚠️ Correction invalide : tape un nombre entre 0 et 50 (ex. 10). Comptée 0 %.<br>':'')+(cop===null?'Saisis le COP de ta machine (entre 1 et 10).':'COP retenu : <b>'+nfCop.format(cop)+(f!==1?' × '+nfN.format(f):'')+(corr>0?' × (1 − '+nfN.format(corr)+' %)':'')+(f!==1||corr>0?' = '+nf2.format(copUse):'')+'</b> ('+SIM_PRESETS[s.preset].name+' : '+(f===1?'SCOP tel quel':(f>1?'+20 %':'−20 %'))+(corr>0?' ; correction '+nfN.format(corr)+' %':'')+')');
+  $('simCopHint').innerHTML=cop===null?'Saisis le COP de ta machine (entre 1 et 10).':'COP retenu : <b>'+nfCop.format(cop)+(f!==1?' × '+nfN.format(f)+' = '+nfCop.format(copUse):'')+'</b> ('+SIM_PRESETS[s.preset].name+' : '+(f===1?'SCOP tel quel':(f>1?'+':'−')+Math.round(Math.abs(f-1)*100)+' %')+')';
+  $('simCopPts').innerHTML=(cop===null||!mc.curve)?'':'COP selon la température dehors (scénario inclus) : '+simPts(copUse).map(function(p){return (p.t<0?'−':'+')+Math.abs(p.t)+' °C → <b>'+nfCop.format(p.cop)+'</b>';}).join(' · ');
   // tarif
   Array.prototype.forEach.call(document.querySelectorAll('[data-tar]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-tar')===s.tar);});
   $('simTarBase').classList.toggle('hidden',s.tar!=='base');$('simTarHphc').classList.toggle('hidden',s.tar!=='hphc');$('simTarTempo').classList.toggle('hidden',s.tar!=='tempo');$('simPctBox').classList.toggle('hidden',s.tar==='base');
@@ -2199,7 +2200,6 @@ function renderSim(){
   fo.innerHTML='<b>Calcul</b><br>Chaleur utile = '+(gaz?nf2.format(qty)+' kWh × '+nfN.format(s.rendG)+' %':nf2.format(qty)+' L × '+nfN.format(s.pci)+' kWh/L × '+nfN.format(s.rendF)+' %')+' = <b>'+nf2.format(r.chaleurTot)+' kWh</b><br>'+
     (ecs?'Chaleur chauffage = '+nf2.format(r.chaleurTot)+' − '+nf2.format(r.ecsH)+' kWh d\'eau chaude = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qCh)+uq+')<br>':'')+
     (rd?'Heures pleines des jours rouges retirées : '+r.rows.filter(function(z){return z.heatRed>0;}).map(function(z){return MONTHS_FR[z.m]+' − '+nf0.format(z.heatRed)+' kWh';}).join(', ')+' → chauffage couvert = '+nf2.format(r.heatBefore)+' − '+nf2.format(r.heatRed)+' = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qCh)+uq+')<br>':'')+
-    (corr>0?'COP corrigé = '+nfCop.format(cop)+(f!==1?' × '+nfN.format(f):'')+' × (1 − '+nfN.format(corr)+' %) = <b>'+nf2.format(copUse)+'</b> (COP de chaque mois baissé de '+nfN.format(corr)+' %)<br>':'')+
     'Répartie sur '+months.length+' mois selon les degrés-jours ('+nf0.format(r.djM)+' DJU) ; kWh élec PAC = Σ chaleur du mois ÷ COP du mois = <b>'+nf2.format(r.kwhPac)+' kWh</b> (COP moyen '+nf2.format(r.copEff)+')<br>'+
     (r.coutComb===null?'':'Coût '+fuel+(ecs?' chauffage':'')+' = '+nf2.format(r.qCh)+uq+' × '+nfN.format(prix)+(gaz?' €/kWh':' €/L')+' = <b>'+fE(r.coutComb)+'</b><br>')+
     (r.coutElec===null?'':'Coût élec = '+nf2.format(r.kwhPac)+' kWh × '+nfN.format(Math.round(pe*10000)/10000)+' €/kWh = <b>'+fE(r.coutElec)+'</b><br>')+
@@ -2261,7 +2261,7 @@ $('simFioul').addEventListener('click',function(){setSimType('fioul');});
 $('simGaz').addEventListener('click',function(){setSimType('gaz');});
 $('sPacKw').addEventListener('input',renderPacKwLimit);
 $('simQty').addEventListener('input',renderSim);$('simPrix').addEventListener('input',renderSim);
-['simCorr','simEcsOn','simEcsPers','simEcsKwh','simPer','simPerFrom','simPerTo','simPci','simRend','simHcFrom','simHcTo','simPctHc','simTdB','simTdW','simTdR','simRedOn'].forEach(function(id){
+['simEcsOn','simEcsPers','simEcsKwh','simPer','simPerFrom','simPerTo','simPci','simRend','simHcFrom','simHcTo','simPctHc','simTdB','simTdW','simTdR','simRedOn'].forEach(function(id){
   var h=function(){simReadState();renderSim();};$(id).addEventListener('input',h);$(id).addEventListener('change',h);});
 ['simPBase','simPHP','simPHC','simTbHP','simTbHC','simTwHP','simTwHC','simTrHP','simTrHC'].forEach(function(id){$(id).addEventListener('input',renderSim);});
 $('simMach').addEventListener('change',function(){var m=SIM_MACH[this.value];simSt.mach=this.value;
@@ -2271,7 +2271,6 @@ $('simCopIn').addEventListener('input',function(){var cur=simSt.mach;
   if(SIM_MACH[cur].scop!==null){simSt.mach=SIM_MACH[cur].curve?'perso':'mine';$('simMach').value=simSt.mach;}
   simSt.cop=simCopVal();saveSim();renderSim();});
 $('simCopIn').addEventListener('focus',function(){try{this.setSelectionRange(0,this.value.length);}catch(e){}});
-$('simCorr').addEventListener('focus',function(){try{this.setSelectionRange(0,this.value.length);}catch(e){}});
 $('simPresets').addEventListener('click',function(ev){var b=ev.target.closest('[data-simp]');if(!b)return;simSt.preset=b.getAttribute('data-simp');saveSim();renderSim();});
 $('simTarSeg').addEventListener('click',function(ev){var b=ev.target.closest('[data-tar]');if(!b)return;simSt.tar=b.getAttribute('data-tar');saveSim();renderSim();});
 $('simFromSuivi').addEventListener('click',simFromSuivi);
@@ -2715,7 +2714,7 @@ function trySaveTank(){ // mêmes règles qu'avant (bouton « Enregistrer la cuv
 
 var tt;function toast(m,ms){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},ms||2400);}
 
-window.__pac={copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){setCurveUI(k);},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},simCopUsed:function(){var s=simSt;return s.cop===null?null:Math.round(s.cop*SIM_PRESETS[s.preset].f*100)/100*(s.corr>0?1-s.corr/100:1);},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){setCurveUI(k);},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 
 fillSettings();setMode('kwh');resetForm();renderAll();setSimType(simSt.type);simReady=true;
 renderTempButtons();if((settings.copMode==='temp'&&settings.tReal)||showTemp)setTimeout(function(){fetchTemps(false);},300);
