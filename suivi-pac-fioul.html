@@ -524,6 +524,7 @@ html.ks-open{overflow:hidden}
     <label for="simPow">Puissance électrique max de la PAC (W) <span class="opt">(facultatif)</span></label>
     <input type="text" id="simPow" inputmode="decimal" autocomplete="off" placeholder="ex. 900">
     <p class="hint" id="simPowHint"></p>
+    <details class="ihelp ifo"><summary id="simClimSum">ⓘ Source de la météo</summary><p class="hint" id="simClim"></p></details>
     <label for="simCopIn">COP saisonnier (SCOP) de la machine</label>
     <input type="text" id="simCopIn" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="ex. 3,2">
     <details class="ihelp ifo" id="simSrcBox"><summary id="simSrcSum">ⓘ Source du COP</summary><p class="hint" id="simMachHint"></p></details>
@@ -585,7 +586,7 @@ html.ks-open{overflow:hidden}
     <div id="simOut"></div>
     <details class="ihelp hidden" id="simMonthsBox"><summary>📅 Détail mois par mois</summary><div id="simMonths"></div></details>
     <details class="ihelp ifo" id="simFormulaBox"><summary>🧮 Calcul détaillé</summary><div class="formula" id="simFormula"></div></details>
-    <details class="ihelp ifo"><summary>⚠️ Hypothèses et simplifications</summary><p class="note">⚠️ Simplifications : la PAC couvre 100 % du chauffage. Le chauffage est réparti sur les mois de la période selon les degrés-jours normaux (Météo-France, Metz) ; pour les machines « air », le COP de chaque mois suit une courbe type selon la température moyenne du mois (normales de Metz), réglée pour qu'en moyenne sur une année il soit égal au SCOP choisi. Favorable / Défavorable / Très défavorable = SCOP ×1,2 / ×0,9 / ×0,8. Si tu indiques la puissance électrique max de la PAC, la consommation de chaque mois est plafonnée à puissance × 24 h × jours du mois (PAC à fond en continu) ; la chaleur manquante est chauffée par la chaudière, et son coût est déduit de l'économie. Si l'eau chaude est cochée, sa part reste faite par la chaudière et n'est pas remplacée. Les abonnements et le prix d'achat de la PAC ne sont pas comptés.</p></details>
+    <details class="ihelp ifo"><summary>⚠️ Hypothèses et simplifications</summary><p class="note">⚠️ Simplifications : la PAC couvre 100 % du chauffage. Le chauffage est réparti sur les mois de la période selon les degrés-jours normaux (climat de ta position GPS si elle est renseignée, sinon Metz) ; il n'y a pas de chauffage de mai à août (la saison de chauffe va de septembre à avril, au prorata des degrés-jours : mars et avril comptent moins qu'en plein hiver) ; pour les machines « air », le COP de chaque mois suit une courbe type selon la température moyenne du mois (climat de ta position GPS, sinon normales de Metz), réglée pour qu'en moyenne sur une année il soit égal au SCOP choisi. Favorable / Défavorable / Très défavorable = SCOP ×1,2 / ×0,9 / ×0,8. Si tu indiques la puissance électrique max de la PAC, la consommation de chaque mois est plafonnée à puissance × 24 h × jours du mois (PAC à fond en continu) ; la chaleur manquante est chauffée par la chaudière, et son coût est déduit de l'économie. Si l'eau chaude est cochée, sa consommation de l'ancienne chaudière est répartie à égalité sur les 12 mois (au prorata des jours) et produite par la PAC avec un COP de 80 % du COP saisonnier (eau à environ 55 °C) ; cette part est comptée dans l'économie. Les abonnements et le prix d'achat de la PAC ne sont pas comptés.</p></details>
   </section>
   </div>
 
@@ -811,6 +812,7 @@ html.ks-open{overflow:hidden}
     </div>
     <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Ta position sert à récupérer la température moyenne réelle de chaque jour sur open-meteo.com (gratuit, sans compte) : pour les « Températures réelles » du COP et pour la courbe 🌡️ Température des graphiques. Les températures sont gardées sur cet appareil. Seules la latitude et la longitude sont envoyées à Open-Meteo : tes relevés restent sur l'appareil. Sans position, ou si Internet ne répond pas, les températures normales de Metz sont utilisées.</p></details>
     <p class="hint" id="tRealStatus"></p>
+    <details class="ihelp ifo"><summary id="climStatusSum">ⓘ Source de la météo</summary><p class="hint" id="climStatus"></p></details>
 
     <h3 class="sh">💾 Sauvegarde</h3>
     <p class="hint" style="margin-top:0">Tes données (relevés PAC, cuve et réglages) restent <b>uniquement sur cet appareil</b>. Exporte un fichier pour passer du téléphone au PC ou ne rien perdre.</p>
@@ -843,7 +845,7 @@ html.ks-open{overflow:hidden}
         Récupéré = somme des économies nettes des relevés depuis l'installation (comparaison choisie sur la carte) − entretien (par an, au prorata)<br>
         <b>Date de rentabilité (prévision « saisonnière »)</b> : on chauffe beaucoup plus en janvier qu'en septembre, donc on ne fait pas une simple moyenne.<br>
         1. Tes relevés depuis l'installation donnent la chaleur fournie par ta PAC (kWh élec × COP), comparée au froid qu'il a fait sur la même période en <b>degrés-jours</b> (pour chaque jour : 18 °C − température moyenne ; températures réelles Open-Meteo si ta position est renseignée, sinon normales de Metz). On obtient « chaleur par degré-jour » : c'est la mesure de ta maison.<br>
-        2. Pour la suite, l'appli avance jour par jour avec les degrés-jours normaux de Metz (Météo-France 1991-2020) : beaucoup en hiver, presque rien en été. Chaque jour : chaleur prévue × (prix fioul ou gaz évité − électricité ÷ COP du mois), moins l'entretien.<br>
+        2. Pour la suite, l'appli avance jour par jour avec les degrés-jours normaux de ton lieu (moyenne des 10 dernières années au point GPS des Réglages ; Metz, Météo-France 1991-2020, sans position) : beaucoup en hiver, presque rien en été. Chaque jour : chaleur prévue × (prix fioul ou gaz évité − électricité ÷ COP du mois), moins l'entretien.<br>
         2 bis. Si tu as indiqué la <b>puissance électrique max</b> de ta PAC : chaque jour, elle ne peut pas fournir plus que puissance × 24 h × COP du jour (COP plus faible quand il fait froid, températures normales du mois). Ce qui dépasse est chauffé par un autre système (bois, fioul…) et ne rapporte pas d'économie en plus. Pour le calibrage, une période de relevés déjà au maximum est écartée (elle ne montre pas tout le besoin) s'il reste assez d'autres relevés. C'est un plafond théorique (PAC à fond 24 h/24) : en vrai, elle sera un peu en dessous.<br>
         3. La date de rentabilité est le jour où le total dépasse le prix à récupérer. La fourchette correspond à un hiver 12 % plus froid ou plus doux que la normale (25 % si l'estimation est encore très approximative).<br>
         Elle se recalcule à chaque relevé : plus il y a de relevés (surtout en plein hiver), plus elle est fiable. Moins de 14 jours de relevés ou moins de 100 degrés-jours mesurés : « estimation encore très approximative ». Si presque aucun froid n'a été mesuré (relevés d'été), on retombe sur l'économie moyenne par jour. Non estimable si l'économie prévue sur un an est nulle ou négative ; au-delà de 6 ans : « &gt; 6 ans ».
@@ -1064,9 +1066,9 @@ function tempNote(pts){
   var any=pts.filter(Boolean), real=any.reduce(function(a,x){return a+x.real;},0), n=any.reduce(function(a,x){return a+x.n;},0);
   if(!locOf(settings))return 'Températures : normales de Metz (aucune position : ajoute-la dans ⚙️ Réglages → Général)';
   if(real>0&&real===n)return 'Températures : Open-Meteo';
-  if(real>0)return 'Températures : Open-Meteo (normales de Metz pour les jours manquants)';
-  if(tempFetching)return 'Températures : normales de Metz (météo en cours de chargement…)';
-  return 'Températures : normales de Metz (météo indisponible)';
+  if(real>0)return 'Températures : Open-Meteo ('+(climInfo.mode==='gps'?'moyenne 10 ans de ton point GPS':'normales de Metz')+' pour les jours manquants)';
+  if(tempFetching)return 'Températures : '+(climInfo.mode==='gps'?'moyenne 10 ans de ton point GPS':'normales de Metz')+' (météo en cours de chargement…)';
+  return 'Températures : '+(climInfo.mode==='gps'?'moyenne 10 ans de ton point GPS':'normales de Metz')+' (météo indisponible)';
 }
 function fTemp(t){return nf1.format(t)+' °C';}
 // Axe °C (à droite) + ligne pointillée grise + points. Ne touche pas à l'échelle des barres.
@@ -1885,7 +1887,7 @@ $('btnMidea').addEventListener('click',function(){
   copPtsUI=MIDEA_PTS.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});$('sCorr').value=numStr(MIDEA_CORR);renderPtsUI();curveCheckUI();
   scheduleSave(0);});
 $('btnMetz').addEventListener('click',function(){
-  Array.prototype.forEach.call(document.querySelectorAll('#copMonthTbl tr[data-m]'),function(r){r.querySelector('.mT').value=numStr(METZ_TNORM[+r.getAttribute('data-m')]);});
+  Array.prototype.forEach.call(document.querySelectorAll('#copMonthTbl tr[data-m]'),function(r){r.querySelector('.mT').value=numStr(METZ_T0[+r.getAttribute('data-m')]);});
   updateCopPreview();scheduleSave(0);});
 $('sTReal').addEventListener('change',showTReal);
 $('btnGeo').addEventListener('click',function(){
@@ -1976,7 +1978,7 @@ function trySaveSettings(){
   var r=collectSettings();
   if(r.err){setSpStatus('⚠️ Pas encore enregistré : '+r.err,true);return r;}
   if(JSON.stringify(r.s)===JSON.stringify(settings)){if($('spStatus').classList.contains('err'))setSpStatus('');return r;}
-  settings=r.s;save(KEY_SET,settings);renderAll();updateCopPreview();setSpStatus('✓ Enregistré');toast('Enregistré',1200);
+  settings=r.s;save(KEY_SET,settings);renderAll();updateCopPreview();setSpStatus('✓ Enregistré');toast('Enregistré',1200);climSync();
   if((settings.copMode==='temp'&&settings.tReal)||showTemp)fetchTemps(false);
   return r;
 }
@@ -2038,7 +2040,7 @@ var SIM_MACH={
 var SIM_ORDER=['aeau','aeauPl','geo','aair','midea','mine','perso'];
 (function(sh){Object.keys(sh).forEach(function(k){SIM_MACH[k].short=sh[k];});})({aeau:'Source : ADEME 2024 (mesures, 100 maisons)',aeauPl:'Source : ADEME 2024 (plancher chauffant)',geo:'Source : ADEME 2024 (géothermie)',aair:'Source : étiquette énergie UE (A+)',midea:'Source : fiche Midea (EPREL)',mine:'Source : ta fiche produit',perso:'COP saisi à la main'});
 var SIM_PRESETS={fav:{f:1.2,name:'Favorable'},neu:{f:1,name:'Neutre'},def:{f:0.9,name:'Défavorable'},tdef:{f:0.8,name:'Très défavorable'}};
-var SIM_MDAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
+var SIM_MDAYS=[31,28,31,30,31,30,31,31,30,31,30,31], SIM_ECS_F=0.8; // COP de l'eau chaude = 80 % du COP saisonnier (eau à ~55 °C), constant toute l'année
 var SIM_CURVE=[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:3.9},{t:7,cop:4.5},{t:12,cop:5}]; // forme type d'une PAC air (même courbe que le Suivi)
 var simType='fioul', simReady=false, simCopUser=false;
 function simNum(v,lo,hi,d){v=typeof v==='number'?v:NaN;return (isFinite(v)&&v>=lo&&v<=hi)?v:d;}
@@ -2058,10 +2060,12 @@ var simSt=(function(){var r=load(KEY_SIM,null);return r?normSim(r):simMigrate(no
 simType=simSt.type;
 function saveSim(){save(KEY_SIM,simSt);}
 // --- calculs purs (testés) ---
+var SIM_NOHEAT=[0,0,0,0,1,1,1,1,0,0,0,0]; // pas de chauffage de mai à août (v29) ; septembre → avril chauffés selon les degrés-jours : seule l'eau chaude, qui reste à la chaudière
+function simDju(m){return SIM_NOHEAT[m]?0:DJU_METZ[m];}
 function simMonthList(per,from,to){if(per==='hiver')return [9,10,11,0,1,2,3];if(per==='autre'){var l=[],m=from;for(var g=0;g<12;g++){l.push(m);if(m===to)break;m=(m+1)%12;}return l;}return [0,1,2,3,4,5,6,7,8,9,10,11];}
 function simScale(){ // facteur qui ramène la courbe type à une moyenne annuelle pondérée chauffage = 1
   var c=METZ_TNORM.map(function(t){return copInterp(t,SIM_CURVE,0);}),dA=0,inv=0;
-  for(var m=0;m<12;m++){dA+=DJU_METZ[m];inv+=DJU_METZ[m]/c[m];}
+  for(var m=0;m<12;m++){dA+=simDju(m);inv+=simDju(m)/c[m];}
   return dA/inv;}
 function simShape(){ // COP relatif de chaque mois, moyenne annuelle pondérée chauffage = 1
   var c=METZ_TNORM.map(function(t){return copInterp(t,SIM_CURVE,0);}),sc=simScale();return c.map(function(x){return x/sc;});}
@@ -2078,24 +2082,24 @@ function simElecPrice(o){ // o:{tar,base,hp,hc,pctHc(0-100),tempo:{bHP..},tdB,td
   return ok(o.base)?{pe:o.base}:{pe:null};}
 var SIM_RED_M=[11,0,1], SIM_RED_HP=16/24, SIM_RED_KEEP=8/24; // jours rouges supposés en déc., janv., févr. ; heures pleines 6 h → 22 h = 16 h sur 24
 function simRedFrac(R){ // part du chauffage de chaque mois retirée : R jours rouges répartis selon les DJU de déc.–févr. (jour rouge = jour moyen du mois), dont 16/24 (heures pleines) retirés
-  var f=[0,0,0,0,0,0,0,0,0,0,0,0];if(!(R>0))return f;var d=0;SIM_RED_M.forEach(function(m){d+=DJU_METZ[m];});
-  SIM_RED_M.forEach(function(m){f[m]=Math.min(1,R*DJU_METZ[m]/d/SIM_MDAYS[m])*SIM_RED_HP;});return f;}
+  var f=[0,0,0,0,0,0,0,0,0,0,0,0];if(!(R>0))return f;var d=0;SIM_RED_M.forEach(function(m){d+=simDju(m);});
+  SIM_RED_M.forEach(function(m){f[m]=Math.min(1,R*simDju(m)/d/SIM_MDAYS[m])*SIM_RED_HP;});return f;}
 function simRun(o){ // o:{type,qty,prix,pe,months,cop,curve,pci,rendF,rendG,ecsYear,redDays}
   var eff=o.type==='gaz'?o.rendG/100:o.pci*o.rendF/100, tot=o.qty*eff, days=0, djM=0, djA=0, m;
-  o.months.forEach(function(m){days+=SIM_MDAYS[m];djM+=DJU_METZ[m];});for(m=0;m<12;m++)djA+=DJU_METZ[m];
-  var ecs=o.ecsYear>0?o.ecsYear*days/365:0, ecsH=tot>0?Math.min(ecs,tot):0, qEcs=eff>0?ecsH/eff:0, qCh=o.qty-qEcs, H=tot-ecsH;
+  o.months.forEach(function(m){days+=SIM_MDAYS[m];djM+=simDju(m);});for(m=0;m<12;m++)djA+=simDju(m);
+  var ecs=o.ecsYear>0?o.ecsYear*days/365:0, ecsH=tot>0?Math.min(ecs,tot):0, qEcs=eff>0?ecsH/eff:0, qCh=o.qty, H=tot-ecsH, cE=o.cop*SIM_ECS_F;
   var sh=o.curve?simShape():null, copM=function(m){return o.cop*(sh?sh[m]:1);};
   var rf=simRedFrac(o.redDays), red=o.redDays>0, Hred=0;
   var capOf=function(m){return o.pow>0?o.pow/1000*24*SIM_MDAYS[m]:Infinity;};
-  var rows=o.months.map(function(m){var h0=H*DJU_METZ[m]/djM,hr=h0*rf[m],h=h0-hr,c=copM(m),kr=h/c,cp=capOf(m),cd=kr>cp+1e-9;Hred+=hr;return {m:m,dju:DJU_METZ[m],heat:h,heatRed:hr,cop:c,kwhRaw:kr,kwh:cd?cp:kr,cap:cp,capped:cd,heatApp:cd?h-cp*c:0};});
-  var H0=H;H=H0-Hred;var qRed=eff>0?Hred/eff:0;qCh=qCh-qRed; // heures pleines des jours rouges : ni chauffage, ni consommation, ni économie
-  var kwhPac=rows.reduce(function(a,r){return a+r.kwh;},0), hApp=rows.reduce(function(a,r){return a+r.heatApp;},0), copEff=kwhPac>0?(H-hApp)/kwhPac:o.cop, qApp=eff>0?hApp/eff:0;
+  var rows=o.months.map(function(m){var h0=djM>0?H*simDju(m)/djM:0,hr=h0*rf[m],h=h0-hr,c=copM(m),e=(ecsH>0&&days>0)?ecsH*SIM_MDAYS[m]/days:0,kr=h/c+e/cE,cp=capOf(m),cd=kr>cp+1e-9;Hred+=hr;return {m:m,dju:simDju(m),heat:h,heatRed:hr,ecs:e,cop:c,kwhRaw:kr,kwh:cd?cp:kr,cap:cp,capped:cd,heatApp:cd?(kr-cp)*c:0};});
+  var H0=H;H=H0-Hred;var qRed=eff>0?Hred/eff:0;qCh=qCh-qRed;var qHeat=qCh-qEcs; // heures pleines des jours rouges : ni chauffage, ni consommation, ni économie
+  var kwhPac=rows.reduce(function(a,r){return a+r.kwh;},0), hApp=rows.reduce(function(a,r){return a+r.heatApp;},0), copEff=kwhPac>0?(H+ecsH-hApp)/kwhPac:o.cop, qApp=eff>0?hApp/eff:0;
   var coutComb=(o.prix===null||o.prix===undefined)?null:qCh*o.prix, coutElec=(o.pe===null||o.pe===undefined)?null:kwhPac*o.pe, coutApp=(o.prix===null||o.prix===undefined)?null:qApp*o.prix;
-  var k=djA/djM, Hy0=H0*k, Hy=0, ky=0, hm;var hAppY=0;for(m=0;m<12;m++){hm=Hy0*DJU_METZ[m]/djA*(1-rf[m]);Hy+=hm;var km=hm/copM(m),cpm=capOf(m);if(km>cpm+1e-9){hAppY+=hm-cpm*copM(m);km=cpm;}ky+=km;}
-  var qChY=Hy/eff, cCy=coutComb===null?null:qChY*o.prix, cEy=coutElec===null?null:ky*o.pe, cAy=coutComb===null?null:(eff>0?hAppY/eff:0)*o.prix;
-  return {red:red,heatRed:Hred,qRed:qRed,heatBefore:H0,yearRed:Hy0-Hy,eff:eff,chaleurTot:tot,days:days,ecsH:ecsH,ecsAsked:ecs,ecsAll:ecs>0&&ecs>=tot,qEcs:qEcs,qCh:qCh,chaleur:H,rows:rows,kwhPac:kwhPac,copEff:copEff,heatApp:hApp,qApp:qApp,coutApp:coutApp,pow:o.pow>0?o.pow:null,djM:djM,djA:djA,share:djM/djA,
+  var k=djM>0?djA/djM:0, Hy0=H0*k, Hy=0, ky=0, hm;var hAppY=0, ecsY=ecsH>0?o.ecsYear:0;for(m=0;m<12;m++){hm=Hy0*simDju(m)/djA*(1-rf[m]);Hy+=hm;var em=ecsY*SIM_MDAYS[m]/365,km=hm/copM(m)+em/cE,cpm=capOf(m);if(km>cpm+1e-9){hAppY+=(km-cpm)*copM(m);km=cpm;}ky+=km;}
+  var qChY=(Hy+ecsY)/eff, cCy=coutComb===null?null:qChY*o.prix, cEy=coutElec===null?null:ky*o.pe, cAy=coutComb===null?null:(eff>0?hAppY/eff:0)*o.prix;
+  return {red:red,heatRed:Hred,qRed:qRed,heatBefore:H0,yearRed:Hy0-Hy,eff:eff,chaleurTot:tot,days:days,ecsH:ecsH,ecsAsked:ecs,ecsAll:ecs>0&&ecs>=tot,qEcs:qEcs,qCh:qCh,qHeat:qHeat,cE:cE,chaleur:H,rows:rows,kwhPac:kwhPac,copEff:copEff,heatApp:hApp,qApp:qApp,coutApp:coutApp,pow:o.pow>0?o.pow:null,djM:djM,djA:djA,share:djA>0?djM/djA:0,
     coutComb:coutComb,coutElec:coutElec,eco:(coutComb===null||coutElec===null)?null:coutComb-coutElec-(coutApp||0),
-    year:{k:k,heat:Hy,kwhPac:ky,qCh:qChY,coutComb:cCy,coutElec:cEy,heatApp:hAppY,eco:(cCy===null||cEy===null)?null:cCy-cEy-(cAy||0)},full:o.months.length===12};}
+    year:{k:k,heat:Hy+ecsY,kwhPac:ky,qCh:qChY,coutComb:cCy,coutElec:cEy,heatApp:hAppY,eco:(cCy===null||cEy===null)?null:cCy-cEy-(cAy||0)},full:o.months.length===12};}
 // Ancien calcul (v19, conservé pour compatibilité des tests) : COP constant, eau chaude déjà en kWh
 function simCompute(type,qty,prix,s,cop,ecsHeat){
   s=s||settings;
@@ -2156,7 +2160,7 @@ function renderSim(){
   $('simPctHc').placeholder=nfN.format(Math.round(pd*10)/10);
   $('simPctHint').textContent='Par défaut '+nfN.format(Math.round(pd*10)/10)+' % = '+hcH+' h creuses sur 24 h (PAC qui tourne de façon régulière). Mets plus si elle chauffe surtout la nuit.';
   var redOff=s.tar==='tempo'&&!s.redOn;$('simTrHP').disabled=redOff;
-  var yf=simRedFrac(s.tdR),yr=0,ya=0;for(var mm=0;mm<12;mm++){ya+=DJU_METZ[mm];yr+=DJU_METZ[mm]*yf[mm];}
+  var yf=simRedFrac(s.tdR),yr=0,ya=0;for(var mm=0;mm<12;mm++){ya+=simDju(mm);yr+=simDju(mm)*yf[mm];}
   $('simRedInfo').innerHTML=(s.redOn?'Décoche si tu coupes le chauffage en heures pleines (6 h → 22 h) les jours rouges.':'<b>Heures pleines des jours rouges coupées</b> : ces '+nf0.format(s.tdR)+' jours, pas de chauffage ni de conso PAC de 6 h à 22 h ; la nuit (22 h → 6 h) reste chauffée au prix HC rouge. Retiré : ≈ <b id="simRedPct">'+nf1.format(yr/ya*100)+' %</b> du chauffage d\'une année, sans coût ni économie.');
   var ep={redOff:redOff,tar:s.tar,pctHc:pc,base:simPriceIn('simPBase'),hp:simPriceIn('simPHP'),hc:simPriceIn('simPHC'),tdB:s.tdB,tdW:s.tdW,tdR:s.tdR,
     tempo:{bHP:simPriceIn('simTbHP'),bHC:simPriceIn('simTbHC'),wHP:simPriceIn('simTwHP'),wHC:simPriceIn('simTwHC'),rHP:simPriceIn('simTrHP'),rHC:simPriceIn('simTrHC')}};
@@ -2172,11 +2176,11 @@ function renderSim(){
   var ey=ecsYear(s), days=months.reduce(function(a,m){return a+SIM_MDAYS[m];},0), eff=gaz?s.rendG/100:s.pci*s.rendF/100;
   if(s.ecsOn){var ei=$('simEcsInfo');
     if(!ey)ei.innerHTML='Indique le nombre de personnes pour calculer la part eau chaude.';
-    else{var eh=ey*days/365;ei.innerHTML='Part eau chaude sur '+(months.length===12?'l\'année':'la période ('+days+' jours)')+' : '+nf0.format(s.ecsPers)+' pers. × '+nf0.format(s.ecsKwh)+' kWh/an'+(months.length===12?'':' × '+days+'/365')+' = <b id="simEcsHeat">'+nf0.format(eh)+' kWh</b> de chaleur ≈ <b>'+nf0.format(eh/eff)+uq+(gaz?' de gaz':' de fioul')+'</b>. Elle reste faite par la chaudière : elle est retirée de ce que la PAC remplace.';}}
+    else{var eh=ey*days/365;ei.innerHTML='Part eau chaude sur '+(months.length===12?'l\'année':'la période ('+days+' jours)')+' : '+nf0.format(s.ecsPers)+' pers. × '+nf0.format(s.ecsKwh)+' kWh/an'+(months.length===12?'':' × '+days+'/365')+' = <b id="simEcsHeat">'+nf0.format(eh)+' kWh</b> de chaleur ≈ <b>'+nf0.format(eh/eff)+uq+(gaz?' de gaz':' de fioul')+'</b>. Elle est répartie à égalité sur chaque mois (au prorata des jours) et produite par la PAC, avec un COP de l\'eau chaude = 80 % du COP saisonnier (eau à environ 55 °C).';}}
   // explication de la période (une ligne)
   var r0=simRun({type:simType,qty:1,prix:null,pe:null,months:months,cop:copUse||3,curve:mc.curve,pci:s.pci,rendF:s.rendF,rendG:s.rendG,ecsYear:0});
   $('simPerInfo').innerHTML='📐 '+(months.length===12?'Consommation sur 12 mois : ':'Consommation sur '+simPerLabel(months)+', soit '+nf0.format(r0.share*100)+' % du besoin de chauffage d\'une année normale. ')+
-    (months.length===12?'le':'Le')+' chauffage est réparti mois par mois selon les degrés-jours (Metz)'+(mc.curve?', avec le COP de chaque mois selon sa température':'')+(months.length===12?'.':' ; l\'année entière est estimée en divisant par '+nf2.format(r0.share)+'.');
+    (months.length===12?'le':'Le')+' chauffage est réparti mois par mois selon les degrés-jours ('+(climInfo.mode==='gps'?'ton point GPS':'Metz')+')'+(mc.curve?', avec le COP de chaque mois selon sa température':'')+(months.length===12?'.':' ; l\'année entière est estimée en divisant par '+nf2.format(r0.share)+'.');
   // résultats
   var qty=parseNum($('simQty').value), prix=simPriceIn('simPrix'), out=$('simOut'), fo=$('simFormula'), mb=$('simMonthsBox');
   $('simPrixHint').textContent=prix===null?'Rien n\'est pré-rempli : saisis le prix payé ('+(gaz?'€ par kWh de gaz':'€ par litre')+').':(isNaN(prix)?'⚠️ Prix invalide (ex. '+(gaz?'0,12':'1,20')+').':'');
@@ -2189,30 +2193,30 @@ function renderSim(){
   var priceMsg=prix===null&&pe===null?'saisis tes prix ('+fuel+' et électricité)':prix===null?'saisis ton prix du '+fuel:'saisis ton prix de l\'électricité';
   var h='<div class="simres">'+
     '<div class="r"><span>Consommation '+fuel+pl+'</span><b>'+nf2.format(qty)+uq+'</b></div>'+
-    (ecs?'<div class="r"><span>💧 dont eau chaude (reste à la chaudière)</span><b id="simEcsQty">'+nf2.format(r.qEcs)+uq+'</b></div>'+
-      '<div class="r"><span>Chauffage seul</span><b id="simChQty">'+nf2.format(r.qCh)+uq+'</b></div>':'')+
+    (ecs?'<div class="r"><span>💧 dont eau chaude (produite par la PAC)</span><b id="simEcsQty">'+nf2.format(r.qEcs)+uq+'</b></div>'+
+      '<div class="r"><span>Chauffage seul</span><b id="simChQty">'+nf2.format(r.qHeat)+uq+'</b></div>':'')+
     (rd?'<div class="r redr"><span>🔴 HP des jours rouges (exclues)</span><b id="simRedHeat" class="redh">− '+nf2.format(r.heatRed)+' kWh<small> ≈ '+nf2.format(r.qRed)+uq+(gaz?' de gaz':' de fioul')+'</small></b></div>':'')+
-    '<div class="r"><span>Chaleur utile'+(ecs?' chauffage':'')+(rd?' (hors HP rouges)':'')+'</span><b id="simChaleur">'+nf2.format(r.chaleur)+' kWh</b></div>'+
+    '<div class="r"><span>Chaleur utile'+(ecs?' chauffage':'')+(rd?' (hors HP rouges)':'')+'</span><b id="simChaleur">'+nf2.format(r.chaleur)+' kWh</b></div>'+(ecs?'<div class="r"><span>Chaleur utile eau chaude</span><b id="simChaleurEcs">'+nf2.format(r.ecsH)+' kWh</b></div>':'')+
     '<div class="r"><span>COP moyen sur la période</span><b id="simCopEff">'+nf2.format(r.copEff)+'</b></div>'+
     '<div class="r"><span>Électricité PAC</span><b id="simPac">'+nf2.format(r.kwhPac)+' kWh</b></div>'+
-    '<div class="r"><span>Coût '+(gaz?'du gaz':'du fioul')+(ecs?' (chauffage)':'')+(rd?' évité':'')+'</span>'+(r.coutComb===null?miss('— saisis ton prix'):'<b id="simCoutComb">'+fE(r.coutComb)+'</b>')+'</div>'+
+    '<div class="r"><span>Coût '+(gaz?'du gaz':'du fioul')+(ecs?' (chauffage + eau chaude)':'')+(rd?' évité':'')+'</span>'+(r.coutComb===null?miss('— saisis ton prix'):'<b id="simCoutComb">'+fE(r.coutComb)+'</b>')+'</div>'+
     '<div class="r"><span>Coût électricité PAC</span>'+(r.coutElec===null?miss('— saisis ton prix'):'<b id="simCoutElec">'+fE(r.coutElec)+'</b>')+'</div>'+
     (r.heatApp>0?'<div class="r"><span>⚠️ Appoint '+fuel+' (PAC plafonnée)</span><b id="simCoutApp">'+(r.coutApp===null?nf2.format(r.qApp)+uq:fE(r.coutApp)+'<small> ≈ '+nf2.format(r.qApp)+uq+'</small>')+'</b></div>':'')+
     '<div class="r total"><span>'+(r.eco!==null&&r.eco<0?'Surcoût avec PAC':'Économie avec PAC')+pl+'</span>'+(r.eco===null?miss('— '+priceMsg):'<b id="simEco" class="'+(r.eco<0?'neg':'')+'">'+fE(r.eco)+'</b>')+'</div></div>';
   if(!r.full)h+='<p class="hint" style="margin:12px 0 4px"><b>Sur une année complète</b> (estimation : ÷ '+nf2.format(r.share)+')</p><div class="simres" id="simYear">'+
-    '<div class="r"><span>Chauffage sur 12 mois'+(r.red&&r.yearRed>0?' (hors HP rouges)':'')+'</span><b id="simYHeat">'+nf0.format(r.year.heat)+' kWh</b></div>'+
+    '<div class="r"><span>Chauffage'+(ecs?' + eau chaude':'')+' sur 12 mois'+(r.red&&r.yearRed>0?' (hors HP rouges)':'')+'</span><b id="simYHeat">'+nf0.format(r.year.heat)+' kWh</b></div>'+
     '<div class="r"><span>Électricité PAC / an</span><b id="simYPac">'+nf0.format(r.year.kwhPac)+' kWh</b></div>'+
     '<div class="r total"><span>'+(r.year.eco!==null&&r.year.eco<0?'Surcoût / an':'Économie / an')+'</span>'+(r.year.eco===null?miss('— '+priceMsg):'<b id="simYEco" class="'+(r.year.eco<0?'neg':'')+'">'+fE(r.year.eco)+'</b>')+'</div></div>'+
-    (r.share<0.15?'<div class="preview warn">⚠️ Période qui compte peu pour le chauffage : l\'estimation sur l\'année est peu fiable.</div>':'');
+    (r.share<0.15?'<div class="preview warn">⚠️ '+(r.share>0?'Période qui compte peu pour le chauffage : l\'estimation sur l\'année est peu fiable.':'Aucun chauffage sur cette période (le chauffage ne compte que de septembre à avril) : choisis une période qui en contient.')+'</div>':'');
   if(r.ecsAll)h+='<div class="preview warn">⚠️ La part eau chaude dépasse cette consommation : vérifie la période ou le nombre de personnes.</div>';
   out.innerHTML=h;
   mb.classList.remove('hidden');
-  $('simMonths').innerHTML='<table class="sim-mt"><tr><th>Mois</th><th>Chaleur'+(rd?'*':'')+'</th><th>COP</th><th>Élec PAC</th></tr>'+r.rows.map(function(x){return '<tr><td>'+MONTHS_FR[x.m]+'</td><td>'+nf0.format(x.heat)+' kWh</td><td>'+nf2.format(x.cop)+'</td><td>'+nf0.format(x.kwh)+' kWh'+(x.capped?' ⚠️':'')+'</td></tr>';}).join('')+'</table>'+(r.heatApp>0?'<p class="hint">⚠️ Plafonné par la puissance de la PAC : '+r.rows.filter(function(z){return z.capped;}).map(function(z){return MONTHS_FR[z.m]+' (besoin '+nf0.format(z.kwhRaw)+' kWh, max '+nf0.format(z.cap)+' kWh)';}).join(', ')+'.</p>':'')+(rd?'<p class="hint">* hors heures pleines des jours rouges</p>':'');
+  $('simMonths').innerHTML='<table class="sim-mt"><tr><th>Mois</th><th>Chauffage'+(rd?'*':'')+'</th><th>COP</th>'+(ecs?'<th>Eau chaude</th>':'')+'<th>Élec PAC</th></tr>'+r.rows.map(function(x){return '<tr><td>'+MONTHS_FR[x.m]+'</td><td>'+(x.dju>0?nf0.format(x.heat)+' kWh':'—')+'</td><td>'+(x.dju>0?nf2.format(x.cop):'—')+'</td>'+(ecs?'<td>'+nf0.format(x.ecs)+' kWh</td>':'')+'<td>'+(x.dju>0||x.ecs>0?nf0.format(x.kwh)+' kWh'+(x.capped?' ⚠️':''):'—')+'</td></tr>';}).join('')+'</table>'+(r.rows.some(function(z){return !(z.dju>0);})?'<p class="hint">☀️ Pas de chauffage de mai à août'+(ecs?' : seule l\'eau chaude consomme de l\'électricité (COP de l\'eau chaude '+nf2.format(r.cE)+').':'.')+'</p>':'')+(r.heatApp>0?'<p class="hint">⚠️ Plafonné par la puissance de la PAC : '+r.rows.filter(function(z){return z.capped;}).map(function(z){return MONTHS_FR[z.m]+' (besoin '+nf0.format(z.kwhRaw)+' kWh, max '+nf0.format(z.cap)+' kWh)';}).join(', ')+'.</p>':'')+(rd?'<p class="hint">* hors heures pleines des jours rouges</p>':'');
   fo.innerHTML='<b>Calcul</b><br>Chaleur utile = '+(gaz?nf2.format(qty)+' kWh × '+nfN.format(s.rendG)+' %':nf2.format(qty)+' L × '+nfN.format(s.pci)+' kWh/L × '+nfN.format(s.rendF)+' %')+' = <b>'+nf2.format(r.chaleurTot)+' kWh</b><br>'+
-    (ecs?'Chaleur chauffage = '+nf2.format(r.chaleurTot)+' − '+nf2.format(r.ecsH)+' kWh d\'eau chaude = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qCh)+uq+')<br>':'')+
-    (rd?'Heures pleines des jours rouges retirées : '+r.rows.filter(function(z){return z.heatRed>0;}).map(function(z){return MONTHS_FR[z.m]+' − '+nf0.format(z.heatRed)+' kWh';}).join(', ')+' → chauffage couvert = '+nf2.format(r.heatBefore)+' − '+nf2.format(r.heatRed)+' = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qCh)+uq+')<br>':'')+
-    'Répartie sur '+months.length+' mois selon les degrés-jours ('+nf0.format(r.djM)+' DJU) ; kWh élec PAC = Σ chaleur du mois ÷ COP du mois = <b>'+nf2.format(r.kwhPac)+' kWh</b> (COP moyen '+nf2.format(r.copEff)+')<br>'+
-    (r.coutComb===null?'':'Coût '+fuel+(ecs?' chauffage':'')+' = '+nf2.format(r.qCh)+uq+' × '+nfN.format(prix)+(gaz?' €/kWh':' €/L')+' = <b>'+fE(r.coutComb)+'</b><br>')+
+    (ecs?'Chaleur chauffage = '+nf2.format(r.chaleurTot)+' − '+nf2.format(r.ecsH)+' kWh d\'eau chaude = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qHeat)+uq+')<br>Eau chaude : '+nf2.format(r.ecsH)+' kWh répartis au prorata des jours de chaque mois, COP de l\'eau chaude = '+nf2.format(r.cE)+' (80 % du COP saisonnier)<br>':'')+
+    (rd?'Heures pleines des jours rouges retirées : '+r.rows.filter(function(z){return z.heatRed>0;}).map(function(z){return MONTHS_FR[z.m]+' − '+nf0.format(z.heatRed)+' kWh';}).join(', ')+' → chauffage couvert = '+nf2.format(r.heatBefore)+' − '+nf2.format(r.heatRed)+' = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qHeat)+uq+')<br>':'')+
+    'Répartie sur '+months.length+' mois selon les degrés-jours ('+nf0.format(r.djM)+' DJU) ; kWh élec PAC = Σ (chaleur du mois ÷ COP du mois'+(ecs?' + eau chaude ÷ COP eau chaude':'')+') = <b>'+nf2.format(r.kwhPac)+' kWh</b> (COP moyen '+nf2.format(r.copEff)+')<br>'+
+    (r.coutComb===null?'':'Coût '+fuel+(ecs?' (chauffage + eau chaude)':'')+' = '+nf2.format(r.qCh)+uq+' × '+nfN.format(prix)+(gaz?' €/kWh':' €/L')+' = <b>'+fE(r.coutComb)+'</b><br>')+
     (r.coutElec===null?'':'Coût élec = '+nf2.format(r.kwhPac)+' kWh × '+nfN.format(Math.round(pe*10000)/10000)+' €/kWh = <b>'+fE(r.coutElec)+'</b><br>')+
     (r.heatApp>0?'Plafond : élec du mois = plus petit de (chaleur ÷ COP) et (puissance '+nf0.format(r.pow)+' W × 24 h × jours du mois). Chaleur non fournie par la PAC = '+nf0.format(r.heatApp)+' kWh, chauffée par la chaudière ≈ '+nf2.format(r.qApp)+uq+(r.coutApp===null?'':' × '+nfN.format(prix)+' = <b>'+fE(r.coutApp)+'</b>')+'<br>':'')+
     (r.eco===null?'':'Économie = '+fE(r.coutComb)+' − '+fE(r.coutElec)+(r.heatApp>0?' − '+fE(r.coutApp):'')+' = <b>'+fE(r.eco)+'</b>');
@@ -2468,6 +2472,35 @@ function winterOf(day){var y=+day.slice(0,4),m=+day.slice(5,7);return m>=9?y:y-1
 // DJU base 18 °C, normales 1991-2020, station Metz-Frescaty (57039001) — source : Météo-France, fiche climatologique
 // https://donneespubliques.meteofrance.fr/FichesClim/FICHECLIM_57039001.pdf (année : 2724,7 DJU)
 var DJU_METZ=[473.5,408,341.2,226.6,117.5,42.6,14.4,18.1,81,208.1,345.2,448.5], DJU_FLOOR=0.5;
+// ---- v29 : climat du point GPS (Open-Meteo, 10 dernières années complètes) à la place de Metz, quand une position est renseignée ----
+var METZ_T0=METZ_TNORM.slice(), DJU_0=DJU_METZ.slice(), KEY_CLIM='pacFioul.clim.v1', climInfo={mode:'metz',msg:''}, climBusy=false;
+function climSet(t,d){for(var m=0;m<12;m++){METZ_TNORM[m]=t[m];DJU_METZ[m]=d[m];}}
+function climText(){var c=climInfo;
+  if(c.mode==='gps')return '🌡️ Climat de ton point GPS ('+nf2.format(settings.lat)+' ; '+nf2.format(settings.lon)+') : moyennes mensuelles et degrés-jours (base 18 °C) des '+c.n+' années '+c.y0+'-'+c.y1+', données Open-Meteo (réanalyse ERA5, point de grille le plus proche de ta position).';
+  if(c.mode==='load')return '⏳ Récupération du climat de ton point GPS (Open-Meteo)… En attendant : normales de Metz-Frescaty (Météo-France 1991-2020).';
+  if(c.mode==='fail')return '⚠️ Climat de ton point GPS indisponible (hors ligne ?) : normales de Metz-Frescaty (Météo-France 1991-2020) utilisées pour l\'instant.';
+  return '🌡️ Climat : normales de Metz-Frescaty (Météo-France 1991-2020), par défaut. Renseigne ta latitude et ta longitude dans ⚙️ Réglages → Général pour utiliser le climat de ton lieu.';}
+function climShow(){var t=climText(),c=climInfo,sm=c.mode==='gps'?'ⓘ Météo : ton point GPS (moyenne 10 ans)':c.mode==='load'?'ⓘ Météo : chargement…':c.mode==='fail'?'⚠️ ⓘ Météo : Metz (GPS indisponible)':'ⓘ Météo : Metz (par défaut)';['climStatus','simClim'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;var u=document.getElementById(id+'Sum');if(u)u.textContent=sm;});}
+function climRefresh(){climShow();try{renderAll();}catch(e){}}
+function climSync(){
+  var loc=locOf(settings);
+  if(!loc){if(climInfo.mode!=='metz'||DJU_METZ[0]!==DJU_0[0]){climSet(METZ_T0,DJU_0);climInfo={mode:'metz'};climRefresh();}else climShow();return;}
+  var c=load(KEY_CLIM,null);
+  if(c&&c.loc===loc&&Array.isArray(c.t)&&c.t.length===12&&Array.isArray(c.dju)&&c.dju.length===12&&c.y1===new Date().getFullYear()-1){climSet(c.t,c.dju);climInfo={mode:'gps',n:c.n,y0:c.y0,y1:c.y1};climRefresh();return;}
+  if(climBusy)return;climBusy=true;
+  var y1=new Date().getFullYear()-1,y0=y1-9;
+  climSet(METZ_T0,DJU_0);climInfo={mode:'load'};climShow();
+  var url='https://archive-api.open-meteo.com/v1/archive?latitude='+settings.lat.toFixed(4)+'&longitude='+settings.lon.toFixed(4)+'&start_date='+y0+'-01-01&end_date='+y1+'-12-31&daily=temperature_2m_mean&timezone=Europe%2FParis';
+  fetch(url).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();}).then(function(j){
+    var tt=j&&j.daily&&j.daily.time,v=j&&j.daily&&j.daily.temperature_2m_mean;if(!Array.isArray(tt)||!Array.isArray(v))throw new Error('format');
+    var sT=[0,0,0,0,0,0,0,0,0,0,0,0],sD=sT.slice(),cn=sT.slice(),i;
+    for(i=0;i<tt.length;i++){var x=v[i];if(typeof x!=='number'||!isFinite(x))continue;var m=+String(tt[i]).slice(5,7)-1;if(!(m>=0&&m<12))continue;sT[m]+=x;sD[m]+=Math.max(0,18-x);cn[m]++;}
+    if(cn.some(function(n){return n<200;}))throw new Error('données insuffisantes');
+    var T=[],D=[];for(var k=0;k<12;k++){T.push(Math.round(sT[k]/cn[k]*10)/10);D.push(Math.round(sD[k]/cn[k]*SIM_MDAYS[k]*10)/10);}
+    save(KEY_CLIM,{loc:locOf(settings),t:T,dju:D,y0:y0,y1:y1,n:10});
+    climBusy=false;if(locOf(settings)!==loc){climSync();return;}
+    climSet(T,D);climInfo={mode:'gps',n:10,y0:y0,y1:y1};climRefresh();
+  }).catch(function(){climBusy=false;climSet(METZ_T0,DJU_0);climInfo={mode:'fail'};climRefresh();});}
 function djuWeight(d){var y=d.getFullYear(),m=d.getMonth(),n=new Date(y,m+1,0).getDate();return Math.max(DJU_METZ[m]/n,DJU_FLOOR);}
 // « Estimé » : litres venant d'un intervalle de plus de EST_GAP jours entre deux relevés de niveau consécutifs
 // (leur répartition entre les mois est une hypothèse, en Climat comme en Uniforme). Les autres litres sont « mesurés ».
@@ -2726,10 +2759,10 @@ function trySaveTank(){ // mêmes règles qu'avant (bouton « Enregistrer la cuv
 
 var tt;function toast(m,ms){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},ms||2400);}
 
-window.__pac={copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){setCurveUI(k);},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={dju:function(){return DJU_METZ.join(',');},copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){setCurveUI(k);},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 
 fillSettings();setMode('kwh');resetForm();renderAll();setSimType(simSt.type);simReady=true;
-renderTempButtons();if((settings.copMode==='temp'&&settings.tReal)||showTemp)setTimeout(function(){fetchTemps(false);},300);
+renderTempButtons();climSync();if((settings.copMode==='temp'&&settings.tReal)||showTemp)setTimeout(function(){fetchTemps(false);},300);
 fillTank();setTankMode('niveau');$('tkDate').value=todayIso();tankReady=true;renderTank();
 })();
 </script>
