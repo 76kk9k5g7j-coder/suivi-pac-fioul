@@ -210,6 +210,9 @@ select{width:100%;min-height:48px;padding:11px 12px;font-size:16px;border-radius
 .evol-tbl tr.tot td{font-weight:700}
 .evol-tbl td.neg{color:var(--danger)}
 #evolTip{min-height:1.2em}
+.evol-det{margin-top:8px}
+.evol-det .legend{margin-top:2px}
+.evol-det #evolTip{margin-top:6px}
 .evol-row{display:flex;gap:8px;align-items:center;margin-top:10px}
 .evol-row .seg{flex:1;margin:0}
 .tbtn{min-height:36px;padding:6px 10px;font-size:.85rem;white-space:nowrap;flex:none}
@@ -414,6 +417,19 @@ html.ks-open{overflow:hidden}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;font:inherit;cursor:pointer}
 .meas-h{margin:14px 0 4px;font-size:.92rem}
 .cust-tabs{margin-top:12px}
+.cust-sw{display:flex;gap:8px;margin-top:12px}
+.cust-sw .btn{min-height:52px}
+#btnCustOn{flex:1 1 auto;justify-content:space-between;gap:8px;text-align:left;padding:6px 8px 6px 10px;border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+#btnCustOn .cust-tx{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+#btnCustOn .cust-tx>span{white-space:nowrap}
+#btnCustOn .cust-tx small{font-weight:500;font-size:.78rem;color:var(--muted)}
+#btnCustOn .cust-st{flex:none;font-size:.78rem;font-weight:700;padding:4px 7px;border-radius:999px;background:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){#btnCustOn .cust-st{color:#062a26}}
+#btnCustOn[aria-checked="false"]{background:var(--input);border-color:var(--line);color:var(--muted);filter:grayscale(1);opacity:.75}
+#btnCustOn[aria-checked="false"] .cust-st{background:var(--line);color:var(--muted)}
+#btnMeas{flex:none;width:46px;padding:0;font-size:1.2rem}
+#btnMeas[aria-expanded="true"] .chev{display:inline-block;transform:rotate(180deg)}
+.cust-dis{opacity:.42;filter:grayscale(1)}
 
 </style>
 </head>
@@ -494,9 +510,9 @@ html.ks-open{overflow:hidden}
       </div>
     </div>
     <div class="chart-wrap" id="chart"></div>
-    <div class="legend" id="legend"></div>
-    <p class="hint" id="evolTip"></p>
+    <div id="legHome"><div class="legend" id="legend"></div></div>
     <div class="evol-tbl" id="evolTable"></div>
+    <details class="ihelp evol-det hidden" id="evolDet"><summary id="evolDetSum">ⓘ Détails</summary><div id="evolDetBody"></div><p class="hint" id="evolTip"></p></details>
   </section>
 
   <section class="card">
@@ -762,14 +778,15 @@ html.ks-open{overflow:hidden}
       <label for="sCorr">% de correction (terrain)</label>
       <input type="text" inputmode="decimal" id="sCorr" placeholder="ex. 10">
       <details class="ihelp ifo"><summary id="sCorrSum">ⓘ Pourquoi −10 % est conseillé</summary><p class="hint">Le SCOP des fiches est mesuré en laboratoire (norme EN 14825) : machine neuve, pose idéale. Chez toi, le dégivrage, les arrêts-redémarrages quand il fait doux, la pose (gaine, calfeutrage) et la température de la pièce le font baisser. Sur le terrain, l'ADEME (étude publiée en 2025, 100 maisons) mesure un SCOP réel moyen de 2,9 pour des PAC air-eau. −10 % (Défavorable) : repère prudent pour une pose correcte ; −20 % : fenêtre mal calfeutrée ou pièce à plus de 22 °C ; 0 % : valeurs du fabricant. Tu peux taper n'importe quelle valeur. Elle s'applique à la courbe de la machine, et à tes valeurs perso seulement si tu coches la case dans « Mon SCOP personnalisé ».</p></details>
-      <div class="actions"><button class="btn small" type="button" id="btnMeas" aria-expanded="false">🧪 Mon SCOP personnalisé</button></div>
+      <label for="sScop">SCOP de ma machine <span class="opt">(fiche produit)</span></label>
+      <input type="text" inputmode="decimal" id="sScop" placeholder="ex. 4" autocomplete="off">
+      <p class="hint" style="margin-top:4px">Change la courbe de base : la forme type d'une PAC air est calée sur ce SCOP (norme EN 14825).</p>
+      <div class="cust-sw" id="custSw"><button class="btn small" type="button" id="btnCustOn" role="switch" aria-checked="true"><span class="cust-tx"><span>🧪 Mon SCOP personnalisé</span><small id="custCnt"></small></span><span class="cust-st" id="custSt">Actif</span></button><button class="btn small" type="button" id="btnMeas" aria-expanded="false" aria-controls="measBox" aria-label="Ouvrir le menu"><span class="chev">▾</span></button></div>
+      <p class="hint" id="custSwHint">Bouton : actif / inactif (valeurs gardées). ▾ : menu.</p>
+      <input type="checkbox" id="sCustOn" checked hidden tabindex="-1" aria-hidden="true">
       <div id="measBox" class="hidden meas-box">
-        <label for="sScop">SCOP de ma machine <span class="opt">(fiche produit)</span></label>
-        <input type="text" inputmode="decimal" id="sScop" placeholder="ex. 4" autocomplete="off">
-        <p class="hint" style="margin-top:4px">Change la courbe de base : la forme type d'une PAC air est calée sur ce SCOP (norme EN 14825).</p>
-        <label class="chk" style="margin-top:10px"><input type="checkbox" id="sCustOn" checked> <span>Utiliser mes valeurs personnalisées</span></label>
-        <p class="hint" style="margin-top:0">Tes COP moyens (a) et tes mesures (b). Décoché : gardés, mais pas utilisés (courbe de la machine seule).</p>
-        <label class="chk" id="sCustCorrLab"><input type="checkbox" id="sCustCorr"> <span>Appliquer la correction (scénario) aux valeurs personnalisées</span></label>
+        <div id="custBody">
+        <label class="chk" id="sCustCorrLab" style="margin-top:0"><input type="checkbox" id="sCustCorr"> <span>Appliquer la correction (scénario) aux valeurs personnalisées</span></label>
         <div id="custVals">
         <div class="seg seg-sm cust-tabs" role="group" aria-label="Mes valeurs personnalisées">
           <button type="button" id="custTabA" data-ctab="a" aria-pressed="true" aria-controls="custPaneA">a) COP moyens<span id="custTabAN"></span></button>
@@ -793,6 +810,7 @@ html.ks-open{overflow:hidden}
           <tr><td>−10 à −3 °C</td><td>348 h</td><td>14 %</td></tr><tr><td>−2 à +4 °C</td><td>1 891 h</td><td><b>51 %</b></td></tr><tr><td>+5 à +9 °C</td><td>1 642 h</td><td>27 %</td></tr><tr><td>+10 à +15 °C</td><td>1 029 h</td><td>8 %</td></tr></table>
           <p class="hint">Climat moyen de la norme (4 910 h de chauffage par saison). Le besoin de chaleur suit une droite : 100 % à −10 °C, 0 % à +16 °C. L'essentiel du SCOP se joue entre 0 et +5 °C ; ton COP à +12 °C pèse très peu. SCOP indicatif : tes valeurs remplacent la courbe de base entre ta température la plus froide et la plus chaude (ligne droite entre deux points, constant au-dessus du plus chaud, pente gardée sous le plus froid), sans appoint ni pertes de cycles. Plusieurs valeurs à la même température : moyenne.</p></details>
         <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Entre deux températures, l'appli trace une ligne droite ; au-delà du point le plus froid ou le plus chaud : valeur du point le plus proche (jamais moins de 1). Un « COP forcé » sur un mois (tableau ci-dessous) reste prioritaire (sauf avec « Températures réelles »). Sans machine choisie, tes valeurs seules forment la courbe (2 températures au moins).</p></details>
+        </div>
       </div>
       </div>
       <details class="ihelp ifo" id="copMonthBox"><summary>📅 COP par mois (COP forcé)</summary>
@@ -1704,6 +1722,8 @@ function renderChart(list){
   var L=46,R=(chartView==='cumul'&&hasE)?54:12,T=14,B=34, pw=W-L-R, ph=H-T-B;
   var leg=$('legend');
   $('evolCtl').classList.toggle('hidden',chartView==='cumul'||!list.length);$('evolTip').textContent='';$('evolTable').innerHTML='';evolLast=null;
+  // v35 : Semaine/Mois/Année : légende + détail dans la bulle « ⓘ Détails » (fermée par défaut), tableau juste sous le graphique
+  var evBars=chartView!=='cumul'&&list.length>0;$('evolDet').classList.toggle('hidden',!evBars);(evBars?$('evolDetBody'):$('legHome')).appendChild(leg);
   setXhair(box,null);
   if(!list.length){box.innerHTML=svgEl(W,H,txt(W/2,H/2,'Le graphique apparaîtra après ton premier relevé',{size:13}));leg.innerHTML='';return;}
   var g='';
@@ -2229,7 +2249,7 @@ var CURVE_SRC={reddit:'Valeurs non officielles d\'un tableau partagé sur Reddit
   midea:'Ancienne courbe Midea « réaliste » : valeurs baissées pour tenir compte des arrêts-redémarrages quand il fait doux.'};
 function syncCurve(){copCurveUI=selToCurve();if(copCurveUI==='scop'&&!scopBase(uiMachKey(),uiScop()))copCurveUI=null;}
 function renderMachUI(E){var v=$('sMach').value,k=uiMachKey(),m=SIM_MACH[k],cv=v.indexOf('cv:')===0?v.slice(3):null;
-  $('sMachHint').textContent=cv?'Source : '+CURVE_SRC[cv]+' SCOP ≈ calcul EN 14825 (climat moyen), avant correction.':m?(m.scop===null&&uiScop()===null?'Tape le SCOP de ta machine dans « Mon SCOP personnalisé ».':m.src):($('sCustOn').checked?'Aucune machine : la courbe vient de tes valeurs dans « Mon SCOP personnalisé » (2 températures au moins).':'⚠️ Aucune machine et valeurs perso désactivées : choisis une machine ou recoche « Utiliser mes valeurs personnalisées ».');
+  $('sMachHint').textContent=cv?'Source : '+CURVE_SRC[cv]+' SCOP ≈ calcul EN 14825 (climat moyen), avant correction.':m?(m.scop===null&&uiScop()===null?'Tape le SCOP de ta machine ci-dessous.':m.src):($('sCustOn').checked?'Aucune machine : la courbe vient de tes valeurs dans « Mon SCOP personnalisé » (2 températures au moins).':'⚠️ Aucune machine et « Mon SCOP personnalisé » inactif : choisis une machine ou active-le.');
   E=E||uiEffPts();var pts=copPtsSorted(E.pts),flat=pts.length<2||pts.every(function(p){return Math.abs(p.cop-pts[0].cop)<1e-9;});
   $('sCopAt').innerHTML=flat?'':'COP selon la température dehors (scénario inclus'+(uiCust().length?', avec tes valeurs perso':'')+') : '+[-10,-7,2,7,12].map(function(t){return SGN(t)+' °C → <b>'+nf2.format(copInterp(t,pts,E.corr))+'</b>';}).join(' · ');
   $('sCopAt').classList.toggle('hidden',flat);
@@ -2238,7 +2258,7 @@ function renderMachUI(E){var v=$('sMach').value,k=uiMachKey(),m=SIM_MACH[k],cv=v
 $('sMach').addEventListener('change',function(){var k=uiMachKey(),m=SIM_MACH[k];
   if(m&&m.scop!==null)$('sScop').value=numStr(m.scop);
   syncCurve();
-  if(m&&m.scop===null&&uiScop()===null){measOpen(true);try{$('sScop').focus({preventScroll:true});}catch(e){}}
+  if(m&&m.scop===null&&uiScop()===null){try{$('sScop').focus({preventScroll:true});}catch(e){}}
   updateCopPreview();});
 $('sScop').addEventListener('input',function(){var k=uiMachKey(),m=SIM_MACH[k];
   if(uiScop()!==null&&(!m||m.scop!==null)){var nk=(!m||m.curve)?'perso':'mine';fillMachSel();$('sMach').value=nk;}
@@ -2276,8 +2296,7 @@ function measParse(){readMeasUI();var ok=[],bad=null,st=[];
     var m={t:t,w:w,ti:ti,to:to,q:q};st[i]='COP '+nf2.format(measCop(m))+' = '+q+' × 0,335 × '+nf1.format(to-ti)+' ÷ '+nf0.format(w);ok.push(m);});
   return {ok:ok,bad:bad,st:st};}
 function renderMeasOut(){if(!$('measOut'))return;var P=measParse();P.st.forEach(function(t,i){var c=$('mcop'+i);if(c)c.textContent=t;});
-  var n=settings.copPts.length+settings.meas.length,on=$('sCustOn').checked;$('btnMeas').textContent='🧪 Mon SCOP personnalisé'+(n?' ('+n+' valeur'+(n>1?'s':'')+(settings.custOn?'':', désactivées')+')':'');
-  $('custVals').classList.toggle('cust-off',!on);$('sCustCorr').disabled=!on;$('sCustCorrLab').classList.toggle('cust-off',!on);
+  var on=custSwSync();$('sCustCorr').disabled=!on;
   var g=uiCustAll(),o=$('measOut'),cc=$('sCustCorr').checked,co=uiCorr();o.classList.remove('warn');
   if(!g.length){o.innerHTML='Saisis tes COP moyens (a) ou tes mesures brutes (b).';return;}
   var base=copPtsSorted(uiBase()),merged=mergeMeas(base,g),ind=scopEN(merged.length>=2?merged:g);
@@ -2285,7 +2304,7 @@ function renderMeasOut(){if(!$('measOut'))return;var P=measParse();P.st.forEach(
   if(copCurveUI==='scop'&&uiScop()!==null){ref=uiScop();lab='SCOP de la machine';}
   else if(base.length>=2){ref=scopEN(base);lab='SCOP de la courbe';}
   var cov=enCover(g[0].t,g[g.length-1].t),h='<div><b>Tes valeurs</b> (moyenne par température) : '+g.map(function(x){return SGN(x.t)+' °C → <b>'+nf2.format(x.cop)+'</b>'+(x.n>1?' ('+x.n+')':'');}).join(' · ')+'</div>'+
-    (!on?'<div id="measOff">⏸️ <b>Désactivées</b> : gardées, mais pas utilisées. Calculs avec la courbe de la machine seule.</div>':
+    (!on?'<div id="measOff">⏸️ <b>Inactif</b> : valeurs gardées, mais pas utilisées. Calculs avec la courbe de la machine seule.</div>':
     (cc?'<div>Correction du scénario appliquée à tes valeurs'+(co?' (−'+nfN.format(co)+' %)':' (0 % actuellement)')+'.</div>':'<div id="measNoCorr">✋ Valeurs mesurées par toi : aucune correction appliquée.</div>')+
     (base.length?'<div>Elles remplacent la courbe de '+SGN(g[0].t)+' à '+SGN(g[g.length-1].t)+' °C ; ailleurs, courbe de base'+(co?' −'+nfN.format(co)+' %':'')+'.</div>':(g.length<2?'<div>⚠️ Sans machine, il faut au moins 2 températures.</div>':'')))+
     '<div style="margin-top:6px">SCOP indicatif avec tes valeurs (avant correction, pour comparer à la fiche) : <b id="measScop">'+nf2.format(ind)+'</b>'+(ref!==null?' · '+lab+' : '+nf2.format(ref):'')+'</div>';
@@ -2298,7 +2317,13 @@ function renderMeasOut(){if(!$('measOut'))return;var P=measParse();P.st.forEach(
 function custTab(t){t=t==='b'?'b':'a';$('custTabA').setAttribute('aria-pressed',String(t==='a'));$('custTabB').setAttribute('aria-pressed',String(t==='b'));
   $('custPaneA').classList.toggle('hidden',t!=='a');$('custPaneB').classList.toggle('hidden',t!=='b');}
 $('custTabA').addEventListener('click',function(){custTab('a');});$('custTabB').addEventListener('click',function(){custTab('b');});
-function measOpen(on){$('measBox').classList.toggle('hidden',!on);$('btnMeas').setAttribute('aria-expanded',String(on));}
+function measOpen(on){$('measBox').classList.toggle('hidden',!on);$('btnMeas').setAttribute('aria-expanded',String(on));$('btnMeas').setAttribute('aria-label',on?'Replier le menu':'Ouvrir le menu');}
+// v35 : le bouton « Mon SCOP personnalisé » est l'interrupteur (état gardé dans #sCustOn, caché) ; ▾ ouvre / replie le menu
+function custSwSync(){var on=$('sCustOn').checked,n=settings.copPts.length+settings.meas.length,b=$('btnCustOn');
+  b.setAttribute('aria-checked',String(on));$('custSt').textContent=on?'Actif':'Inactif';
+  $('custCnt').textContent=(n?n+' valeur'+(n>1?'s':''):'aucune valeur')+(on?'':' · pas utilisées');
+  $('custBody').classList.toggle('cust-dis',!on);return on;}
+$('btnCustOn').addEventListener('click',function(){var c=$('sCustOn');c.checked=!c.checked;c.dispatchEvent(new Event('change',{bubbles:true}));toast(c.checked?'Mon SCOP personnalisé : actif':'Mon SCOP personnalisé : inactif (valeurs gardées)');});
 $('btnMeas').addEventListener('click',function(){measOpen($('measBox').classList.contains('hidden'));});
 $('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.length>=40){toast('40 mesures maximum');return;}measUI.push({t:'',w:'',ti:'',to:'',q:350});renderMeasUI();var r=document.querySelectorAll('#measList .mx-t');if(r.length)r[r.length-1].focus();});
 $('measList').addEventListener('click',function(ev){var b=ev.target.closest('.mx-del');if(!b)return;readMeasUI();measUI.splice(+b.closest('.meas-row').getAttribute('data-i'),1);renderMeasUI();updateCopPreview();scheduleSave(0);});
@@ -2325,7 +2350,7 @@ function fillSettings(){
   copPtsUI=settings.copPts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});
   $('sCorr').value=numStr(settings.copCorr);
   measUI=settings.meas.map(function(m){return {t:numStr(m.t),w:numStr(m.w),ti:numStr(m.ti),to:numStr(m.to),q:m.q};});renderMeasUI();custTab(!settings.copPts.length&&settings.meas.length?'b':'a');
-  renderTGrid();renderMonthUI();syncCurve();renderPtsUI();measOpen(settings.meas.length+settings.copPts.length>0||(settings.copCurve==='scop'&&SIM_MACH[settings.mach]&&SIM_MACH[settings.mach].scop===null));
+  renderTGrid();renderMonthUI();syncCurve();renderPtsUI();measOpen(settings.custOn!==false&&settings.meas.length+settings.copPts.length>0); // v35 : SCOP machine hors du menu ; inactif = menu replié au départ
   $('sTReal').checked=settings.tReal;$('sLat').value=numStr(settings.lat);$('sLon').value=numStr(settings.lon);showTReal();
   $('sPacPrix').value=numStr(settings.pacPrix);$('sPacAides').value=numStr(settings.pacAides);$('sPacEnt').value=numStr(settings.pacEnt);$('sPacKw').value=settings.pacKw?numStr(Math.round(settings.pacKw*1000)):'';renderPacKwLimit();
   $('sPacDate').value=settings.pacDate||'';
@@ -2360,7 +2385,7 @@ function collectSettings(){ // mêmes règles qu'avant (bouton « Enregistrer »
   if(strict&&badPt)return {err:'COP moyen invalide (ex. 7 °C → 3,5)'};
   if(strict&&dup)return {err:'Deux COP moyens ont la même température'};
   if(badPt||dup)pts=settings.copPts.slice();
-  if(strict&&!n.copCurve&&custGroups({copPts:pts,meas:n.meas,custOn:n.custOn}).length<2)return {err:n.custOn?'COP selon la température : choisis une machine, ou mets tes COP à 2 températures au moins':'COP selon la température : choisis une machine, ou coche « Utiliser mes valeurs personnalisées »'};
+  if(strict&&!n.copCurve&&custGroups({copPts:pts,meas:n.meas,custOn:n.custOn}).length<2)return {err:n.custOn?'COP selon la température : choisis une machine, ou mets tes COP à 2 températures au moins':'COP selon la température : choisis une machine, ou active « Mon SCOP personnalisé »'};
   n.copPts=pts.slice(0,8);
   raw=$('sCorr').value.trim().replace('%','');
   if(raw===''){n.copCorr=null;}else{v=parseNum(raw);if(isNaN(v)||v<0||v>=90){if(strict)return {err:'% de correction : entre 0 et 89',el:'sCorr'};v=settings.copCorr;}n.copCorr=v;}
@@ -2730,7 +2755,7 @@ function spSumTxt(){var S=settings,o={},p,n,c;
   else{var cv=S.copCurve;
     p=cv==='scop'&&SIM_MACH[S.mach]?spMachShort(S.mach)+(S.scop>0?' · SCOP '+nf1.format(S.scop):''):cv&&COP_CURVES[cv]?COP_CURVES[cv].name+' · SCOP ≈ '+nf1.format(scopEN(COP_CURVES[cv].pts)):'Mes valeurs perso';
     if(S.copCorr>0)p+=' · −'+nfN.format(S.copCorr)+' %';
-    n=(S.copPts||[]).length+(S.meas||[]).length;if(n&&cv)p+=' · '+n+' valeur'+(n>1?'s':'')+' perso'+(S.custOn===false?' (désactivées)':'');
+    n=(S.copPts||[]).length+(S.meas||[]).length;if(n&&cv)p+=' · '+n+' valeur'+(n>1?'s':'')+' perso'+(S.custOn===false?' (inactif)':'');
     o.secCop=p;}
   // Ancien chauffage
   var cs=(S.comps||[]).filter(function(x){return x.on&&okP(x.prix);});cs.sort(function(a,b){return (b.fav?1:0)-(a.fav?1:0);});
