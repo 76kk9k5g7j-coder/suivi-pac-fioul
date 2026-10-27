@@ -373,6 +373,33 @@ html.ks-open{overflow:hidden}
 .ihelp.ifo>summary{color:var(--muted);font-weight:600}
 .ihelp.ifo[open]>summary{color:var(--accent)}
 .sim-lead{margin-top:0}
+
+.seg.scen3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg.scen3 button{min-width:0;padding-left:4px;padding-right:4px;line-height:1.2}
+.seg.scen3 button small{display:block;font-size:.78em;opacity:.8;font-weight:500}
+/* v31 */
+.tgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:8px}
+.tcell{display:flex;flex-direction:column;align-items:stretch;gap:2px;margin:0;font-size:.78rem;color:var(--muted)}
+.tcell span{text-align:center}
+.tcell input{padding:6px 2px;text-align:center;font-size:16px;min-width:0} /* v32 : 16 px = pas de zoom auto sur iPhone */
+.tcell.man input{border-color:var(--accent);font-weight:600}
+.tcell.man span::after{content:' ✎';color:var(--accent)}
+.meas-head,.meas-row{display:grid;grid-template-columns:1fr 1.2fr 1fr 1fr 1.25fr 36px;gap:4px;align-items:center}
+.meas-head{font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.15}
+.meas-row{margin-top:6px}
+.meas-row input,.meas-row select{min-width:0;padding:7px 2px;font-size:16px;text-align:center} /* v32 : 16 px (iPhone) */
+.meas-row .icon-btn{width:36px;height:36px;padding:0}
+.meas-cop{grid-column:1/-1;font-size:.76rem;color:var(--muted)}
+#measOut{margin-top:10px;font-size:.85rem;line-height:1.45;padding:8px 10px;border-radius:10px;background:var(--card2,rgba(127,127,127,.08))}
+#measOut>div+div{margin-top:3px}
+#measOut.warn{outline:1px solid rgba(230,160,40,.55)}
+.el-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.el-2col>*{min-width:0}
+.tp-avg{font-size:.85rem;line-height:1.5}
+.pe-hist{font-size:.85rem}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;font:inherit;cursor:pointer}
+.meas-h{margin:14px 0 4px;font-size:.92rem}
+
 </style>
 </head>
 <body>
@@ -461,6 +488,8 @@ html.ks-open{overflow:hidden}
     <h2>🗒️ Relevés PAC</h2>
     <ul class="list rlist" id="list"></ul>
     <button class="btn small block hidden more-btn" type="button" id="btnListAll"></button>
+    <div class="pe-hist" id="peHistBox"><label class="chk"><input type="checkbox" id="suPeAll"> <span>Appliquer le prix actuel aux anciens relevés</span></label>
+    <p class="hint" id="peHistTxt"></p></div>
   </section>
   </div>
 
@@ -476,8 +505,8 @@ html.ks-open{overflow:hidden}
   <div id="viewSim" role="tabpanel" aria-labelledby="tabSim" class="hidden">
   <section class="card">
     <h2>🧮 Et si j'avais eu une PAC ?</h2>
-    <p class="hint sim-lead"><b>Simulation indépendante</b> : ni tes relevés, ni tes prix du Suivi.</p>
-    <details class="ihelp ifo"><summary>ⓘ Comment ça marche</summary><p class="hint">Entre une consommation de fioul ou de gaz : le simulateur calcule ce qu'une pompe à chaleur aurait consommé en électricité, et l'économie. <b>Simulation indépendante</b> : elle n'utilise ni tes relevés, ni ta PAC, ni tes prix du Suivi, et ne les modifie pas.</p></details>
+    <p class="hint sim-lead"><b>Simulation indépendante</b> : elle ne modifie ni tes relevés, ni tes Réglages.</p>
+    <details class="ihelp ifo"><summary>ⓘ Comment ça marche</summary><p class="hint">Entre une consommation de fioul ou de gaz : le simulateur calcule ce qu'une pompe à chaleur aurait consommé en électricité, et l'économie. Il n'utilise pas tes relevés. Il part des prix d'électricité de tes ⚙️ Réglages (et de leur COP si « Utiliser aussi ces réglages dans le Simulateur » est coché).</p></details>
     <label>Énergie</label>
     <div class="seg" role="group" aria-label="Énergie simulée">
       <button type="button" id="simFioul" aria-pressed="true">🛢️ Fioul (litres)</button>
@@ -529,64 +558,25 @@ html.ks-open{overflow:hidden}
     <input type="text" id="simCopIn" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="ex. 3,2">
     <details class="ihelp ifo" id="simSrcBox"><summary id="simSrcSum">ⓘ Source du COP</summary><p class="hint" id="simMachHint"></p></details>
     <label>Scénario</label>
-    <div class="seg presets" role="group" aria-label="Scénario de COP" id="simPresets">
-      <button type="button" data-simp="fav" aria-pressed="false">😊 Favorable</button>
-      <button type="button" data-simp="neu" aria-pressed="true">😐 Neutre</button>
-      <button type="button" data-simp="def" aria-pressed="false">🥶 Défavorable</button>
-      <button type="button" data-simp="tdef" aria-pressed="false">🧊 Très défavorable</button>
+    <div class="seg presets scen3" role="group" aria-label="Scénario de COP" id="simPresets">
+      <button type="button" data-simp="neu" aria-pressed="true">😐 Neutre<small>0 %</small></button>
+      <button type="button" data-simp="def" aria-pressed="false">🥶 Défavorable<small>−10 %</small></button>
+      <button type="button" data-simp="tdef" aria-pressed="false">🧊 Très défav.<small>−20 %</small></button>
     </div>
     <p class="hint" id="simCopHint"></p>
     <p class="hint" id="simCopPts"></p>
+    <p class="hint hidden" id="simCopReset"><button type="button" class="linkbtn" id="simCopResetBtn">↩︎ Reprendre le COP des Réglages</button></p>
 
-    <h3 class="sh">⚡ Tarif d'électricité</h3>
-    <div class="seg" role="group" aria-label="Tarif d'électricité" id="simTarSeg">
-      <button type="button" data-tar="base" aria-pressed="true">Base</button>
-      <button type="button" data-tar="hphc" aria-pressed="false">HP / HC</button>
-      <button type="button" data-tar="tempo" aria-pressed="false">Tempo</button>
-    </div>
-    <div id="simTarBase">
-      <label for="simPBase">Prix du kWh (€)</label>
-      <input type="text" id="simPBase" inputmode="decimal" placeholder="saisis ton prix" autocomplete="off">
-    </div>
-    <div id="simTarHphc" class="hidden">
-      <div class="settings-grid sim-2col">
-        <div><label for="simPHP">Heures pleines (€/kWh)</label><input type="text" id="simPHP" inputmode="decimal" placeholder="saisis ton prix" autocomplete="off"></div>
-        <div><label for="simPHC">Heures creuses (€/kWh)</label><input type="text" id="simPHC" inputmode="decimal" placeholder="saisis ton prix" autocomplete="off"></div>
-        <div><label for="simHcFrom">Heures creuses de</label><select id="simHcFrom"></select></div>
-        <div><label for="simHcTo">à</label><select id="simHcTo"></select></div>
-      </div>
-    </div>
-    <div id="simTarTempo" class="hidden">
-      <p class="hint" style="margin-top:8px">Heures creuses Tempo : 22 h → 6 h (fixe). Saisis tes 6 prix (€/kWh).</p>
-      <div class="tempo-grid">
-        <span></span><b>HP</b><b>HC</b>
-        <span>🔵 Bleu</span><input type="text" id="simTbHP" inputmode="decimal" placeholder="prix" aria-label="Bleu heures pleines" autocomplete="off"><input type="text" id="simTbHC" inputmode="decimal" placeholder="prix" aria-label="Bleu heures creuses" autocomplete="off">
-        <span>⚪ Blanc</span><input type="text" id="simTwHP" inputmode="decimal" placeholder="prix" aria-label="Blanc heures pleines" autocomplete="off"><input type="text" id="simTwHC" inputmode="decimal" placeholder="prix" aria-label="Blanc heures creuses" autocomplete="off">
-        <span>🔴 Rouge</span><input type="text" id="simTrHP" inputmode="decimal" placeholder="prix" aria-label="Rouge heures pleines" autocomplete="off"><input type="text" id="simTrHC" inputmode="decimal" placeholder="prix" aria-label="Rouge heures creuses" autocomplete="off">
-      </div>
-      <label>Nombre de jours par an</label>
-      <div class="tempo-days">
-        <div><label for="simTdB">🔵 Bleus</label><input type="text" id="simTdB" inputmode="numeric" autocomplete="off"></div>
-        <div><label for="simTdW">⚪ Blancs</label><input type="text" id="simTdW" inputmode="numeric" autocomplete="off"></div>
-        <div><label for="simTdR">🔴 Rouges</label><input type="text" id="simTdR" inputmode="numeric" autocomplete="off"></div>
-      </div>
-      <details class="ihelp ifo"><summary>ⓘ Combien de jours mettre ?</summary><p class="hint">Répartition standard d'une saison Tempo : 300 bleus, 43 blancs, 22 rouges. Le chauffage consomme surtout en hiver, quand tombent les jours blancs et rouges (rouges : de novembre à mars) : leur poids réel est plus fort que leur nombre de jours. Pour en tenir compte simplement, augmente les blancs et les rouges.</p></details>
-      <label class="chk sim-ecs-chk"><input type="checkbox" id="simRedOn" checked> <span>🔴 Activer les heures pleines des jours rouges</span></label>
-      <p class="hint" id="simRedInfo"></p>
-      <details class="ihelp ifo"><summary>ⓘ Hypothèse jours rouges</summary><p class="hint" id="simRedHyp">Hypothèse : jours rouges en déc.–févr., répartis selon les degrés-jours (jour moyen du mois) ; heures pleines = 16 h sur 24 = 2/3 du chauffage du jour.</p></details>
-    </div>
-    <div id="simPctBox" class="hidden">
-      <label for="simPctHc">Part de la consommation PAC en heures creuses (%)</label>
-      <input type="text" id="simPctHc" inputmode="decimal" autocomplete="off">
-      <details class="ihelp ifo"><summary>ⓘ Quelle part mettre ?</summary><p class="hint" id="simPctHint"></p></details>
-    </div>
-    <div class="preview" id="simTarInfo"></div>
-    <p class="hint" id="simSuiviBox"><button type="button" class="linkbtn" id="simFromSuivi">↩️ Reprendre mon tarif du Suivi</button> (facultatif · copie unique, sans lien ensuite)</p>
+    <h3 class="sh">⚡ Électricité</h3>
+    <div id="simElBlock"></div>
+    <p class="hint" id="simElNote">Prix de départ : ceux de tes ⚙️ Réglages. Tu peux les changer ici sans toucher aux Réglages.</p>
+    <p class="hint hidden" id="simElReset"><button type="button" class="linkbtn" id="simElResetBtn">↩︎ Remettre les prix des Réglages</button></p>
+    <p class="hint" id="simSuiviBox"><button type="button" class="linkbtn" id="simFromSuivi">↩️ Reprendre mon prix fioul / gaz des Réglages</button> (facultatif · copie unique)</p>
 
     <div id="simOut"></div>
     <details class="ihelp hidden" id="simMonthsBox"><summary>📅 Détail mois par mois</summary><div id="simMonths"></div></details>
     <details class="ihelp ifo" id="simFormulaBox"><summary>🧮 Calcul détaillé</summary><div class="formula" id="simFormula"></div></details>
-    <details class="ihelp ifo"><summary>⚠️ Hypothèses et simplifications</summary><p class="note">⚠️ Simplifications : la PAC couvre 100 % du chauffage. Le chauffage est réparti sur les mois de la période selon les degrés-jours normaux (climat de ta position GPS si elle est renseignée, sinon Metz) ; il n'y a pas de chauffage de mai à août (la saison de chauffe va de septembre à avril, au prorata des degrés-jours : mars et avril comptent moins qu'en plein hiver) ; pour les machines « air », le COP de chaque mois suit une courbe type selon la température moyenne du mois (climat de ta position GPS, sinon normales de Metz), réglée pour qu'en moyenne sur une année il soit égal au SCOP choisi. Favorable / Défavorable / Très défavorable = SCOP ×1,2 / ×0,9 / ×0,8. Si tu indiques la puissance électrique max de la PAC, la consommation de chaque mois est plafonnée à puissance × 24 h × jours du mois (PAC à fond en continu) ; la chaleur manquante est chauffée par la chaudière, et son coût est déduit de l'économie. Si l'eau chaude est cochée, sa consommation de l'ancienne chaudière est répartie à égalité sur les 12 mois (au prorata des jours) et produite par la PAC avec un COP de 80 % du COP saisonnier (eau à environ 55 °C) ; cette part est comptée dans l'économie. Les abonnements et le prix d'achat de la PAC ne sont pas comptés.</p></details>
+    <details class="ihelp ifo"><summary>⚠️ Hypothèses et simplifications</summary><p class="note">⚠️ Simplifications : la PAC couvre 100 % du chauffage. Le chauffage est réparti sur les mois de la période selon les degrés-jours normaux (climat de ta position GPS si elle est renseignée, sinon Metz) ; il n'y a pas de chauffage de mai à août (la saison de chauffe va de septembre à avril, au prorata des degrés-jours : mars et avril comptent moins qu'en plein hiver) ; pour les machines « air », le COP de chaque mois suit une courbe type selon la température moyenne du mois (climat de ta position GPS, sinon normales de Metz), réglée pour que son SCOP (calcul EN 14825) soit égal au SCOP choisi. Neutre / Défavorable / Très défavorable = SCOP ×1 / ×0,9 / ×0,8. Électricité Tempo « Moyenne EDF automatique » : chaque mois prend le prix moyen de sa saison (hiver du 15 septembre au 15 avril, été le reste de l'année). Si tu indiques la puissance électrique max de la PAC, la consommation de chaque mois est plafonnée à puissance × 24 h × jours du mois (PAC à fond en continu) ; la chaleur manquante est chauffée par la chaudière, et son coût est déduit de l'économie. Si l'eau chaude est cochée, sa consommation de l'ancienne chaudière est répartie à égalité sur les 12 mois (au prorata des jours) et produite par la PAC avec un COP de 80 % du COP saisonnier (eau à environ 55 °C) ; cette part est comptée dans l'économie. Les abonnements et le prix d'achat de la PAC ne sont pas comptés.</p></details>
   </section>
   </div>
 
@@ -668,8 +658,41 @@ html.ks-open{overflow:hidden}
   </div>
   <div class="sp-body">
 
+  <details class="card sp-sec" id="secGen">
+    <summary><h2>🌍 Général</h2></summary>
+    <h3 class="sh">📍 Lieu de la météo</h3>
+    <div class="preview" id="climBox"></div>
+    <p class="hint">Pour changer de lieu, utilise ta position ou tape une latitude et une longitude : la météo du lieu est récupérée tout de suite (point de données le plus proche) et sert au Simulateur et aux prévisions du Suivi.</p>
+    <div class="settings-grid">
+      <div><label for="sLat">Latitude</label><input type="text" inputmode="decimal" id="sLat" placeholder="ex. 49,12"></div>
+      <div><label for="sLon">Longitude</label><input type="text" inputmode="decimal" id="sLon" placeholder="ex. 6,18"></div>
+    </div>
+    <div class="actions">
+      <button class="btn small" type="button" id="btnGeo">📍 Ma position</button>
+      <button class="btn small" type="button" id="btnMetzDef">↩︎ Remettre Metz par défaut</button>
+    </div>
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="sTReal"> <span>Températures réelles pour le COP (via Internet)</span></label>
+    <div id="boxTReal" class="hidden">
+      <p class="hint">En mode « COP selon la température », chaque relevé prend la moyenne des températures réelles de sa période (le « COP forcé » par mois ne s'applique alors pas). Pour les jours pas encore disponibles, les températures moyennes du mois sont utilisées.</p>
+    </div>
+    <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Ta position sert à récupérer sur open-meteo.com (gratuit, sans compte) le climat de ton lieu (moyenne des 10 dernières années, pour le Simulateur et les prévisions), puis la température réelle de chaque jour pour les « Températures réelles » du COP et la courbe 🌡️ Température des graphiques. Les températures réelles se mettent à jour toutes seules. Les températures sont gardées sur cet appareil. Seules la latitude et la longitude sont envoyées à Open-Meteo : tes relevés restent sur l'appareil. Sans position, ou si Internet ne répond pas, les températures normales de Metz sont utilisées.</p></details>
+    <p class="hint" id="tRealStatus"></p>
+
+    <h3 class="sh">🌡️ Températures moyennes par mois</h3>
+    <details class="ihelp tg-box" id="tGridBox"><summary id="tGridSum">ⓘ Températures du lieu</summary>
+      <div class="tgrid" id="tGrid"></div>
+      <p class="hint" id="tGridHint">Remplies avec la météo du lieu. Tu peux les modifier : un mois modifié est marqué en couleur (case vide = valeur du lieu).</p>
+      <div class="actions" style="margin-top:8px"><button class="btn small" type="button" id="btnTReset">↺ Remettre les températures du lieu</button></div>
+    </details>
+
+    <h3 class="sh">⚡ Électricité</h3>
+    <div id="sElBlock"></div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="sPeAll"> <span>Appliquer le prix actuel aux anciens relevés</span></label>
+    <details class="ihelp ifo"><summary>ⓘ Prix des anciens relevés</summary><p class="hint" id="elHistTxt"></p></details>
+  </details>
+
   <details class="card sp-sec" id="secPac">
-    <summary><h2>🔌 PAC &amp; électricité</h2></summary>
+    <summary><h2>🔌 PAC</h2></summary>
     <h3 class="sh">💶 Prix de la PAC (rentabilité)</h3>
     <div class="settings-grid">
       <div><label for="sPacPrix">Prix PAC, pose comprise (€)</label><input type="text" inputmode="decimal" id="sPacPrix" placeholder="ex. 1500"></div>
@@ -682,29 +705,10 @@ html.ks-open{overflow:hidden}
     <input type="text" inputmode="decimal" id="sPacKw" placeholder="ex. 900" autocomplete="off">
     <p class="hint" id="pacKwLimit"></p>
     <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Sert seulement à la prévision de rentabilité : par grand froid, la PAC ne peut pas fournir plus que sa puissance électrique max × 24 h × son COP du jour ; au-delà, c'est un autre chauffage (bois, fioul…) qui prend le relais, sans économie en plus. Vide = pas de limite. Midea PortaSplit : 800 W consommés en chauffage nominal (fiche technique Midea) ; la valeur max est indiquée sur l'étiquette de l'appareil (« Heating power input »).</p></details>
+  </details>
 
-    <h3 class="sh">Électricité</h3>
-    <div class="seg" role="group" aria-label="Option tarifaire">
-      <button type="button" id="elecBase" aria-pressed="true">Base (prix unique)</button>
-      <button type="button" id="elecHphc" aria-pressed="false">Heures pleines / creuses</button>
-    </div>
-    <div id="boxBase">
-      <label for="sElec">Prix électricité (€/kWh)</label><input type="text" inputmode="decimal" id="sElec">
-      <p class="hint">À renseigner : le prix du kWh de ta facture ou de ton contrat (aucun prix par défaut). L'abonnement n'est pas compté.</p>
-    </div>
-    <div id="boxHphc" class="hidden">
-      <p class="hcinfo">🌙 Heures creuses : 22 h – 6 h</p>
-      <div class="settings-grid">
-        <div><label for="sHP">Prix heures pleines (€/kWh)</label><input type="text" inputmode="decimal" id="sHP" placeholder="ex. 0,2142"></div>
-        <div><label for="sHC">Prix heures creuses (€/kWh)</label><input type="text" inputmode="decimal" id="sHC" placeholder="ex. 0,1589"></div>
-      </div>
-      <label for="sPct">% de la conso PAC en heures creuses</label>
-      <div style="display:flex;gap:8px"><input type="text" inputmode="decimal" id="sPct" placeholder="ex. 33,3" style="flex:1"><button class="btn small" type="button" id="btnPct">Utiliser 33,3 %</button></div>
-      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Suggestion : 22 h – 6 h = 8 h sur 24 = 33,3 % si la PAC tourne de façon régulière toute la journée. Ajuste si elle tourne surtout la nuit ou le jour. Pour Tempo, mets tes prix moyens HP/HC.</p></details>
-      <p class="hint" id="elecAvg"></p>
-    </div>
-
-    <h3 class="sh">COP de la PAC</h3>
+  <details class="card sp-sec" id="secCop">
+    <summary><h2>🌀 COP de la PAC</h2></summary>
     <div id="copSection">
     <div class="seg" role="group" aria-label="Mode de COP">
       <button type="button" id="copFixe" aria-pressed="true">COP fixe</button>
@@ -716,30 +720,49 @@ html.ks-open{overflow:hidden}
     </div>
     <div id="boxCopTemp" class="hidden">
       <div id="boxMyCurve">
-      <p class="hint">Entre de 2 à 6 points « température extérieure → COP » (fiche de ta PAC).</p>
-      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Le COP d'une PAC air/air baisse quand il fait froid dehors. Entre deux points, l'appli calcule une valeur intermédiaire (ligne droite). Plus froid que ton point le plus froid ou plus chaud que ton point le plus chaud : elle garde la valeur du point le plus proche. Jamais moins de 1. ⚠️ COP peu fiable sous 0 °C (dégivrage).</p></details>
-      <table class="ptable ctable" id="copPtsTbl"></table>
-      <div class="actions">
-        <button class="btn small" type="button" id="btnAddPt">+ Ajouter un point</button>
-        <button class="btn small" type="button" id="btnMidea">Remplir avec Midea PortaSplit (valeurs réalistes)</button>
+      <label for="sMach">Type de machine</label>
+      <select id="sMach"></select>
+      <p class="hint" id="sMachHint"></p>
+      <p class="hint cop-at" id="sCopAt"></p>
+      <label>Scénario</label>
+      <div class="seg presets scen3" role="group" aria-label="Scénario de COP" id="sScen">
+        <button type="button" data-scen="0" aria-pressed="false">😐 Neutre<small>0 %</small></button>
+        <button type="button" data-scen="10" aria-pressed="false">🥶 Défavorable<small>−10 %</small></button>
+        <button type="button" data-scen="20" aria-pressed="false">🧊 Très défav.<small>−20 %</small></button>
       </div>
-      <div class="seg cv-seg" style="margin-top:10px" role="group" aria-label="Courbes de COP toutes faites (une seule active)" id="copCurveSeg">
-        <button type="button" id="cvReddit" data-cv="reddit" aria-pressed="false"><span class="cv-n">Midea PortaSplit Reddit</span><span class="cv-s">SCOP ≈ 4,5</span></button>
-        <button type="button" id="cvR32" data-cv="r32" aria-pressed="false"><span class="cv-n">Moyenne R32 officielle</span><span class="cv-s">SCOP ≈ 4,2</span></button>
-        <button type="button" id="cvPorta" data-cv="porta" aria-pressed="false"><span class="cv-n">PortaSplit estimée</span><span class="cv-s">SCOP ≈ 3,6</span></button>
-        <button type="button" id="cvMidea" data-cv="midea" aria-pressed="false"><span class="cv-n">Midea réaliste (ancienne)</span><span class="cv-s">SCOP ≈ 3,9</span></button>
+      <label for="sCorr">% de correction (terrain)</label>
+      <input type="text" inputmode="decimal" id="sCorr" placeholder="ex. 10">
+      <details class="ihelp ifo"><summary id="sCorrSum">ⓘ Pourquoi −10 % est conseillé</summary><p class="hint">Le SCOP des fiches est mesuré en laboratoire (norme EN 14825) : machine neuve, pose idéale. Chez toi, le dégivrage, les arrêts-redémarrages quand il fait doux, la pose (gaine, calfeutrage) et la température de la pièce le font baisser. Sur le terrain, l'ADEME (étude publiée en 2025, 100 maisons) mesure un SCOP réel moyen de 2,9 pour des PAC air-eau. −10 % (Défavorable) : repère prudent pour une pose correcte ; −20 % : fenêtre mal calfeutrée ou pièce à plus de 22 °C ; 0 % : valeurs du fabricant. Tu peux taper n'importe quelle valeur. Elle s'applique à la courbe de la machine, et à tes valeurs perso seulement si tu coches la case dans « Mon SCOP personnalisé ».</p></details>
+      <div class="actions"><button class="btn small" type="button" id="btnMeas" aria-expanded="false">🧪 Mon SCOP personnalisé</button></div>
+      <div id="measBox" class="hidden meas-box">
+        <label for="sScop">SCOP de ma machine <span class="opt">(fiche produit)</span></label>
+        <input type="text" inputmode="decimal" id="sScop" placeholder="ex. 4" autocomplete="off">
+        <p class="hint" style="margin-top:4px">Change la courbe de base : la forme type d'une PAC air est calée sur ce SCOP (norme EN 14825).</p>
+        <label class="chk" style="margin-top:10px"><input type="checkbox" id="sCustCorr"> <span>Appliquer la correction (scénario) aux valeurs personnalisées</span></label>
+        <h4 class="meas-h">a) Mes COP moyens par température</h4>
+        <p class="hint" style="margin-top:0">COP déjà calculés (moyenne de tes relevés), par ex. à −7, +2, +7 et +12 °C.</p>
+        <table class="ptable ctable" id="copPtsTbl"></table>
+        <div class="actions"><button class="btn small" type="button" id="btnAddPt">+ Ajouter un point de température</button></div>
+        <h4 class="meas-h">b) Mes mesures brutes</h4>
+        <p class="hint" style="margin-top:0">Relevés stabilisés : COP = débit × 0,335 × (sortie − entrée) ÷ watts. Débit : vitesse mini 350, 50 % 390, 100 % 420 m³/h.</p>
+        <div class="meas-head"><span>Dehors °C</span><span>Watts</span><span>Entrée °C</span><span>Sortie °C</span><span>Vitesse</span><span></span></div>
+        <div id="measList"></div>
+        <div class="actions" style="margin-top:8px"><button class="btn small" type="button" id="btnMeasAdd">+ Ajouter une mesure</button></div>
+        <div class="preview" id="measOut"></div>
+        <details class="ihelp ifo"><summary>ⓘ Poids de chaque température dans le SCOP (EN 14825)</summary>
+          <table class="sim-mt"><tr><th>Températures dehors</th><th>Heures / saison</th><th>Part du besoin de chaleur</th></tr>
+          <tr><td>−10 à −3 °C</td><td>348 h</td><td>14 %</td></tr><tr><td>−2 à +4 °C</td><td>1 891 h</td><td><b>51 %</b></td></tr><tr><td>+5 à +9 °C</td><td>1 642 h</td><td>27 %</td></tr><tr><td>+10 à +15 °C</td><td>1 029 h</td><td>8 %</td></tr></table>
+          <p class="hint">Climat moyen de la norme (4 910 h de chauffage par saison). Le besoin de chaleur suit une droite : 100 % à −10 °C, 0 % à +16 °C. L'essentiel du SCOP se joue entre 0 et +5 °C ; ton COP à +12 °C pèse très peu. SCOP indicatif : tes valeurs remplacent la courbe de base entre ta température la plus froide et la plus chaude (ligne droite entre deux points, constant au-dessus du plus chaud, pente gardée sous le plus froid), sans appoint ni pertes de cycles. Plusieurs valeurs à la même température : moyenne.</p></details>
+        <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Entre deux températures, l'appli trace une ligne droite ; au-delà du point le plus froid ou le plus chaud : valeur du point le plus proche (jamais moins de 1). Un « COP forcé » sur un mois (tableau ci-dessous) reste prioritaire (sauf avec « Températures réelles »). Sans machine choisie, tes valeurs seules forment la courbe (2 températures au moins).</p></details>
       </div>
-      <p class="hint" id="cvState"></p>
-      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Une seule courbe active à la fois (aucune par défaut). Le bouton met la courbe dans le tableau ; ton « % de correction » s'applique par-dessus (COP × (1 − correction)). Touche à nouveau le bouton actif, ou modifie un point, pour la désactiver. Un « COP forcé » sur un mois reste prioritaire. Le Simulateur garde sa propre courbe.</p><p class="hint">• <b>Midea PortaSplit Reddit</b> — SCOP ≈ 4,5. Valeurs <b>non officielles</b> reprises d'un tableau partagé sur Reddit (COP de laboratoire à charge partielle) : <b>plutôt optimistes</b>.</p><p class="hint">• <b>Moyenne R32 officielle</b> — SCOP ≈ 4,2. Moyenne des COP <b>publiés par les fabricants</b> pour 5 splits R32 (Samsung AR12TXFC et AR09TX, Mitsubishi HR25VF, Midea MOB02-18HFN8, Daikin FTXF/RXF25E) : chiffres officiels mais mesurés en laboratoire. Aucun n'en publie à −10 °C : 2,5 y est une estimation (0,1 de moins par degré sous −7 °C).</p><p class="hint">• <b>PortaSplit estimée</b> — SCOP ≈ 3,6. Estimation issue d'une <b>réponse d'IA</b>, <b>non vérifiée</b> par des mesures indépendantes. À rapprocher d'une vraie mesure chez toi (idéalement par 4 à 10 °C dehors).</p><p class="hint">• <b>Midea réaliste (ancienne)</b> — SCOP ≈ 3,9. Ta courbe d'avant : les mêmes points que le bouton « Remplir avec Midea PortaSplit (valeurs réalistes) » (valeurs Midea baissées pour tenir compte des arrêts-redémarrages quand il fait doux). Ce bouton-ci ne change pas ton % de correction.</p><p class="hint">SCOP = calcul théorique simplifié sur le climat moyen de la norme EN 14825, avant ta correction : c'est un repère pour comparer les courbes, pas une mesure.</p></details>
-      <label for="sCorr">% de correction (terrain) <span class="opt">(facultatif)</span></label>
-      <input type="text" inputmode="decimal" id="sCorr" placeholder="ex. 15">
-      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Les COP des fiches sont mesurés en laboratoire. En vrai, ils sont souvent 10 à 20 % plus bas (dégivrage, gaine, pièce…). Avec 15 %, tous les COP calculés sont multipliés par 0,85. Vide = 0 %.</p></details>
       </div>
-      <h4 class="sh4">Température extérieure moyenne par mois</h4>
-      <div class="actions" style="margin-top:6px"><button class="btn small" type="button" id="btnMetz">Normales Metz (Météo-France 1991-2020)</button></div>
-      <table class="ptable ctable" id="copMonthTbl"></table>
-      <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">« COP calculé » vient de la température du mois et de la courbe choisie (ou de tes points et du % de correction). Pour imposer un COP sur un mois, remplis « COP forcé » (vide = calculé). Pour un relevé qui couvre plusieurs mois, le COP est la moyenne des mois, pondérée par le nombre de jours dans chaque mois. Pour utiliser les températures réelles : ⚙️ Général → Météo.</p></details>
+      <details class="ihelp ifo" id="copMonthBox"><summary>📅 COP par mois (COP forcé)</summary>
+        <table class="ptable ctable" id="copMonthTbl"></table>
+        <p class="hint">« COP calculé » vient de la température du mois (⚙️ Général) et de la courbe (avec tes mesures si tu en as). Pour imposer un COP sur un mois, remplis « COP forcé » (vide = calculé). Un relevé qui couvre plusieurs mois prend la moyenne des mois, pondérée par le nombre de jours.</p>
+      </details>
     </div>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" id="sSimUse" checked> <span>Utiliser aussi ces réglages dans le Simulateur</span></label>
+    <p class="hint">Coché : le Simulateur part de ce COP (machine, scénario, ton SCOP personnalisé), modifiable là-bas sans toucher aux Réglages. Décoché : il garde ses propres réglages.</p>
     </div>
   </details>
 
@@ -795,25 +818,8 @@ html.ks-open{overflow:hidden}
     <p class="hint">Climat : les litres entre deux relevés espacés sont répartis selon le froid habituel de chaque mois. Uniforme : à parts égales sur chaque jour.</p>
   </details>
 
-  <details class="card sp-sec" id="secGen">
-    <summary><h2>🌍 Général</h2></summary>
-    <h3 class="sh">📍 Météo</h3>
-    <div class="settings-grid">
-      <div><label for="sLat">Latitude</label><input type="text" inputmode="decimal" id="sLat" placeholder="ex. 49,12"></div>
-      <div><label for="sLon">Longitude</label><input type="text" inputmode="decimal" id="sLon" placeholder="ex. 6,18"></div>
-    </div>
-    <div class="actions">
-      <button class="btn small" type="button" id="btnGeo">📍 Ma position</button>
-      <button class="btn small" type="button" id="btnTFetch">🔄 Mettre à jour les températures</button>
-    </div>
-    <label class="chk" style="margin-top:10px"><input type="checkbox" id="sTReal"> <span>Températures réelles pour le COP (via Internet)</span></label>
-    <div id="boxTReal" class="hidden">
-      <p class="hint">En mode « COP selon la température », chaque relevé prend la moyenne des températures réelles de sa période (le « COP forcé » par mois ne s'applique alors pas). Pour les jours pas encore disponibles, les températures moyennes du mois sont utilisées.</p>
-    </div>
-    <details class="ihelp"><summary>ℹ️ Aide</summary><p class="hint">Ta position sert à récupérer la température moyenne réelle de chaque jour sur open-meteo.com (gratuit, sans compte) : pour les « Températures réelles » du COP et pour la courbe 🌡️ Température des graphiques. Les températures sont gardées sur cet appareil. Seules la latitude et la longitude sont envoyées à Open-Meteo : tes relevés restent sur l'appareil. Sans position, ou si Internet ne répond pas, les températures normales de Metz sont utilisées.</p></details>
-    <p class="hint" id="tRealStatus"></p>
-    <details class="ihelp ifo"><summary id="climStatusSum">ⓘ Source de la météo</summary><p class="hint" id="climStatus"></p></details>
-
+  <details class="card sp-sec" id="secSave">
+    <summary><h2>💾 Sauvegarde &amp; calculs</h2></summary>
     <h3 class="sh">💾 Sauvegarde</h3>
     <p class="hint" style="margin-top:0">Tes données (relevés PAC, cuve et réglages) restent <b>uniquement sur cet appareil</b>. Exporte un fichier pour passer du téléphone au PC ou ne rien perdre.</p>
     <div class="actions">
@@ -823,7 +829,7 @@ html.ks-open{overflow:hidden}
     </div>
 
     <h3 class="sh">↺ Valeurs par défaut</h3>
-    <p class="hint" style="margin-top:0">Remet COP fixe 3, PCI 10, rendements 85 % / 90 % et électricité Base avec un prix vide, à ressaisir (prix fioul / gaz, cuve et relevés conservés).</p>
+    <p class="hint" style="margin-top:0">Remet COP fixe 3, PCI 10, rendements 85 % / 90 % et électricité Base au tarif EDF (0,2001 €/kWh) (prix fioul / gaz, cuve et relevés conservés).</p>
     <div class="actions"><button class="btn small" type="button" id="btnResetSettings">Valeurs par défaut</button></div>
 
     <details class="ihelp info" id="infoCalc">
@@ -835,7 +841,7 @@ html.ks-open{overflow:hidden}
         kWh de gaz évités = chaleur ÷ rendement gaz<br>
         Fioul évité (€) = litres × prix fioul (€/L)<br>
         Gaz évité (€) = kWh gaz × prix gaz (€/kWh)<br>
-        Économie nette = fioul ou gaz évité − kWh élec × prix élec<br>
+        Économie nette = fioul ou gaz évité − kWh élec × prix élec (chaque relevé garde le prix d'électricité en vigueur à sa date, sauf si « Appliquer le prix actuel aux anciens relevés » est coché)<br>
         Écart = différence entre deux comparaisons
         <div id="formulaEx" style="margin-top:6px"></div>
       </div>
@@ -858,10 +864,10 @@ html.ks-open{overflow:hidden}
         Consommé entre deux relevés = niveau précédent + livraisons entre les deux − niveau actuel
       </div>
       <p class="note">COP 3, PCI 10 kWh/L, rendement fioul 85 % et gaz 90 % : valeurs moyennes, à ajuster selon ta PAC et ta chaudière. Les abonnements (électricité, gaz) ne sont pas comptés.</p>
-      <p class="note">ℹ️ Pour info seulement (non pré-rempli) : électricité 0,2001 €/kWh TTC = Tarif Bleu EDF option Base 3 et 6 kVA, en vigueur depuis le 01/08/2026 (0,1985 € de 9 à 15 kVA). Heures creuses au 01/08/2026 : HP 0,2142 €, HC 0,1589 € TTC/kWh. Source : <a href="https://particulier.edf.fr/fr/accueil/electricite-gaz/tarif-bleu.html" target="_blank" rel="noopener">EDF, Tarif Bleu</a> (vérifié le 24/10/2026).</p>
+      <p class="note">ℹ️ Électricité pré-remplie (modifiable) : Tarif Bleu EDF TTC en vigueur depuis le 01/08/2026. Base 0,2001 €/kWh (3 et 6 kVA ; 0,1985 € à partir de 9 kVA, option fermée aux nouveaux clients à partir de 9 kVA). Heures creuses : HP 0,2142 €, HC 0,1589 €. Tempo : bleu HC 0,1356 / HP 0,1654 ; blanc HC 0,1536 / HP 0,1921 ; rouge HC 0,1615 / HP 0,7295 €. Source : <a href="https://particulier.edf.fr/fr/accueil/electricite-gaz/tarif-bleu.html" target="_blank" rel="noopener">EDF, grille de prix du Tarif Bleu</a> (1er août 2026). Jours Tempo moyens des 5 dernières saisons (RTE) : du 15 septembre au 15 avril 152,4 bleus, 38,8 blancs, 22 rouges ; du 16 avril au 14 septembre 147,8 bleus, 4,2 blancs, 0 rouge.</p>
       <p class="note">ℹ️ Pour info seulement (non pré-rempli) : prix moyen national du fioul 1,9308 €/L TTC au 16/10/2026 (ministère de la Transition écologique, livraison 2 000 à 4 999 L, publié le 22/10/2026, via <a href="https://www.comparonslenergie.com/chauffage/fioul/" target="_blank" rel="noopener">comparonslenergie.com</a>).</p>
       <p class="note">ℹ️ Pour info seulement (non pré-rempli) : prix repère CRE du gaz pour un logement chauffé au gaz, octobre 2026, zone GRDF : 0,14557 €/kWh TTC en moyenne (0,13594 € à 0,16436 € selon la commune). Source : <a href="https://www.cre.fr/actualites/toute-lactualite/le-prix-repere-de-vente-de-gaz-augmente-de-63-ttc-au-1er-octobre-2026.html" target="_blank" rel="noopener">CRE</a> (vérifié le 24/10/2026). L'abonnement gaz n'est pas compté, comme pour l'électricité.</p>
-      <p class="note">ℹ️ Midea PortaSplit, valeurs réalistes : −10 °C : 2,5 · −7 °C : 2,8 · +2 °C : 3,9 · +7 °C : 4,5 · +12 °C : 5,0, avec 10 % de correction. Les valeurs de Midea (mesurées en laboratoire, à charge partielle, norme EN 14825) sont plus hautes : 2,70 · 3,18 · 4,35 · 5,57 · 6,78. Elles sont baissées ici surtout quand il fait doux, car cette PAC ne peut pas descendre sous environ 300 W : quand il faut peu de chaleur, elle s'arrête et redémarre, ce qui fait perdre du rendement. Elles ont aussi été comparées aux splits fixes certifiés par Eurovent et à des mesures faites chez des particuliers (COP sur la saison d'environ 2,4 à 3). Les 10 % de correction couvrent les pertes autour de la fenêtre et l'usage réel. Mets plutôt 15 % si la fenêtre est mal calfeutrée ou si la pièce est chauffée à plus de 22 °C. Sources : <a href="https://www.midea.es/wp-content/uploads/2024/05/ErP_MMCS-12HRN8-QRD0.pdf" target="_blank" rel="noopener">fiche ErP Midea</a>, <a href="https://eprel.ec.europa.eu/qr/1917520" target="_blank" rel="noopener">fiche énergie EPREL</a>, <a href="https://www.eurovent-certification.com" target="_blank" rel="noopener">catalogue Eurovent</a>, <a href="https://www.buildingscience.com/sites/default/files/migrate/pdf/BA-1407_Long-Term_Monitoring_Mini-Splits_Northeast_v2.pdf" target="_blank" rel="noopener">étude BuildingScience (mesures sur plusieurs années)</a>.</p>
+      <p class="note">ℹ️ Courbe « Midea réaliste (ancienne) » : −10 °C : 2,5 · −7 °C : 2,8 · +2 °C : 3,9 · +7 °C : 4,5 · +12 °C : 5,0. Les valeurs partagées sur Reddit (non officielles, laboratoire, charge partielle) sont plus hautes : 2,70 · 3,18 · 4,35 · 5,57 · 6,78. Elles sont baissées ici surtout quand il fait doux, car cette PAC ne peut pas descendre sous environ 300 W : quand il faut peu de chaleur, elle s'arrête et redémarre, ce qui fait perdre du rendement. Elles ont aussi été comparées aux splits fixes certifiés par Eurovent et à des mesures faites chez des particuliers (COP sur la saison d'environ 2,4 à 3). Les 10 % de correction couvrent les pertes autour de la fenêtre et l'usage réel. Mets plutôt −20 % (Très défavorable) si la fenêtre est mal calfeutrée ou si la pièce est chauffée à plus de 22 °C. Sources : <a href="https://www.midea.es/wp-content/uploads/2024/05/ErP_MMCS-12HRN8-QRD0.pdf" target="_blank" rel="noopener">fiche ErP Midea</a>, <a href="https://eprel.ec.europa.eu/qr/1917520" target="_blank" rel="noopener">fiche énergie EPREL</a>, <a href="https://www.eurovent-certification.com" target="_blank" rel="noopener">catalogue Eurovent</a>, <a href="https://www.buildingscience.com/sites/default/files/migrate/pdf/BA-1407_Long-Term_Monitoring_Mini-Splits_Northeast_v2.pdf" target="_blank" rel="noopener">étude BuildingScience (mesures sur plusieurs années)</a>.</p>
       <p class="note">ℹ️ Températures normales : Metz-Frescaty, Météo-France 1991-2020. Températures réelles : <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>.</p>
     </details>
   </details>
@@ -874,11 +880,18 @@ html.ks-open{overflow:hidden}
 'use strict';
 var KEY_DATA='pacFioul.entries.v1', KEY_SET='pacFioul.settings.v1', KEY_WELCOME='pacFioul.welcomeDone';
 // Comparaisons (fioul / gaz) : prix volontairement vides, c'est l'utilisateur qui les saisit.
+// v31 : Tarif Bleu EDF TTC en vigueur depuis le 01/08/2026 (seuls prix pré-remplis de l'appli) — EDF, Grille_prix_Tarif_Bleu.pdf
+var EDF={base:0.2001,hp:0.2142,hc:0.1589,t:{bHC:0.1356,bHP:0.1654,wHC:0.1536,wHP:0.1921,rHC:0.1615,rHP:0.7295}};
+var T6=['bHP','bHC','wHP','wHC','rHP','rHC'];
+// jours Tempo moyens (5 dernières saisons, RTE) : hiver Tempo = 15 sept. → 15 avr., été = 16 avr. → 14 sept.
+var TEMPO_DAYS={w:{b:152.4,w:38.8,r:22},s:{b:147.8,w:4.2,r:0}};
+var MACH_KEYS=['aeau','aeauPl','geo','aair','midea','mine','perso'];
+var METZ_BASE=[2.7,3.6,7,10.5,14.5,17.9,20.1,19.7,15.7,11.3,6.5,3.5];
 var DEFAULTS={cop:3, pci:10, rend:85, rendGaz:90, ecsOn:false, ecsPers:null, ecsKwh:800,
   comps:[{id:'f1',type:'fioul',label:'',prix:null,on:true}],
-  elecMode:'base', prixElec:null, prixHP:null, prixHC:null, pctHC:null,
+  elecMode:'base', prixElec:EDF.base, prixHP:EDF.hp, prixHC:EDF.hc, pctHC:null, tempoMode:'auto', tempo:Object.assign({},EDF.t), tdB:300, tdW:43, tdR:22, redOn:false, peApplyAll:false, mach:'', scop:null, meas:[],
   copMode:'fixe', copPts:[], copCorr:null, copCurve:null, tMonths:[null,null,null,null,null,null,null,null,null,null,null,null], copOver:[null,null,null,null,null,null,null,null,null,null,null,null], tReal:false, lat:null, lon:null, pacPrix:null, pacAides:null, pacDate:null, pacEnt:null};
-var MAX_COMPS=8;
+var MAX_COMPS=8, MEAS_Q_OK=[350,390,420];
 var OLD_DEFAULT_FIOUL=1.9308, HC_SUGGEST=33.3;
 
 var $=function(id){return document.getElementById(id);};
@@ -894,7 +907,18 @@ function normalizeSettings(raw){
   ['prixHP','prixHC'].forEach(function(k){s[k]=posNum(raw[k]);});
   var p=Number(raw.pctHC); s.pctHC=(raw.pctHC!==null&&raw.pctHC!==''&&isFinite(p)&&p>=0&&p<=100)?p:null;
   if(raw.hc8!==true&&s.pctHC===37.5)s.pctHC=33.3; s.hc8=true; // v20 : heures creuses 22 h – 6 h = 8 h (et non 9 h)
-  s.elecMode=raw.elecMode==='hphc'?'hphc':'base';
+  s.elecMode=['hphc','tempo'].indexOf(raw.elecMode)>=0?raw.elecMode:'base';
+  // v31 : Tempo (Moyenne EDF automatique ou Personnalisé), historique des prix, machine + SCOP, mesures personnelles
+  s.tempoMode=raw.tempoMode==='perso'?'perso':'auto';s.tempo={};var rt=(raw.tempo&&typeof raw.tempo==='object')?raw.tempo:{};
+  T6.forEach(function(k){var v=posNum(rt[k]);s.tempo[k]=(v!==null&&v<10)?v:null;});
+  [['tdB',300],['tdW',43],['tdR',22]].forEach(function(x){var v=Number(raw[x[0]]);s[x[0]]=(raw[x[0]]!==null&&raw[x[0]]!==undefined&&isFinite(v)&&v>=0&&v<=366)?v:x[1];});
+  s.redOn=raw.redOn===true;s.peApplyAll=raw.peApplyAll===true;s.simUseSet=raw.simUseSet!==false;
+  var fresh31=raw.v31!==true;
+  if(fresh31){ // une seule fois : prix EDF dans les cases vides (y compris si le prix avait été effacé avant la v31)
+    if(s.prixElec===null)s.prixElec=EDF.base;if(s.prixHP===null)s.prixHP=EDF.hp;if(s.prixHC===null)s.prixHC=EDF.hc;
+    T6.forEach(function(k){if(s.tempo[k]===null)s.tempo[k]=EDF.t[k];});
+    if(s.elecMode==='hphc'&&s.pctHC===null)s.pctHC=HC_SUGGEST;}
+  s.v31=true;
   if(s.rend>100) s.rend=DEFAULTS.rend;
   if(s.rendGaz>100) s.rendGaz=DEFAULTS.rendGaz;
   var comps=null;
@@ -919,11 +943,21 @@ function normalizeSettings(raw){
   // COP selon la température (v5)
   function finOrNull(v,min,max){if(v===null||v===''||v===undefined||typeof v==='boolean')return null;v=Number(v);return (isFinite(v)&&v>=min&&v<=max)?v:null;}
   s.copMode=raw.copMode==='temp'?'temp':'fixe';
-  s.copPts=Array.isArray(raw.copPts)?raw.copPts.map(function(p){return {t:finOrNull(p&&p.t,-50,50),cop:finOrNull(p&&p.cop,0.01,20)};}).filter(function(p){return p.t!==null&&p.cop!==null;}).slice(0,6):[];
-  s.copCorr=finOrNull(raw.copCorr,0,90);
-  s.copCurve=(raw.copCurve==='reddit'||raw.copCurve==='r32'||raw.copCurve==='porta'||raw.copCurve==='midea')?raw.copCurve:null; // v23/v24 : courbe toute faite (null = mes points)
+  s.copPts=Array.isArray(raw.copPts)?raw.copPts.map(function(p){return {t:finOrNull(p&&p.t,-50,50),cop:finOrNull(p&&p.cop,0.01,20)};}).filter(function(p){return p.t!==null&&p.cop!==null;}).slice(0,8):[];
+  s.copCorr=finOrNull(raw.copCorr,0,90);if(!('copCorr' in raw))s.copCorr=10; // v31 : nouvelle installation → Défavorable (−10 %)
+  s.mach=MACH_KEYS.indexOf(raw.mach)>=0?raw.mach:'';s.scop=finOrNull(raw.scop,1,10);
+  s.copCurve=(raw.copCurve==='reddit'||raw.copCurve==='r32'||raw.copCurve==='porta'||raw.copCurve==='midea'||raw.copCurve==='scop')?raw.copCurve:null; // v23/v24 : courbe toute faite (null = mes points) ; v31 : 'scop' = machine + SCOP
+  if(s.copCurve==='scop'&&(!s.mach||s.scop===null))s.copCurve=null;
+  // v32 : copPts = tes COP perso (plus une copie de la courbe). Ancienne version : avec une courbe active, le tableau n'était qu'une copie → vidé ;
+  // sans courbe, tes points gardent la correction % comme avant (case cochée) → mêmes chiffres dans le Suivi.
+  s.custCorr=raw.custCorr===true;
+  if(raw.v32!==true){if(s.copCurve)s.copPts=[];else if(s.copPts.length)s.custCorr=true;}
+  s.v32=true;
+  s.meas=Array.isArray(raw.meas)?raw.meas.map(function(m){return m&&{t:finOrNull(m.t,-30,40),w:finOrNull(m.w,1,10000),ti:finOrNull(m.ti,-20,60),to:finOrNull(m.to,-20,80),q:MEAS_Q_OK.indexOf(Number(m&&m.q))>=0?Number(m.q):350};}).filter(function(m){return m&&m.t!==null&&m.w!==null&&m.ti!==null&&m.to!==null&&m.to>m.ti;}).slice(0,40):[];
   s.tMonths=[];s.copOver=[];
   for(var mi=0;mi<12;mi++){s.tMonths.push(finOrNull(Array.isArray(raw.tMonths)?raw.tMonths[mi]:null,-50,50));s.copOver.push(finOrNull(Array.isArray(raw.copOver)?raw.copOver[mi]:null,1,20));}
+  // v31 : températures des mois = celles du lieu (case vide) ; une ancienne valeur égale à la normale de Metz redevient « valeur du lieu »
+  if(fresh31)for(mi=0;mi<12;mi++)if(s.tMonths[mi]!==null&&Math.abs(s.tMonths[mi]-METZ_BASE[mi])<1e-9)s.tMonths[mi]=null;
   s.tReal=raw.tReal===true;
   s.lat=finOrNull(raw.lat,-90,90);s.lon=finOrNull(raw.lon,-180,180);
   // Rentabilité (v16) : rien de pré-rempli
@@ -938,6 +972,7 @@ function normalizeSettings(raw){
 var entries=load(KEY_DATA,[]); if(!Array.isArray(entries)) entries=[];
 var settings=normalizeSettings(load(KEY_SET,{}));
 save(KEY_SET,settings); // écrit la version migrée
+var elecHist=null; // v31 : historique des prix d'électricité (chargé plus bas)
 var mode='kwh', editingId=null, chartView='cumul';
 
 // ---------- formats ----------
@@ -962,21 +997,119 @@ function defaultName(c,list){var n=0;(list||settings.comps).some(function(x){if(
 function compName(c,list){return (c.label||'').trim()||defaultName(c,list);}
 function fKwhG(x){return fKwh(x).replace(' kWh',' kWh de gaz');}
 
+// ---------- v31 : électricité (même bloc dans les Réglages et le Simulateur) ----------
+function okP(v){return typeof v==='number'&&isFinite(v)&&v>0;}
+function elNorm(raw){raw=(raw&&typeof raw==='object')?raw:{};var o={},f=function(v){v=(v===null||v===undefined||v==='')?NaN:Number(v);return (isFinite(v)&&v>0&&v<10)?v:null;},d=function(v,x){v=Number(v);return (v!==null&&isFinite(v)&&v>=0&&v<=366)?Math.round(v*10)/10:x;};
+  o.mode=['hphc','tempo'].indexOf(raw.mode)>=0?raw.mode:'base';o.base=f(raw.base);o.hp=f(raw.hp);o.hc=f(raw.hc);
+  var p=Number(raw.pct);o.pct=(raw.pct!==null&&raw.pct!==undefined&&raw.pct!==''&&isFinite(p)&&p>=0&&p<=100)?p:null;
+  o.tm=raw.tm==='perso'?'perso':'auto';o.t={};var t=(raw.t&&typeof raw.t==='object')?raw.t:{};T6.forEach(function(k){o.t[k]=f(t[k]);});
+  o.tdB=d(raw.tdB,300);o.tdW=d(raw.tdW,43);o.tdR=d(raw.tdR,22);o.redOn=raw.redOn===true;return o;}
+function elOf(s){return {mode:s.elecMode,base:s.prixElec,hp:s.prixHP,hc:s.prixHC,pct:s.pctHC,tm:s.tempoMode,t:Object.assign({},s.tempo),tdB:s.tdB,tdW:s.tdW,tdR:s.tdR,redOn:s.redOn===true};}
+function elPc(el){return (el.pct===null||el.pct===undefined?100/3:el.pct)/100;}
+// Tempo « Moyenne EDF automatique » : moyenne des 6 prix pondérée par le nombre moyen de jours de chaque couleur de la saison
+function tempoAvg(el,win){var d=TEMPO_DAYS[win],t=el.t||{},need=['bHC','wHC','rHC','bHP','wHP'].concat(el.redOn?['rHP']:[]);
+  if(!need.every(function(k){return okP(t[k]);}))return null;
+  var n=d.b+d.w+d.r,hc=(d.b*t.bHC+d.w*t.wHC+d.r*t.rHC)/n,hp=el.redOn?(d.b*t.bHP+d.w*t.wHP+d.r*t.rHP)/n:(d.b*t.bHP+d.w*t.wHP)/(d.b+d.w);return {hc:hc,hp:hp};}
+// part « hiver Tempo » (15 sept. → 15 avr.) d'un jour, puis d'un mois (septembre et avril au prorata des jours)
+function isTempoWinter(d){var m=+d.slice(5,7),j=+d.slice(8,10);return m>=10||m<=3||(m===9&&j>=15)||(m===4&&j<=15);}
+var TEMPO_FWM=[1,1,1,15/30,0,0,0,0,16/30,1,1,1];
+// prix moyen d'un kWh de PAC (fw = part d'hiver Tempo, sert seulement en Tempo automatique)
+function elPriceW(el,fw){if(!el)return null;
+  if(el.mode==='hphc'){if(!okP(el.hp)||!okP(el.hc))return null;var pc=elPc(el);return el.hp*(1-pc)+el.hc*pc;}
+  if(el.mode==='tempo'){
+    if(el.tm==='perso')return simElecPrice({tar:'tempo',pctHc:elPc(el)*100,tempo:el.t,tdB:el.tdB,tdW:el.tdW,tdR:el.tdR,redOff:!el.redOn}).pe;
+    var a=tempoAvg(el,'w'),b=tempoAvg(el,'s');if(!a||!b)return null;var q=elPc(el);return fw*(a.hp*(1-q)+a.hc*q)+(1-fw)*(b.hp*(1-q)+b.hc*q);}
+  return okP(el.base)?el.base:null;}
+function elSeasonal(el){return !!el&&el.mode==='tempo'&&el.tm!=='perso';}
+function elPriceDay(el,d){return elPriceW(el,isTempoWinter(d)?1:0);}
+function elPriceMonth(el,m){return elPriceW(el,TEMPO_FWM[m]);}
+// prix moyen sur une période (mêmes jours que le COP : « from » inclus, « to » exclu), au prorata des jours
+function elPricePeriod(el,from,to){if(!elSeasonal(el)||!from||from>=to)return elPriceDay(el,to);
+  var n=0,w=0;for(var d=from,g=0;d<to&&g<4000;d=addDays(d,1),g++){n++;if(isTempoWinter(d))w++;}return elPriceW(el,n?w/n:0);}
+var P4=function(x){return nfN.format(Math.round(x*10000)/10000);};
+function elShort(el){var p=elPriceW(el,1),q=elPriceW(el,0),x=function(v){return v===null?'prix à renseigner':P4(v)+' €/kWh';};
+  if(el.mode==='hphc')return 'Heures creuses (HP '+(okP(el.hp)?P4(el.hp):'—')+', HC '+(okP(el.hc)?P4(el.hc):'—')+') : '+x(p);
+  if(el.mode==='tempo')return el.tm==='perso'?'Tempo personnalisé : '+x(p):'Tempo moyenne EDF : hiver '+x(p)+', été '+x(q);
+  return 'Base : '+x(p);}
+// --- historique des prix (Suivi) : chaque relevé garde le prix d'électricité en vigueur à sa date ---
+var KEY_EHIST='pacFioul.elecHist.v1';
+function histNorm(a){if(!Array.isArray(a))return null;return a.filter(function(x){return x&&typeof x.d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.d)&&x.e&&typeof x.e==='object';})
+  .map(function(x){return {d:x.d,e:elNorm(x.e)};}).sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0;});}
+function histSeed(s){return [{d:'2000-01-01',e:elOf(s)}];} // relevés existants : figés au prix enregistré au moment de la mise à jour
+function histPush(s){var e=elOf(s),k=JSON.stringify(e),last=elecHist[elecHist.length-1],t=todayIso();
+  if(last&&JSON.stringify(last.e)===k)return false;
+  if(last&&last.d===t){var prev=elecHist[elecHist.length-2];if(prev&&JSON.stringify(prev.e)===k)elecHist.pop();else last.e=e;}
+  else elecHist.push({d:t,e:e});
+  save(KEY_EHIST,elecHist);return true;}
+function elAt(d,s){s=s||settings;if(s.peApplyAll||!elecHist.length)return elOf(s);var r=elecHist[0];
+  for(var i=0;i<elecHist.length;i++){if(elecHist[i].d<=d)r=elecHist[i];else break;}return r.e;}
+function entryPrice(from,to){return elPricePeriod(elAt(to),from,to);}
+// --- bloc HTML (copié à l'identique dans les Réglages « s » et le Simulateur « sim ») ---
+function elBlockHtml(p){
+  var inp=function(id,ph,lab,mode){return '<input type="text" id="'+p+id+'" inputmode="'+(mode||'decimal')+'" placeholder="'+ph+'" autocomplete="off"'+(lab?' aria-label="'+lab+'"':'')+'>';};
+  var row=function(e,n,c){return '<span>'+e+' '+n+'</span>'+inp('T'+c+'HP','prix',n+' heures pleines')+inp('T'+c+'HC','prix',n+' heures creuses');};
+  return '<div class="seg" role="group" aria-label="Option tarifaire" id="'+p+'TarSeg"><button type="button" data-eltar="base" aria-pressed="true">Base</button><button type="button" data-eltar="hphc" aria-pressed="false">Heures creuses</button><button type="button" data-eltar="tempo" aria-pressed="false">Tempo</button></div>'+
+    '<div id="'+p+'BoxBase"><label for="'+p+'Elec">Prix du kWh (€/kWh)</label>'+inp('Elec','ex. 0,2001')+'</div>'+
+    '<div id="'+p+'BoxHphc" class="hidden"><p class="hcinfo">🌙 Heures creuses : 22 h – 6 h</p><div class="el-2col"><div><label for="'+p+'HP">Heures pleines (€/kWh)</label>'+inp('HP','ex. 0,2142')+'</div><div><label for="'+p+'HC">Heures creuses (€/kWh)</label>'+inp('HC','ex. 0,1589')+'</div></div></div>'+
+    '<div id="'+p+'BoxTempo" class="hidden"><div class="seg seg-sm" role="group" aria-label="Calcul du prix Tempo" id="'+p+'TmSeg" style="margin-top:10px"><button type="button" data-eltm="auto" aria-pressed="true">Moyenne EDF automatique</button><button type="button" data-eltm="perso" aria-pressed="false">Personnalisé</button></div>'+
+      '<p class="hint" id="'+p+'TmHint"></p>'+
+      '<div class="tempo-grid"><span></span><b>HP</b><b>HC</b>'+row('🔵','Bleu','b')+row('⚪','Blanc','w')+row('🔴','Rouge','r')+'</div>'+
+      '<div id="'+p+'TpPerso" class="hidden"><label>Nombre de jours par an</label><div class="tempo-days"><div><label for="'+p+'TdB">🔵 Bleus</label>'+inp('TdB','300','','numeric')+'</div><div><label for="'+p+'TdW">⚪ Blancs</label>'+inp('TdW','43','','numeric')+'</div><div><label for="'+p+'TdR">🔴 Rouges</label>'+inp('TdR','22','','numeric')+'</div></div>'+
+        '<details class="ihelp ifo"><summary>ⓘ Combien de jours mettre ?</summary><p class="hint">Répartition standard d\'une saison Tempo : 300 bleus, 43 blancs, 22 rouges. Le chauffage consomme surtout en hiver, quand tombent les jours blancs et rouges (rouges : de novembre à mars) : leur poids réel est plus fort que leur nombre de jours. Pour en tenir compte simplement, augmente les blancs et les rouges, ou choisis « Moyenne EDF automatique ».</p></details></div>'+
+      '<div id="'+p+'TpAuto"><div class="preview tp-avg" id="'+p+'TpAvg"></div><details class="ihelp ifo"><summary>ⓘ Comment la moyenne est calculée</summary><p class="hint" id="'+p+'TpExpl"></p></details></div>'+
+      '<label class="chk sim-ecs-chk"><input type="checkbox" id="'+p+'RedOn"> <span>🔴 Activer les heures pleines des jours rouges</span></label><p class="hint" id="'+p+'RedInfo"></p></div>'+
+    '<div id="'+p+'PctBox" class="hidden"><label for="'+p+'Pct">Part de la conso PAC en heures creuses (%)</label><div style="display:flex;gap:8px"><input type="text" inputmode="decimal" id="'+p+'Pct" placeholder="33,3" style="flex:1" autocomplete="off"><button class="btn small" type="button" id="'+p+'PctBtn">Utiliser 33,3 %</button></div>'+
+      '<details class="ihelp ifo"><summary>ⓘ Quelle part mettre ?</summary><p class="hint">22 h – 6 h = 8 h sur 24 = 33,3 % si la PAC tourne de façon régulière toute la journée (c\'est la valeur prise si la case est vide). Mets plus si elle chauffe surtout la nuit.</p></details></div>'+
+    '<div class="preview" id="'+p+'TarInfo"></div>'+
+    '<details class="ihelp ifo"><summary>ⓘ Source des prix : EDF, 1er août 2026</summary><p class="hint">Pré-remplis avec le Tarif Bleu EDF TTC en vigueur depuis le 1er août 2026 (grille de prix EDF « Grille_prix_Tarif_Bleu ») : Base 0,2001 €/kWh en 3 et 6 kVA (0,1985 € à partir de 9 kVA, option Base fermée aux nouveaux clients à partir de 9 kVA) ; Heures creuses HP 0,2142 €, HC 0,1589 € ; Tempo bleu HC 0,1356 / HP 0,1654, blanc HC 0,1536 / HP 0,1921, rouge HC 0,1615 / HP 0,7295 €. L\'abonnement n\'est pas compté. Tous les prix sont modifiables. Ils ne se mettent pas à jour tout seuls : à la prochaine hausse, tape les nouveaux prix.</p></details>';}
+var elUI={s:{mode:'base',tm:'auto'},sim:{mode:'base',tm:'auto'}};
+function setElUI(p,mode,tm){var u=elUI[p];if(mode)u.mode=mode;if(tm)u.tm=tm;
+  Array.prototype.forEach.call($(p+'TarSeg').querySelectorAll('[data-eltar]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-eltar')===u.mode);});
+  Array.prototype.forEach.call($(p+'TmSeg').querySelectorAll('[data-eltm]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-eltm')===u.tm);});
+  $(p+'BoxBase').classList.toggle('hidden',u.mode!=='base');$(p+'BoxHphc').classList.toggle('hidden',u.mode!=='hphc');$(p+'BoxTempo').classList.toggle('hidden',u.mode!=='tempo');
+  $(p+'PctBox').classList.toggle('hidden',u.mode==='base');$(p+'TpPerso').classList.toggle('hidden',u.tm!=='perso');$(p+'TpAuto').classList.toggle('hidden',u.tm==='perso');}
+var EL_T={bHP:'TbHP',bHC:'TbHC',wHP:'TwHP',wHC:'TwHC',rHP:'TrHP',rHC:'TrHC'};
+function fillEl(p,el){$(p+'Elec').value=numStr(el.base);$(p+'HP').value=numStr(el.hp);$(p+'HC').value=numStr(el.hc);$(p+'Pct').value=numStr(el.pct);
+  T6.forEach(function(k){$(p+EL_T[k]).value=numStr(el.t[k]);});$(p+'TdB').value=numStr(el.tdB);$(p+'TdW').value=numStr(el.tdW);$(p+'TdR').value=numStr(el.tdR);
+  $(p+'RedOn').checked=el.redOn===true;setElUI(p,el.mode,el.tm);}
+function readEl(p){var bad=null,g=function(id){var r=$(p+id).value.trim();if(r==='')return null;var v=parseNum(r);if(!(isFinite(v)&&v>0&&v<10)){if(!bad)bad=p+id;return NaN;}return v;};
+  var el={mode:elUI[p].mode,tm:elUI[p].tm,base:g('Elec'),hp:g('HP'),hc:g('HC'),pct:null,t:{},redOn:$(p+'RedOn').checked};
+  T6.forEach(function(k){el.t[k]=g(EL_T[k]);});
+  var r=$(p+'Pct').value.trim().replace('%','');if(r!==''){var v=parseNum(r);if(isFinite(v)&&v>=0&&v<=100)el.pct=v;else if(!bad)bad=p+'Pct';}
+  [['tdB','TdB',300],['tdW','TdW',43],['tdR','TdR',22]].forEach(function(x){var r=$(p+x[1]).value.trim(),v=parseNum(r);if(r==='')el[x[0]]=x[2];else if(isFinite(v)&&v>=0&&v<=366)el[x[0]]=Math.round(v*10)/10;else{el[x[0]]=x[2];if(!bad)bad=p+x[1];}});
+  return {el:el,bad:bad};}
+function elClean(el){var o=JSON.parse(JSON.stringify(el,function(k,v){return (typeof v==='number'&&isNaN(v))?null:v;}));return elNorm(o);}
+function renderElInfo(p,el,bad){
+  var q=elPc(el),pcT=nfN.format(Math.round(q*1000)/10),ti=$(p+'TarInfo');
+  $(p+EL_T.rHP).disabled=el.mode==='tempo'&&!el.redOn&&el.tm!=='perso';
+  $(p+'TmHint').textContent=el.tm==='perso'?'Tes 6 prix et ton nombre de jours de chaque couleur : un seul prix moyen toute l\'année. Heures creuses Tempo : 22 h → 6 h.':'Prix EDF pré-remplis, modifiables : les moyennes se recalculent. Heures creuses Tempo : 22 h → 6 h.';
+  var a=tempoAvg(el,'w'),b=tempoAvg(el,'s');
+  $(p+'TpAvg').innerHTML=(a&&b)?'<div>❄️ <b>Hiver</b> (15 sept. → 15 avr.) : HC <b id="'+p+'AvWHC">'+P4(a.hc)+'</b> · HP <b id="'+p+'AvWHP">'+P4(a.hp)+'</b> €/kWh'+(el.redOn?'':' <span class="opt">(sans HP rouges)</span>')+'</div><div>☀️ <b>Été</b> (16 avr. → 14 sept.) : HC <b id="'+p+'AvSHC">'+P4(b.hc)+'</b> · HP <b id="'+p+'AvSHP">'+P4(b.hp)+'</b> €/kWh</div>':'Saisis les 6 prix Tempo pour calculer les moyennes.';
+  var D=TEMPO_DAYS,f1=function(x){return nf1.format(x);};
+  $(p+'TpExpl').innerHTML='Personne ne sait à l\'avance quels jours seront blancs ou rouges : l\'appli prend la moyenne des 5 dernières saisons (données RTE) et l\'applique toute seule selon la date.<br><b>Hiver</b>, du 15 septembre au 15 avril : '+f1(D.w.b)+' jours bleus, '+f1(D.w.w)+' blancs et '+nf0.format(D.w.r)+' rouges en moyenne. HC = ('+f1(D.w.b)+' × bleu HC + '+f1(D.w.w)+' × blanc HC + '+nf0.format(D.w.r)+' × rouge HC) ÷ '+f1(D.w.b+D.w.w+D.w.r)+'. '+
+    (el.redOn?'HP = ('+f1(D.w.b)+' × bleu HP + '+f1(D.w.w)+' × blanc HP + '+nf0.format(D.w.r)+' × rouge HP) ÷ '+f1(D.w.b+D.w.w+D.w.r)+' (case « heures pleines des jours rouges » cochée).':'HP = ('+f1(D.w.b)+' × bleu HP + '+f1(D.w.w)+' × blanc HP) ÷ '+f1(D.w.b+D.w.w)+' : sans les heures pleines des jours rouges (case décochée : tu ne chauffes pas à ce moment-là). Coche la case pour les compter.')+
+    '<br><b>Été</b>, du 16 avril au 14 septembre : '+f1(D.s.b)+' bleus, '+f1(D.s.w)+' blancs, aucun rouge. HC = ('+f1(D.s.b)+' × bleu HC + '+f1(D.s.w)+' × blanc HC) ÷ '+f1(D.s.b+D.s.w)+', HP pareil avec les prix HP.<br>Prix d\'un kWh = HP × (1 − part HC) + HC × part HC. Un relevé (ou un mois) de septembre ou d\'avril mélange les deux saisons au prorata des jours. Si tu changes un des 6 prix, les moyennes se recalculent.';
+  if(p==='s')$('sRedInfo').textContent=el.redOn?'Coché : les heures pleines des jours rouges comptent dans le prix moyen (comme si tu chauffais aussi à ce moment-là).':'Décoché : tu ne chauffes pas en heures pleines les jours rouges. En moyenne EDF automatique, elles sont retirées de la moyenne HP d\'hiver ; en personnalisé, un jour rouge ne garde que ses heures creuses.';
+  if(bad){ti.innerHTML='⚠️ Un prix ou une valeur est invalide (ex. 0,2001).';return;}
+  var pw=elPriceW(el,1),ps=elPriceW(el,0);
+  if(pw===null){ti.innerHTML='Saisis '+(el.mode==='base'?'ton prix du kWh':el.mode==='hphc'?'tes prix heures pleines et heures creuses':'tes 6 prix Tempo')+' pour calculer le prix de l\'électricité de la PAC.';return;}
+  if(el.mode==='base')ti.innerHTML='Prix de l\'électricité retenu : <b id="'+p+'Pe">'+P4(pw)+' €/kWh</b>';
+  else if(el.mode==='hphc')ti.innerHTML='Prix moyen retenu : <b id="'+p+'Pe">'+P4(pw)+' €/kWh</b> = '+nfN.format(Math.round((1-q)*1000)/10)+' % × '+nfN.format(el.hp)+' (HP) + '+pcT+' % × '+nfN.format(el.hc)+' (HC)';
+  else if(el.tm==='perso'){var E=simElecPrice({tar:'tempo',pctHc:q*100,tempo:el.t,tdB:el.tdB,tdW:el.tdW,tdR:el.tdR,redOff:!el.redOn});
+    ti.innerHTML='Prix moyen retenu : <b id="'+p+'Pe">'+P4(pw)+' €/kWh</b> toute l\'année<br>'+(!el.redOn?'Poids dans la conso':'Jours')+' : bleus '+nf1.format(E.w.b*100)+' % · blancs '+nf1.format(E.w.w*100)+' % · rouges '+nf1.format(E.w.r*100)+' %'+(!el.redOn?' (nuits seules)':'')+' ; heures creuses '+pcT+' %';}
+  else ti.innerHTML='Prix moyen retenu (heures creuses '+pcT+' %) : <b id="'+p+'Pe">❄️ '+P4(pw)+'</b> en hiver · <b id="'+p+'PeS">☀️ '+P4(ps)+' €/kWh</b> en été, choisi selon la date.';}
+elecHist=histNorm(load(KEY_EHIST,null));
+if(!elecHist||!elecHist.length){elecHist=histSeed(settings);save(KEY_EHIST,elecHist);} // migration v31 : relevés existants figés au prix enregistré
+document.getElementById('sElBlock').innerHTML=elBlockHtml('s');document.getElementById('simElBlock').innerHTML=elBlockHtml('sim');
 // ---------- calcul ----------
-function elecPrice(s){
-  s=s||settings;
-  if(s.elecMode==='hphc'){
-    if(s.prixHP===null||s.prixHC===null||s.pctHC===null) return null;
-    return s.prixHP*(1-s.pctHC/100)+s.prixHC*(s.pctHC/100);
-  }
-  return s.prixElec;
-}
-function calc(kwh,s,cop){
+// prix d'électricité actuel (aujourd'hui) des réglages s
+function elecPrice(s){s=s||settings;return elPriceDay(elOf(s),todayIso());}
+function calc(kwh,s,cop,peArg){
   s=s||settings;
   var chaleur=kwh*((cop!==null&&cop!==undefined&&cop>0)?cop:s.cop);
   var litres=chaleur/(s.pci*s.rend/100);
   var kwhGaz=chaleur/(s.rendGaz/100);
-  var pe=elecPrice(s), coutElec=pe===null?null:kwh*pe;
+  var pe=peArg!==undefined?peArg:elecPrice(s), coutElec=pe===null?null:kwh*pe;
   var sides=s.comps.filter(function(c){return c.on;}).map(function(c){
     var qty=c.type==='gaz'?kwhGaz:litres, eur=c.prix===null?null:qty*c.prix;
     return {id:c.id,type:c.type,name:compName(c,s.comps),prix:c.prix,qty:qty,eur:eur,net:(eur===null||coutElec===null)?null:eur-coutElec};
@@ -986,7 +1119,7 @@ function calc(kwh,s,cop){
   var pr=sides.filter(function(x){return x.eur!==null;}), diff=null;
   if(pr.length===2) diff={hi:pr[0],lo:pr[1],v:pr[0].eur-pr[1].eur,max:false};
   else if(pr.length>2){var so=pr.slice().sort(function(a,b){return b.eur-a.eur;});diff={hi:so[0],lo:so[so.length-1],v:so[0].eur-so[so.length-1].eur,max:true};}
-  return {kwh:kwh,chaleur:chaleur,litres:litres,kwhGaz:kwhGaz,coutElec:coutElec,sides:sides,hasFioul:hasFioul,hasGaz:hasGaz,diff:diff};
+  return {kwh:kwh,chaleur:chaleur,litres:litres,kwhGaz:kwhGaz,pe:pe,coutElec:coutElec,sides:sides,hasFioul:hasFioul,hasGaz:hasGaz,diff:diff};
 }
 // ---------- COP selon la température ----------
 // Températures moyennes mensuelles normales, Metz-Frescaty (57039001), 1991-2020 — Météo-France, fiche climatologique :
@@ -1007,9 +1140,39 @@ var COP_CURVES={reddit:{name:'Midea PortaSplit Reddit',pts:[{t:-10,cop:2.7},{t:-
   // midea (v24) : l'ancienne courbe « Midea réaliste » (= bouton « Remplir avec Midea PortaSplit (valeurs réalistes) », sans changer le % de correction).
   midea:{name:'Midea réaliste (ancienne)',pts:MIDEA_PTS.map(function(p){return {t:p.t,cop:p.cop};})}};
 // SCOP théorique simplifié (climat moyen EN 14825), affiché sous chaque bouton — indicatif, avant ta correction %.
-function curveOf(s){return (s&&s.copCurve&&COP_CURVES[s.copCurve])||null;}
-function curvePts(s){var c=curveOf(s);return c?c.pts:s.copPts;}
-function curveCorr(s){return s.copCorr;} // v24 : la correction % s'applique aussi par-dessus une courbe toute faite
+// v31 : SCOP selon la norme EN 14825 (climat moyen, Strasbourg, 4 910 h) — même méthode que scop/sim.py
+var EN_T=[-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+var EN_H=[1,25,23,24,27,68,91,89,165,173,240,280,320,357,356,303,330,326,348,335,315,215,169,151,105,74];
+function enPh(t){return (16-t)/26;} // charge linéaire : 100 % à −10 °C, 0 % à +16 °C
+// COP à une température : ligne droite entre deux points, constant au-dessus du point le plus chaud, pente des deux points les plus froids gardée en dessous
+function enCop(t,pts){if(pts.length<2)return pts.length?pts[0].cop:null;var a=pts[0],b=pts[1];if(t<a.t)return a.cop+(b.cop-a.cop)*(t-a.t)/(b.t-a.t);return copInterp(t,pts,0);}
+function scopEN(pts){pts=copPtsSorted(pts);if(pts.length<1)return null;var num=0,den=0;
+  EN_T.forEach(function(t,i){var w=EN_H[i]*enPh(t),c=Math.max(0.5,enCop(t,pts));num+=w;den+=w/c;});return num/den;}
+function enCover(lo,hi){var all=0,c=0;EN_T.forEach(function(t,i){var w=EN_H[i]*enPh(t);all+=w;if(t>=Math.round(lo)&&t<=Math.round(hi))c+=w;});return all>0?c/all:0;}
+// courbe de base « machine + SCOP » : forme type (SIM_CURVE) mise à l'échelle pour que son SCOP EN 14825 = SCOP saisi ; machine sans courbe : COP constant
+function scopBase(mach,scop){if(!(scop>=1&&scop<=10))return null;var m=SIM_MACH[mach];if(!m)return null;
+  if(!m.curve)return SIM_CURVE.map(function(p){return {t:p.t,cop:scop};});
+  var k=scop/scopEN(SIM_CURVE);return SIM_CURVE.map(function(p){return {t:p.t,cop:Math.round(p.cop*k*100)/100};});}
+function machName(k){return SIM_MACH[k]?SIM_MACH[k].name:'';}
+// mesures personnelles : COP = débit × 0,335 × (sortie − entrée) ÷ watts ; moyenne par température
+var MEAS_Q=[350,390,420], AIR_C=0.335;
+function measCop(m){return m.q*AIR_C*(m.to-m.ti)/m.w;}
+function avgGroups(a){var g={};a.forEach(function(x){var c=x.cop;if(!(c>0)||!isFinite(c)||!isFinite(x.t))return;var k=String(x.t);if(!g[k])g[k]={t:x.t,s:0,n:0};g[k].s+=c;g[k].n++;});
+  return Object.keys(g).map(function(k){return {t:g[k].t,cop:g[k].s/g[k].n,n:g[k].n};}).sort(function(a,b){return a.t-b.t;});}
+// tes points remplacent la courbe de base sur la plage mesurée (de ta température la plus froide à la plus chaude)
+function measGroups(meas){return avgGroups((meas||[]).map(function(m){return {t:m.t,cop:measCop(m)};}));}
+// v32 : valeurs perso = tes COP moyens (tableau) + tes mesures brutes, moyennées par température
+function custGroups(s){return avgGroups((s.copPts||[]).map(function(p){return {t:p.t,cop:p.cop};}).concat((s.meas||[]).map(function(m){return {t:m.t,cop:measCop(m)};})));}
+function mergeMeas(base,groups){if(!groups.length)return copPtsSorted(base);var lo=groups[0].t,hi=groups[groups.length-1].t;
+  return copPtsSorted(base).filter(function(p){return p.t<lo||p.t>hi;}).concat(groups.map(function(x){return {t:x.t,cop:x.cop};})).sort(function(a,b){return a.t-b.t;});}
+function curveOf(s){if(!s||!s.copCurve)return null;if(s.copCurve==='scop'){var p=scopBase(s.mach,s.scop);return p?{name:'Machine : '+machName(s.mach)+' (SCOP '+nfN.format(s.scop)+')',pts:p}:null;}return COP_CURVES[s.copCurve]||null;}
+function basePts(s){var c=curveOf(s);return c?c.pts:[];}
+// la correction % s'applique à la courbe de base ; à tes valeurs perso seulement si « custCorr » (case cochée)
+function curvePts(s){var b=basePts(s),g=custGroups(s);if(!g.length)return b;var k=1-(s.copCorr||0)/100,kc=s.custCorr?k:1;
+  return mergeMeas(b.map(function(p){return {t:p.t,cop:p.cop*k};}),g.map(function(x){return {t:x.t,cop:x.cop*kc};}));}
+function curveCorr(s){return custGroups(s).length?0:s.copCorr;}
+function effPts(s){return custGroups(s).length?curvePts(s):basePts(s).map(function(p){return {t:p.t,cop:p.cop*(1-(s.copCorr||0)/100)};});}
+function tEff(s,m){return (s.tMonths&&s.tMonths[m]!==null&&s.tMonths[m]!==undefined)?s.tMonths[m]:METZ_TNORM[m];}
 var KEY_TEMPS='pacFioul.temps.v1';
 var tempCache=load(KEY_TEMPS,null); if(!tempCache||typeof tempCache!=='object'||!tempCache.days||typeof tempCache.days!=='object')tempCache={loc:'',days:{}};
 var tempFetching=false, tempStatus='';
@@ -1023,7 +1186,7 @@ function copInterp(t,pts,corr){
   return Math.max(1,c*(1-(corr||0)/100));
 }
 function tempReady(s){s=s||settings;return s.copMode==='temp'&&copPtsSorted(curvePts(s)).length>=2;}
-function monthCop(m,s){s=s||settings;if(s.copOver[m]!==null)return Math.max(1,s.copOver[m]);if(s.tMonths[m]===null)return null;return copInterp(s.tMonths[m],curvePts(s),curveCorr(s));}
+function monthCop(m,s){s=s||settings;if(s.copOver[m]!==null)return Math.max(1,s.copOver[m]);return copInterp(tEff(s,m),curvePts(s),curveCorr(s));}
 function locOf(s){return (s.lat!==null&&s.lon!==null)?s.lat.toFixed(2)+','+s.lon.toFixed(2):'';}
 // COP d'une période : du jour « from » (inclus) au jour « to » (exclu). Sans période connue : le jour « to » seul.
 function copFor(from,to,s){
@@ -1035,7 +1198,7 @@ function copFor(from,to,s){
   if(s.tReal&&loc&&tempCache.loc===loc){
     var sum=0,n=0,real=0;
     days.forEach(function(k){var v=tempCache.days[k];
-      if(typeof v==='number'){sum+=v;n++;real++;}else{var tn=s.tMonths[+k.slice(5,7)-1];if(tn!==null){sum+=tn;n++;}}});
+      if(typeof v==='number'){sum+=v;n++;real++;}else{var tn=tEff(s,+k.slice(5,7)-1);sum+=tn;n++;}});
     if(real>0){var tm=sum/n;return {cop:copInterp(tm,curvePts(s),curveCorr(s)),src:real===days.length?'reel':'mixte',t:tm};}
   }
   var tot=0,cnt=0;days.forEach(function(k){var c=monthCop(+k.slice(5,7)-1,s);if(c!==null){tot+=c;cnt++;}});
@@ -1049,9 +1212,11 @@ function copSrcText(r){
   return 'COP '+t+' ('+(r.src==='reel'?'températures réelles':'températures réelles + moyennes')+', '+nf1.format(r.t)+' °C en moyenne)';
 }
 function calcRange(list,from,to){
-  var k=0,h=0;list.forEach(function(e){if((!from||e.date>=from)&&(!to||e.date<=to)){k+=e.kwh;h+=e.kwh*e.cop;}});
-  return calc(k,null,(tempReady()&&k>0)?h/k:null);
+  var k=0,h=0,pk=0,miss=false;list.forEach(function(e){if((!from||e.date>=from)&&(!to||e.date<=to)){k+=e.kwh;h+=e.kwh*e.cop;if(e.kwh>0){if(e.pe===null||e.pe===undefined)miss=true;else pk+=e.kwh*e.pe;}}});
+  return calc(k,null,(tempReady()&&k>0)?h/k:null,peAvg(k,pk,miss));
 }
+// v31 : prix moyen pondéré par les kWh (chaque relevé garde le prix de sa date) ; un relevé sans prix → pas de coût
+function peAvg(k,pk,miss){return k>0?(miss?null:pk/k):undefined;}
 // ---------- Courbe 🌡️ Température sur les graphiques en barres ----------
 var TEMP_MIN=-5, TEMP_MAX=35, KEY_STEMP='pacFioul.showTemp', showTemp=load(KEY_STEMP,false)===true, tempFailed=false, TEMP_COL='#8c8c8c';
 // Température moyenne extérieure du jour « from » (inclus) au jour « to » (exclu). Jours futurs ignorés (null si tout est futur).
@@ -1133,6 +1298,7 @@ function resolved(){
     var r=Object.assign({},e);
     r.from=prevDate;prevDate=e.date;
     var cf=copFor(r.from,e.date);r.cop=cf.cop;r.copInfo=cf;
+    r.pe=entryPrice(r.from,e.date); // v31 : prix d'électricité en vigueur à la date du relevé
     if(typeof e.index==='number'){
       if(lastIdx===null){r.kwh=0;r.start=true;}
       else{var d=e.index-lastIdx;r.kwh=Math.max(0,d);if(d<0)r.bad=true;r.prevIndex=lastIdx;}
@@ -1228,7 +1394,9 @@ function kpiData(){
   return {label:b[0],from:from,to:to,first:inR.length?inR[0].date:null,n:inR.length,nK:inR.filter(function(e){return e.kwh>0;}).length,
     hasIdx:inR.some(function(e){return typeof e.index==='number';}),kwh:c.kwh,heatSum:hs,copTemp:temp,cop:temp?hs/c.kwh:s.cop,
     chaleur:c.chaleur,litres:c.litres,kwhFioul:c.litres*s.pci,kwhGaz:c.kwhGaz,pci:s.pci,rend:s.rend,rendGaz:s.rendGaz,
-    elecMode:s.elecMode,pe:elecPrice(),prixHP:s.prixHP,prixHC:s.prixHC,pctHC:s.pctHC,coutElec:c.coutElec,c:c,main:statMain(c)};
+    elecMode:s.elecMode,pe:(c.kwh>0?c.pe:elecPrice()),peVar:peVaries(inR),peCur:elecPrice(),prixHP:s.prixHP,prixHC:s.prixHC,pctHC:s.pctHC,coutElec:c.coutElec,c:c,main:statMain(c)};
+}
+function peVaries(l){var v=null,d=false;l.forEach(function(e){if(e.kwh>0&&e.pe!==null&&e.pe!==undefined){if(v===null)v=e.pe;else if(Math.abs(e.pe-v)>1e-9)d=true;}});return d;
 }
 function kStep(n,hl,t,f){return '<div class="kstep'+(hl?' hl':'')+'"><span class="kn">'+n+'</span><div class="kt">'+t+'</div><div class="kf">'+f+'</div></div>';}
 function kB(k,raw,txt){return '<b data-k="'+esc(k)+'" data-raw="'+esc(String(raw))+'">'+txt+'</b>';}
@@ -1249,7 +1417,8 @@ function kpiHtml(kind,d){
     :'— renseigne un prix fioul ou gaz dans ⚙️ Réglages'));
   var pf;
   if(d.pe===null)pf='— renseigne le prix de l\'électricité dans ⚙️ Réglages';
-  else pf=(d.elecMode==='hphc'?'Prix moyen = HP '+nfN.format(d.prixHP)+' × (1 − '+nfN.format(d.pctHC)+'\u00a0%) + HC '+nfN.format(d.prixHC)+' × '+nfN.format(d.pctHC)+'\u00a0% = '+kB('pe',d.pe,nfN.format(d.pe)+' €/kWh')+' (heures creuses 22 h – 6 h)<br>'
+  else if(d.peVar||elSeasonal(elOf(settings))||(d.peCur!==null&&Math.abs(d.pe-d.peCur)>1e-9))pf=(d.peVar?'Chaque relevé garde le prix d\'électricité en vigueur à sa date'+(settings.elecMode==='tempo'&&settings.tempoMode!=='perso'?' (Tempo : moyenne de sa saison)':'')+' : Σ (kWh × prix du relevé) ÷ Σ kWh = ':(settings.peApplyAll?'Prix actuel appliqué à tous les relevés : ':'Prix en vigueur à la date des relevés : '))+kB('pe',d.pe,nfN.format(Math.round(d.pe*10000)/10000)+' €/kWh')+' (⚙️ Réglages → Électricité)<br>'+f2(d.kwh)+' kWh × '+nfN.format(Math.round(d.pe*10000)/10000)+' €/kWh = '+kB('coutElec',d.coutElec,fE(d.coutElec));
+  else pf=(d.elecMode==='hphc'&&d.pctHC!==null?'Prix moyen = HP '+nfN.format(d.prixHP)+' × (1 − '+nfN.format(d.pctHC)+'\u00a0%) + HC '+nfN.format(d.prixHC)+' × '+nfN.format(d.pctHC)+'\u00a0% = '+kB('pe',d.pe,nfN.format(d.pe)+' €/kWh')+' (heures creuses 22 h – 6 h)<br>'
     :'Prix des ⚙️ Réglages : '+kB('pe',d.pe,nfN.format(d.pe)+' €/kWh')+'<br>')+f2(d.kwh)+' kWh × '+nfN.format(d.pe)+' €/kWh = '+kB('coutElec',d.coutElec,fE(d.coutElec));
   H.push(kStep(++n,kind==='elec','Coût de l\'électricité',pf));
   var nets=ps.filter(function(x){return x.net!==null;});
@@ -1310,7 +1479,7 @@ function renderList(list){
   var rows=list.slice().reverse(), shown=listAll?rows:rows.slice(0,LIST_N);
   more.classList.toggle('hidden',rows.length<=LIST_N);more.textContent=listAll?'Voir moins':'Voir tout ('+rows.length+')';
   ul.innerHTML=shown.map(function(e){
-    var c=calc(e.kwh,null,e.cop), ms=statMain(c), op=!!openRows[e.id]; // v24 : même comparaison que le Suivi et la Rentabilité (⭐ favori)
+    var c=calc(e.kwh,null,e.cop,e.pe), ms=statMain(c), op=!!openRows[e.id]; // v24 : même comparaison que le Suivi et la Rentabilité (⭐ favori)
     var sub=typeof e.index==='number'
       ? 'Index '+nfN.format(e.index)+(e.start?' · point de départ':(' · '+nfN.format(e.prevIndex)+' → '+nfN.format(e.index)))+(e.bad?' · ⚠️ index inférieur au précédent':'')
       : '';
@@ -1322,6 +1491,7 @@ function renderList(list){
       '<div class="li-sub">'+volText(c)+(typeof e.index==='number'?' <span class="tag">index</span>':'')+'</div>'+
       '<div class="li-sub">'+compactLine(c)+'</div>'+
       (e.start?'':'<div class="li-sub li-cop">🌡️ '+esc(copSrcText(e.copInfo))+'</div>')+
+      (e.kwh>0?'<div class="li-sub li-pe">⚡ '+(e.pe===null?'Prix de l\'électricité manquant':'Électricité '+nfN.format(Math.round(e.pe*10000)/10000)+' €/kWh'+(settings.peApplyAll?' (prix actuel appliqué)':' (prix en vigueur le '+fDate(e.date)+')'))+'</div>':'')+
       (sub?'<div class="li-sub">'+esc(sub)+'</div>':'')+
       (e.note?'<div class="li-note">📝 '+esc(e.note)+'</div>':'')+
       '<div class="r-act"><button class="btn small" type="button" data-edit="'+e.id+'">✏️ Modifier</button>'+
@@ -1339,9 +1509,16 @@ function renderFormula(){
   if(c.hasGaz) ex.push('÷ '+nfN.format(settings.rendGaz)+' % = <b>'+fKwhG(c.kwhGaz)+'</b> évités');
   $('formulaEx').innerHTML='Exemple : 150 kWh × COP '+nf2c.format(cf0.cop)+(cf0.src==='fixe'?'':' (mois en cours)')+' = '+nf0.format(c.chaleur)+' kWh de chaleur'+(ex.length>1?'<br>→ ':' ')+ex.join('<br>→ ')+
     (pe===null?'':'<br>Élec : 150 × '+nfN.format(pe)+' € = '+fE(c.coutElec))+cmpHtml(c);
-  var pm=$('elecAvg');
-  if(settings.elecMode==='hphc'){pm.textContent=pe===null?'Prix moyen : renseigne HP, HC et % d\'heures creuses.':'Prix moyen pondéré utilisé : '+nfN.format(pe)+' €/kWh';}
+  renderPeHist();
 }
+// v31 : historique des prix (Réglages → Électricité et liste des relevés)
+function renderPeHist(){var h=elecHist, cur=elOf(settings), txt;
+  var lines=h.map(function(x,i){var nx=h[i+1];return (i===0?(nx?'Jusqu\'au '+fDate(addDays(nx.d,-1)):'Tous les relevés'):(nx?'Du '+fDate(x.d)+' au '+fDate(addDays(nx.d,-1)):'Depuis le '+fDate(x.d)))+' : '+esc(elShort(x.e));});
+  txt=(settings.peApplyAll?'<b>Coché</b> : tous les relevés sont calculés avec le prix actuel ('+esc(elShort(cur))+'). Décoche pour revenir aux prix d\'origine.':'Chaque relevé garde le prix d\'électricité en vigueur à sa date. Coche pour tout recalculer au prix actuel (réversible).')+'<br>'+lines.join('<br>');
+  $('elHistTxt').innerHTML=txt;$('peHistTxt').innerHTML=txt;$('sPeAll').checked=settings.peApplyAll;$('suPeAll').checked=settings.peApplyAll;
+  $('peHistBox').classList.toggle('hidden',!entries.length||(h.length<2&&!settings.peApplyAll));} // v32 : dans le Suivi seulement si le prix a changé
+function setPeAll(on){if(settings.peApplyAll===on)return;settings=Object.assign({},settings,{peApplyAll:on});save(KEY_SET,settings);renderAll();toast(on?'Prix actuel appliqué à tous les relevés':'Chaque relevé reprend le prix de sa date',1600);}
+$('suPeAll').addEventListener('change',function(){setPeAll(this.checked);});
 
 // ---------- graphique SVG ----------
 var COL={};
@@ -1423,7 +1600,7 @@ function renderChart(list){
   var shortNum=function(v){return Math.abs(v)>=1000?nf1.format(v/1000)+'k':(Math.abs(v)<10&&v%1?nf1.format(v):nf0.format(v));};
   if(chartView==='cumul'){
     var pts=[],cl=0,acc=c0.sides.map(function(){return 0;}),byDate={};
-    list.forEach(function(e){var c=calc(e.kwh,null,e.cop);cl+=volMain(c);eIdx.forEach(function(i){acc[i]+=c.sides[i].net;});byDate[e.date]={l:cl,e:acc.slice()};});
+    list.forEach(function(e){var c=calc(e.kwh,null,e.cop,e.pe);cl+=volMain(c);eIdx.forEach(function(i){acc[i]+=c.sides[i].net;});byDate[e.date]={l:cl,e:acc.slice()};});
     Object.keys(byDate).sort().forEach(function(d){pts.push({d:d,t:parseIso(d).getTime(),l:byDate[d].l,e:byDate[d].e});});
     var t0=pts[0].t,t1=pts[pts.length-1].t; if(t1===t0){t0-=86400000*3;t1+=86400000*3;}
     var maxL=niceMax(Math.max.apply(null,pts.map(function(p){return p.l;})));
@@ -1495,14 +1672,14 @@ function renderBars(list,c0,SER,box,leg,W,H,L,T,ph,pw,gridY,shortNum){
   uBox.innerHTML='<button type="button" data-eunit="vol" aria-pressed="'+(evolUnitSel==='vol')+'">'+volU+'</button>'+(hasEur?'<button type="button" data-eunit="eur" aria-pressed="'+(evolUnitSel==='eur')+'">€</button>':'');
   var unit=evolUnitSel==='eur'?'€':volU, ser=SER.filter(function(x){return x.unit===unit;});
   // agrégation par période
-  var groups={};list.forEach(function(e){var k=evolKeyOf(e.date,view);if(!groups[k])groups[k]={kwh:0,h:0};groups[k].kwh+=e.kwh;groups[k].h+=e.kwh*e.cop;});
+  var groups={};list.forEach(function(e){var k=evolKeyOf(e.date,view);if(!groups[k])groups[k]={kwh:0,h:0,pk:0,miss:false};var g=groups[k];g.kwh+=e.kwh;g.h+=e.kwh*e.cop;if(e.kwh>0){if(e.pe===null||e.pe===undefined)g.miss=true;else g.pk+=e.kwh*e.pe;}});
   var all=evolPeriods(list,view), w=evolWindow(all,view,Math.max(1,ser.length),pw);
   var pwFull=pw; if(showTemp)pw=pw-26;
   $('evolNavLab').textContent=w.lab;$('evolNavSub').textContent=[w.sub,w.pages>1?'page '+(w.pages-w.page)+'/'+w.pages:''].filter(Boolean).join(' · ');
   $('evolPrev').disabled=w.page>=w.pages-1;$('evolNext').disabled=w.page<=0;
-  var data=w.keys.map(function(k){var gg=groups[k], c=gg?calc(gg.kwh,null,(tempReady()&&gg.kwh>0)?gg.h/gg.kwh:null):null;
+  var data=w.keys.map(function(k){var gg=groups[k], c=gg?calc(gg.kwh,null,(tempReady()&&gg.kwh>0)?gg.h/gg.kwh:null,peAvg(gg.kwh,gg.pk,gg.miss)):null;
     var to=view==='week'?addDays(k,7):view==='month'?(+k.slice(5,7)===12?(+k.slice(0,4)+1)+'-01-01':k.slice(0,5)+pad(+k.slice(5,7)+1)+'-01'):(+k+1)+'-01-01', from=view==='week'?k:view==='month'?k+'-01':k+'-01-01';
-    return {k:k,lab:evolLab(k,view),long:evolLong(k,view),c:c,kwh:gg?gg.kwh:0,h:gg?gg.h:0,v:ser.map(function(x){return c?x.val(c):null;}),tp:showTemp?tempPeriod(from,to):null};});
+    return {k:k,lab:evolLab(k,view),long:evolLong(k,view),c:c,kwh:gg?gg.kwh:0,h:gg?gg.h:0,pk:gg?gg.pk:0,miss:gg?gg.miss:false,v:ser.map(function(x){return c?x.val(c):null;}),tp:showTemp?tempPeriod(from,to):null};});
   var per=view==='week'?'semaine':view==='month'?'mois':'année';
   if(!ser.length){
     box.innerHTML=svgEl(W,H,txt(W/2,H/2-8,'Aucune série en €',{size:13})+txt(W/2,H/2+12,'Renseigne un prix (fioul ou gaz) et l\'électricité dans ⚙️ Réglages',{size:11}));
@@ -1531,7 +1708,7 @@ function renderBars(list,c0,SER,box,leg,W,H,L,T,ph,pw,gridY,shortNum){
   setXhair(box,{W:W,T:T,ph:ph,pts:data.map(function(d,j){var it=d.c?ser.map(function(x,si){return {lab:x.short,col:x.col,val:fmt(d.v[si],unit),sq:true};}):[{lab:'Aucun relevé',col:COL['--line'],val:'—',sq:true}];
     if(d.tp)it.push({lab:'Temp. moy.',col:TEMP_COL,val:fTemp(d.tp.t),y:tempY(d.tp.t,T,ph)});
     return {x:L+slot*j+slot/2,x0:L+slot*j+1,x1:L+slot*(j+1)-1,title:d.long.charAt(0).toUpperCase()+d.long.slice(1),items:it};})});
-  var tk=data.reduce(function(a,d){return a+d.kwh;},0), th=data.reduce(function(a,d){return a+d.h;},0), tot=calc(tk,null,(tempReady()&&tk>0)?th/tk:null);
+  var tk=data.reduce(function(a,d){return a+d.kwh;},0), th=data.reduce(function(a,d){return a+d.h;},0), tot=calc(tk,null,(tempReady()&&tk>0)?th/tk:null,peAvg(tk,data.reduce(function(a,d){return a+d.pk;},0),data.some(function(d){return d.miss;})));
   leg.innerHTML=ser.map(function(x){return '<span data-s="'+esc(x.key)+'"><i style="background:'+x.col+'"></i>'+esc(x.name)+' par '+per+'</span>';}).join('')+
     (unit!=='€'&&!hasEur?'<span>Renseigne un prix de fioul ou de gaz (et d\'électricité) dans ⚙️ Réglages pour voir les barres en €.</span>':'')+
     '<span>Total affiché : '+compactLine(tot)+'</span>'+(showTemp?tempLegend(data.map(function(d){return d.tp;}),view==='week'?'':null):'');
@@ -1584,7 +1761,7 @@ function updatePreview(){
   if(kwh<0){p.classList.add('warn');p.innerHTML='⚠️ Valeur négative.';return;}
   var dt=$('fDate').value||todayIso(), pd=null;
   entries.forEach(function(e){if(e.id!==editingId&&e.date<=dt&&(pd===null||e.date>pd))pd=e.date;});
-  var cf=copFor(pd,dt), c=calc(kwh,null,cf.cop);
+  var cf=copFor(pd,dt), c=calc(kwh,null,cf.cop,entryPrice(pd,dt));
   p.innerHTML=head+'= '+nf0.format(c.chaleur)+' kWh de chaleur · '+esc(copSrcText(cf))+' → <b>'+volText(c)+'</b>'+cmpHtml(c);
 }
 function openForm(){$('formBody').classList.remove('hidden');$('btnNewReading').classList.add('hidden');}
@@ -1650,7 +1827,7 @@ function roiCompute(list){
   var cost=Math.max(0,s.pacPrix-(s.pacAides||0)), r={state:'ok',opts:opts,side:side,cost:cost};
   if(side.net===null){r.state='noelec';return r;}
   var d0=s.pacDate||(list.length?list[0].date:null);r.d0=d0;
-  var rows=d0?list.filter(function(e){return e.date>=d0;}).map(function(e){var sd=calc(e.kwh,null,e.cop).sides.filter(function(x){return x.id===side.id;})[0];return {d:e.date,net:sd&&sd.net!==null?sd.net:0};}):[];
+  var rows=d0?list.filter(function(e){return e.date>=d0;}).map(function(e){var sd=calc(e.kwh,null,e.cop,e.pe).sides.filter(function(x){return x.id===side.id;})[0];return {d:e.date,net:sd&&sd.net!==null?sd.net:0};}):[];
   var entDay=(s.pacEnt||0)/365, last=rows.length?rows[rows.length-1].d:null, ref=last||todayIso();
   var cum=0,paid=null;rows.forEach(function(x){cum+=x.net;if(paid===null&&cum-entDay*Math.max(0,daysBetween(d0,x.d))>=cost)paid=x.d;});
   r.ent=d0?entDay*Math.max(0,daysBetween(d0,ref)):0; r.rec=cum-r.ent; r.n=rows.length; r.last=last;
@@ -1688,7 +1865,7 @@ function heatCalib(rows,s,kwe){
 function roiForecast(r,rows,s,sid,entDay){
   var kwe=s.pacKw||null,c=heatCalib(rows,s,kwe),H=c.H,D=c.D,days=c.days;
   r.calDays=days;r.calDju=D;r.calHeat=H;r.calSat=c.nSat;r.calExcl=c.excl;r.kwe=kwe;
-  var nph=[];for(var m=0;m<12;m++){var cm=tempReady(s)?(monthCop(m,s)||s.cop):s.cop;var sd=calc(1/cm,null,cm).sides.filter(function(x){return x.id===sid;})[0];nph.push(sd&&sd.net!==null?sd.net:0);}
+  var nph=[];for(var m=0;m<12;m++){var cm=tempReady(s)?(monthCop(m,s)||s.cop):s.cop;var sd=calc(1/cm,null,cm,elPriceMonth(elOf(s),m)).sides.filter(function(x){return x.id===sid;})[0];nph.push(sd&&sd.net!==null?sd.net:0);}
   if(D<40||H<=0){ // presque pas de froid mesuré (ex. relevés d'été : clim, eau chaude…) : repli sur la moyenne plate
     r.method='flat';r.rough=true;if(r.etaFlat){r.eta=r.etaLo=r.etaHi=r.etaFlat;}return;}
   var h=H/D;r.heatPerDju=h;r.method='saison';r.rough=days<14||D<100;
@@ -1747,7 +1924,7 @@ function renderRoi(list){
     sub.innerHTML='<span id="roiRec">'+(r.rec<0?'Pas d\'économie pour l\'instant ('+fEur0(r.rec)+')':fEur0(r.rec)+' récupérés sur '+fEur0(r.cost))+'</span> · '+eta;
     if(r.capHit&&r.capHit.length)sub.innerHTML+=' <span class="roi-cap" title="PAC plafonnée par sa puissance max : détail dans ⓘ" aria-label="PAC plafonnée par sa puissance max, détail dans le ⓘ">⚠️</span>';
   }
-  sub.title='Prévision saisonnière : chaleur mesurée par degré-jour, projetée avec les températures normales des mois à venir (comparée à '+r.side.name+'). Détails : ⚙️ Réglages → Général → Comment c\'est calculé.';
+  sub.title='Prévision saisonnière : chaleur mesurée par degré-jour, projetée avec les températures normales des mois à venir (comparée à '+r.side.name+'). Détails : ⚙️ Réglages → Sauvegarde & calculs → Comment c\'est calculé.';
   // v24 : plus de pastilles ; on indique discrètement la comparaison utilisée (⭐ favori des Réglages)
   pick.innerHTML='<span class="vs" id="roiVs">vs '+esc(r.side.name)+(r.opts.length>1&&favId()===r.side.id?' ⭐':'')+'</span>';
 }
@@ -1761,7 +1938,7 @@ function roiBarStyle(bar,p,done){var t=p/100, st=bar.style;
   var em=$('roiPctIn'), lab=Math.round(Math.max(0,p))+' %';em.textContent=lab;
   if(p>=15){em.className='';em.style.left='calc('+p.toFixed(1)+'% - 41px)';}else{em.className='out';em.style.left='calc('+Math.max(0,p).toFixed(1)+'% + 5px)';}}
 $('roiCard').addEventListener('click',function(ev){
-  var f=ev.target.closest('[data-roiset]');if(f){var t=f.getAttribute('data-roiset');openSettings(t==='compList'?'secOld':'secPac',t==='compList'?null:t);}});
+  var f=ev.target.closest('[data-roiset]');if(f){var t=f.getAttribute('data-roiset');openSettings(t==='compList'?'secOld':t==='sElec'?'secGen':'secPac',t==='compList'?null:t);}});
 
 // ---------- graphique : boutons ----------
 $('evolUnit').addEventListener('click',function(ev){var b=ev.target.closest('[data-eunit]');if(!b)return;evolUnitSel=b.getAttribute('data-eunit');save(KEY_EUNIT,evolUnitSel);evolPage=0;evolSel=null;renderChart(resolved());});
@@ -1785,11 +1962,8 @@ if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');i
 
 // ---------- réglages ----------
 var REQ={sCop:'cop',sPci:'pci',sRend:'rend',sRendGaz:'rendGaz'};
-var OPT={sElec:'prixElec',sHP:'prixHP',sHC:'prixHC'};
-var elecModeUI='base', compsUI=[];
+var compsUI=[];
 function numStr(v){return v===null||v===undefined?'':String(v).replace('.',',');}
-function setElecMode(m){elecModeUI=m;$('elecBase').setAttribute('aria-pressed',m==='base');$('elecHphc').setAttribute('aria-pressed',m==='hphc');
-  $('boxBase').classList.toggle('hidden',m!=='base');$('boxHphc').classList.toggle('hidden',m!=='hphc');}
 // --- liste des comparaisons (brouillon d'interface, enregistré automatiquement) ---
 function readCompsUI(){
   compsUI.forEach(function(c){var r=document.querySelector('#compList [data-cid="'+c.id+'"]');if(!r)return;
@@ -1831,12 +2005,12 @@ $('compList').addEventListener('click',function(ev){
   compsUI=compsUI.filter(function(x){return x.id!==id;});renderCompsUI();scheduleSave(0);
 });
 // --- COP selon la température : brouillon d'interface ---
-var copModeUI='fixe', copPtsUI=[], copCurveUI=null;
-function setCurveUI(k){copCurveUI=(k&&COP_CURVES[k])?k:null;
-  Array.prototype.forEach.call(document.querySelectorAll('#copCurveSeg button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-cv')===copCurveUI));});
-  var c=copCurveUI?COP_CURVES[copCurveUI]:null;
-  $('cvState').textContent=c?'Courbe active (avant % de correction) : '+c.pts.map(function(p){return (p.t>0?'+':p.t<0?'−':'')+nf0.format(Math.abs(p.t))+' °C → '+nf2.format(p.cop);}).join(' · '):'';$('cvState').classList.toggle('hidden',!c);
-  updateCopPreview();}
+var copModeUI='fixe', copPtsUI=[], copCurveUI=null, measUI=[];
+var SGN=function(t){return (t>0?'+':t<0?'−':'')+nf1.format(Math.abs(t)).replace(/,0$/,'');};
+function uiMach(){return uiMachKey();}
+function uiScop(){var v=parseNum($('sScop').value);return (isFinite(v)&&v>=1&&v<=10)?v:null;}
+function uiCorr(){var c=parseNum($('sCorr').value.replace('%',''));return (isFinite(c)&&c>=0&&c<90)?c:0;}
+function uiCurve(k){return k==='scop'?scopBase(uiMachKey(),uiScop()):(k&&COP_CURVES[k]?COP_CURVES[k].pts:null);}
 function setCopMode(m){copModeUI=m;$('copFixe').setAttribute('aria-pressed',m==='fixe');$('copTemp').setAttribute('aria-pressed',m==='temp');
   $('boxCopFixe').classList.toggle('hidden',m!=='fixe');$('boxCopTemp').classList.toggle('hidden',m!=='temp');}
 function readPtsUI(){Array.prototype.forEach.call(document.querySelectorAll('#copPtsTbl tr[data-i]'),function(r){var i=+r.getAttribute('data-i');if(copPtsUI[i]){copPtsUI[i].tRaw=r.querySelector('.pT').value;copPtsUI[i].cRaw=r.querySelector('.pC').value;}});}
@@ -1845,91 +2019,168 @@ function renderPtsUI(){
     (copPtsUI.length?copPtsUI.map(function(p,i){return '<tr data-i="'+i+'"><td><input type="text" inputmode="text" class="pT" aria-label="Température du point '+(i+1)+'" placeholder="ex. 7" value="'+esc(p.tRaw)+'"></td>'+
       '<td><input type="text" inputmode="decimal" class="pC" aria-label="COP du point '+(i+1)+'" placeholder="ex. 3,5" value="'+esc(p.cRaw)+'"></td>'+
       '<td><button class="icon-btn del pDel" type="button" aria-label="Supprimer le point '+(i+1)+'">🗑️</button></td></tr>';}).join('')
-    :'<tr><td colspan="3" class="empty" style="text-align:left;white-space:normal">Aucun point : ajoute-en (2 à 6) ou utilise le bouton Midea.</td></tr>')+'</tbody>';
-  $('btnAddPt').disabled=copPtsUI.length>=6;
+    :'<tr><td colspan="3" class="empty" style="text-align:left;white-space:normal">Aucun COP moyen saisi.</td></tr>')+'</tbody>';
+  $('btnAddPt').disabled=copPtsUI.length>=8;
   updateCopPreview();
 }
 function renderMonthUI(){
-  var h='<thead><tr><th>Mois</th><th>T moy. (°C)</th><th>COP calculé</th><th>COP forcé</th></tr></thead><tbody>';
-  for(var m=0;m<12;m++)h+='<tr data-m="'+m+'"><td>'+MONTHS_AB[m]+'</td><td><input type="text" inputmode="text" class="mT" aria-label="Température moyenne '+MONTHS_FR[m]+'" value="'+esc(numStr(settings.tMonths[m]))+'"></td><td class="mc" id="mc'+m+'">—</td>'+
+  var h='<thead><tr><th>Mois</th><th>T moy.</th><th>COP calculé</th><th>COP forcé</th></tr></thead><tbody>';
+  for(var m=0;m<12;m++)h+='<tr data-m="'+m+'"><td>'+MONTHS_AB[m]+'</td><td id="mt'+m+'">—</td><td class="mc" id="mc'+m+'">—</td>'+
     '<td><input type="text" inputmode="decimal" class="mO" aria-label="COP forcé '+MONTHS_FR[m]+'" placeholder="—" value="'+esc(numStr(settings.copOver[m]))+'"></td></tr>';
   $('copMonthTbl').innerHTML=h+'</tbody>';
 }
+// --- températures des mois (⚙️ Général) : remplies avec le lieu, modifiables ---
+function r1(x){return Math.round(x*10)/10;}
+function renderTGrid(){var h='';for(var m=0;m<12;m++){var v=settings.tMonths[m],man=v!==null;
+  h+='<label class="tcell'+(man?' man':'')+'"><span>'+MONTHS_AB[m]+'</span><input type="text" inputmode="text" class="tgI" data-m="'+m+'" data-auto="'+(man?0:1)+'" value="'+esc(numStr(man?v:r1(METZ_TNORM[m])))+'" aria-label="Température moyenne '+MONTHS_FR[m]+' (°C)"></label>';}
+  $('tGrid').innerHTML=h;tGridSum();}
+function tGridInputs(){return Array.prototype.slice.call(document.querySelectorAll('#tGrid .tgI'));}
+function tGridManual(i){if(i.getAttribute('data-auto')==='1'||i.value.trim()==='')return false;var v=parseNum(i.value);return !(isFinite(v)&&Math.abs(v-METZ_TNORM[+i.getAttribute('data-m')])<0.05);}
+function tGridVal(m){var i=document.querySelector('#tGrid .tgI[data-m="'+m+'"]');if(!i||!tGridManual(i))return METZ_TNORM[m];var v=parseNum(i.value);return isFinite(v)?v:METZ_TNORM[m];}
+function tGridSum(){var ins=tGridInputs(),n=0,sum=0;ins.forEach(function(i){var man=tGridManual(i);i.parentNode.classList.toggle('man',man);if(man)n++;sum+=tGridVal(+i.getAttribute('data-m'));});
+  $('tGridSum').textContent='ⓘ '+(climInfo&&climInfo.mode==='gps'?'Lieu GPS':'Metz')+' · moyenne '+nf1.format(sum/12)+' °C'+(n?' · '+n+' mois modifié'+(n>1?'s':''):'');$('btnTReset').disabled=!n;}
+function tGridRefresh(){tGridInputs().forEach(function(i){if(i.getAttribute('data-auto')==='1'&&document.activeElement!==i)i.value=numStr(r1(METZ_TNORM[+i.getAttribute('data-m')]));});tGridSum();updateCopPreview();}
+$('tGrid').addEventListener('input',function(ev){if(ev.target.classList.contains('tgI'))ev.target.setAttribute('data-auto',ev.target.value.trim()===''?'1':'0');tGridSum();updateCopPreview();});
+$('tGrid').addEventListener('focusout',function(ev){var i=ev.target;if(i.classList&&i.classList.contains('tgI')&&i.value.trim()===''){i.setAttribute('data-auto','1');i.value=numStr(r1(METZ_TNORM[+i.getAttribute('data-m')]));tGridSum();}});
+$('btnTReset').addEventListener('click',function(){tGridInputs().forEach(function(i){i.setAttribute('data-auto','1');i.value=numStr(r1(METZ_TNORM[+i.getAttribute('data-m')]));});tGridSum();updateCopPreview();scheduleSave(0);});
 function uiPts(){readPtsUI();var a=[];copPtsUI.forEach(function(p){var t=parseNum(p.tRaw),c=parseNum(p.cRaw);if(isFinite(t)&&c>0)a.push({t:t,cop:c});});return a;}
+function uiBase(){return copCurveUI?uiCurve(copCurveUI)||[]:[];}
+function uiCust(){return avgGroups(uiPts().concat(measParse().ok.map(function(m){return {t:m.t,cop:measCop(m)};})));}
+function uiEffPts(){var b=uiBase(),g=uiCust(),k=1-uiCorr()/100,kc=$('sCustCorr').checked?k:1;
+  return g.length?{pts:mergeMeas(b.map(function(p){return {t:p.t,cop:p.cop*k};}),g.map(function(x){return {t:x.t,cop:x.cop*kc};})),corr:0}:{pts:b,corr:uiCorr()};}
 function updateCopPreview(){
-  var pts=uiPts(), corr=parseNum($('sCorr').value);if(!isFinite(corr)||corr<0)corr=0;
-  if(copCurveUI)pts=COP_CURVES[copCurveUI].pts;
+  if(!$('copMonthTbl').querySelector('tr'))return;
+  var E=uiEffPts();
   for(var m=0;m<12;m++){var cell=$('mc'+m);if(!cell)continue;var r=document.querySelector('#copMonthTbl tr[data-m="'+m+'"]');
-    var t=parseNum(r.querySelector('.mT').value), o=parseNum(r.querySelector('.mO').value), c=(pts.length>=2&&isFinite(t))?copInterp(t,pts,corr):null;
-    cell.textContent=c===null?'—':nf2.format(c);cell.classList.toggle('forced',o>0&&c!==null);}
+    var t=tGridVal(m), o=parseNum(r.querySelector('.mO').value), c=(copPtsSorted(E.pts).length>=2&&isFinite(t))?copInterp(t,E.pts,E.corr):null;
+    $('mt'+m).textContent=nf1.format(t)+' °C';cell.textContent=c===null?'—':nf2.format(c);cell.classList.toggle('forced',o>0&&c!==null);}
+  renderMachUI(E);renderMeasOut();
 }
+// v32 : un seul sélecteur = machines (SCOP affiché) + courbes toutes faites
+function machLabel(k){var m=SIM_MACH[k],v=(m.scop!==null)?m.scop:uiScopSafe(),t=v!==null?' · SCOP '+nf1.format(v):' · ton SCOP',n=k==='mine'?'Ma machine (COP constant)':k==='perso'?'Personnalisé (courbe PAC air)':m.name.replace(' + plancher chauffant',' + plancher'),x=n.match(/^(.*?)( \(.*\)| – .*)$/);
+  return x?x[1]+t+x[2]:n+t;} // v32 : SCOP avant la précision entre parenthèses, pour rester lisible quand le menu est fermé (390 px)
+function uiScopSafe(){return $('sScop')?uiScop():null;}
+function fillMachSel(){var sel=$('sMach'),v=sel.value;
+  sel.innerHTML='<option value="">— Aucune : seulement mes valeurs perso</option><optgroup label="Machines">'+SIM_ORDER.map(function(k){return '<option value="'+k+'">'+esc(machLabel(k))+'</option>';}).join('')+'</optgroup>'+
+    '<optgroup label="Courbes toutes faites">'+Object.keys(COP_CURVES).map(function(k){return '<option value="cv:'+k+'">'+esc(COP_CURVES[k].name)+' · SCOP ≈ '+nf1.format(scopEN(COP_CURVES[k].pts))+'</option>';}).join('')+'</optgroup>';
+  sel.value=v;}
+function selToCurve(){var v=$('sMach').value;if(v.indexOf('cv:')===0)return v.slice(3);if(!v)return null;return 'scop';}
+function uiMachKey(){var v=$('sMach').value;return (v&&v.indexOf('cv:')!==0)?v:'';}
+var CURVE_SRC={reddit:'Valeurs non officielles d\'un tableau partagé sur Reddit (COP de laboratoire à charge partielle) : plutôt optimistes.',
+  r32:'Moyenne des COP publiés par les fabricants pour 5 splits R32 (Samsung AR12TXFC et AR09TX, Mitsubishi HR25VF, Midea MOB02-18HFN8, Daikin FTXF/RXF25E), mesurés en laboratoire. −10 °C non publié : 2,5 estimé.',
+  porta:'Estimation issue d\'une réponse d\'IA, non vérifiée par des mesures indépendantes.',
+  midea:'Ancienne courbe Midea « réaliste » : valeurs baissées pour tenir compte des arrêts-redémarrages quand il fait doux.'};
+function syncCurve(){copCurveUI=selToCurve();if(copCurveUI==='scop'&&!scopBase(uiMachKey(),uiScop()))copCurveUI=null;}
+function renderMachUI(E){var v=$('sMach').value,k=uiMachKey(),m=SIM_MACH[k],cv=v.indexOf('cv:')===0?v.slice(3):null;
+  $('sMachHint').textContent=cv?'Source : '+CURVE_SRC[cv]+' SCOP ≈ calcul EN 14825 (climat moyen), avant correction.':m?(m.scop===null&&uiScop()===null?'Tape le SCOP de ta machine dans « Mon SCOP personnalisé ».':m.src):'Aucune machine : la courbe vient de tes valeurs dans « Mon SCOP personnalisé » (2 températures au moins).';
+  E=E||uiEffPts();var pts=copPtsSorted(E.pts),flat=pts.length<2||pts.every(function(p){return Math.abs(p.cop-pts[0].cop)<1e-9;});
+  $('sCopAt').innerHTML=flat?'':'COP selon la température dehors (scénario inclus'+(uiCust().length?', avec tes valeurs perso':'')+') : '+[-10,-7,2,7,12].map(function(t){return SGN(t)+' °C → <b>'+nf2.format(copInterp(t,pts,E.corr))+'</b>';}).join(' · ');
+  $('sCopAt').classList.toggle('hidden',flat);
+  var raw=$('sCorr').value.trim().replace('%',''),x=raw===''?0:parseNum(raw);
+  Array.prototype.forEach.call($('sScen').querySelectorAll('[data-scen]'),function(b){b.setAttribute('aria-pressed',String(isFinite(x)&&Math.abs(+b.getAttribute('data-scen')-x)<1e-9));});}
+$('sMach').addEventListener('change',function(){var k=uiMachKey(),m=SIM_MACH[k];
+  if(m&&m.scop!==null)$('sScop').value=numStr(m.scop);
+  syncCurve();
+  if(m&&m.scop===null&&uiScop()===null){measOpen(true);try{$('sScop').focus({preventScroll:true});}catch(e){}}
+  updateCopPreview();});
+$('sScop').addEventListener('input',function(){var k=uiMachKey(),m=SIM_MACH[k];
+  if(uiScop()!==null&&(!m||m.scop!==null)){var nk=(!m||m.curve)?'perso':'mine';fillMachSel();$('sMach').value=nk;}
+  fillMachSel();syncCurve();updateCopPreview();});
+$('sCustCorr').addEventListener('change',function(){updateCopPreview();scheduleSave(0);});
+$('sScen').addEventListener('click',function(ev){var b=ev.target.closest('[data-scen]');if(!b)return;$('sCorr').value=b.getAttribute('data-scen');updateCopPreview();scheduleSave(0);});
 function showTReal(){$('boxTReal').classList.toggle('hidden',!$('sTReal').checked);}
 $('copFixe').addEventListener('click',function(){setCopMode('fixe');scheduleSave(0);});
 function samePts(a,b){a=copPtsSorted(a);b=copPtsSorted(b);return a.length===b.length&&a.every(function(p,i){return Math.abs(p.t-b[i].t)<1e-9&&Math.abs(p.cop-b[i].cop)<1e-9;});}
-function curvePtsUI(k){return COP_CURVES[k].pts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});}
-// un point modifié à la main → la courbe toute faite n'est plus active (ce sont tes points)
-function curveCheckUI(){if(copCurveUI&&!samePts(uiPts(),COP_CURVES[copCurveUI].pts))setCurveUI(null);}
-$('copCurveSeg').addEventListener('click',function(ev){var b=ev.target.closest('button[data-cv]');if(!b)return;var k=b.getAttribute('data-cv');
-  if(copCurveUI!==k){var cur=uiPts(),known=!cur.length||samePts(cur,MIDEA_PTS)||Object.keys(COP_CURVES).some(function(x){return samePts(cur,COP_CURVES[x].pts);});
-    if(!known&&!confirm('Remplacer tes points par la courbe « '+COP_CURVES[k].name+' » ? (ton % de correction est gardé)'))return;
-    copPtsUI=curvePtsUI(k);renderPtsUI();}
-  setCurveUI(copCurveUI===k?null:k);toast(copCurveUI?'Courbe : '+COP_CURVES[copCurveUI].name:'Courbe : tes points');scheduleSave(0);});
 $('copTemp').addEventListener('click',function(){setCopMode('temp');scheduleSave(0);});
-$('btnAddPt').addEventListener('click',function(){readPtsUI();if(copPtsUI.length>=6){toast('6 points maximum');return;}copPtsUI.push({tRaw:'',cRaw:''});renderPtsUI();
+$('btnAddPt').addEventListener('click',function(){readPtsUI();if(copPtsUI.length>=8){toast('8 points maximum');return;}copPtsUI.push({tRaw:'',cRaw:''});renderPtsUI();
   var r=document.querySelectorAll('#copPtsTbl .pT');if(r.length)r[r.length-1].focus();});
-$('copPtsTbl').addEventListener('click',function(ev){var b=ev.target.closest('.pDel');if(!b)return;readPtsUI();copPtsUI.splice(+b.closest('tr').getAttribute('data-i'),1);renderPtsUI();curveCheckUI();scheduleSave(0);});
-$('copPtsTbl').addEventListener('input',function(){curveCheckUI();updateCopPreview();});
+$('copPtsTbl').addEventListener('click',function(ev){var b=ev.target.closest('.pDel');if(!b)return;readPtsUI();copPtsUI.splice(+b.closest('tr').getAttribute('data-i'),1);renderPtsUI();scheduleSave(0);});
+$('copPtsTbl').addEventListener('input',function(){updateCopPreview();});
 $('copMonthTbl').addEventListener('input',updateCopPreview);
 $('sCorr').addEventListener('input',updateCopPreview);
-$('btnMidea').addEventListener('click',function(){
-  readPtsUI();var hasData=copPtsUI.some(function(p){return String(p.tRaw).trim()!==''||String(p.cRaw).trim()!=='';});
-  if((hasData||$('sCorr').value.trim()!=='')&&!confirm('Remplacer tes points et ton % de correction par ceux de la Midea PortaSplit ?'))return;
-  copPtsUI=MIDEA_PTS.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});$('sCorr').value=numStr(MIDEA_CORR);renderPtsUI();curveCheckUI();
-  scheduleSave(0);});
-$('btnMetz').addEventListener('click',function(){
-  Array.prototype.forEach.call(document.querySelectorAll('#copMonthTbl tr[data-m]'),function(r){r.querySelector('.mT').value=numStr(METZ_T0[+r.getAttribute('data-m')]);});
-  updateCopPreview();scheduleSave(0);});
+// --- SCOP personnalisé : tes mesures (jamais corrigées) ---
+function measRowHtml(m,i){var q=String(m.q||350);
+  return '<div class="meas-row" data-i="'+i+'"><input type="text" inputmode="text" class="mx-t" aria-label="Température dehors, mesure '+(i+1)+'" placeholder="7" value="'+esc(m.t)+'">'+
+    '<input type="text" inputmode="decimal" class="mx-w" aria-label="Watts, mesure '+(i+1)+'" placeholder="450" value="'+esc(m.w)+'">'+
+    '<input type="text" inputmode="decimal" class="mx-i" aria-label="Température d\'entrée de l\'air, mesure '+(i+1)+'" placeholder="20" value="'+esc(m.ti)+'">'+
+    '<input type="text" inputmode="decimal" class="mx-o" aria-label="Température de sortie de l\'air, mesure '+(i+1)+'" placeholder="38" value="'+esc(m.to)+'">'+
+    '<select class="mx-q" aria-label="Vitesse du ventilateur, mesure '+(i+1)+'">'+MEAS_Q.map(function(v){return '<option value="'+v+'"'+(String(v)===q?' selected':'')+'>'+v+'</option>';}).join('')+'</select>'+
+    '<button class="icon-btn del mx-del" type="button" aria-label="Supprimer la mesure '+(i+1)+'">🗑️</button><div class="meas-cop" id="mcop'+i+'"></div></div>';}
+function renderMeasUI(){$('measList').innerHTML=measUI.map(measRowHtml).join('')||'<p class="hint">Aucune mesure.</p>';renderMeasOut();}
+function readMeasUI(){Array.prototype.forEach.call(document.querySelectorAll('#measList .meas-row'),function(r){var i=+r.getAttribute('data-i');if(!measUI[i])return;
+  measUI[i]={t:r.querySelector('.mx-t').value,w:r.querySelector('.mx-w').value,ti:r.querySelector('.mx-i').value,to:r.querySelector('.mx-o').value,q:+r.querySelector('.mx-q').value};});}
+function measParse(){readMeasUI();var ok=[],bad=null,st=[];
+  measUI.forEach(function(r,i){var raw=[r.t,r.w,r.ti,r.to].map(function(x){return String(x===null||x===undefined?'':x).trim();});
+    if(raw.every(function(x){return x==='';})){st[i]='';return;}
+    var t=parseNum(raw[0]),w=parseNum(raw[1]),ti=parseNum(raw[2]),to=parseNum(raw[3]),q=MEAS_Q.indexOf(+r.q)>=0?+r.q:350;
+    if(!(isFinite(t)&&t>=-30&&t<=40)||!(w>=1&&w<=10000)||!(isFinite(ti)&&ti>=-20&&ti<=60)||!(isFinite(to)&&to<=80)){st[i]='⚠️ incomplet';if(bad===null)bad=i;return;}
+    if(!(to>ti)){st[i]='⚠️ sortie ≤ entrée';if(bad===null)bad=i;return;}
+    var m={t:t,w:w,ti:ti,to:to,q:q};st[i]='COP '+nf2.format(measCop(m))+' = '+q+' × 0,335 × '+nf1.format(to-ti)+' ÷ '+nf0.format(w);ok.push(m);});
+  return {ok:ok,bad:bad,st:st};}
+function renderMeasOut(){if(!$('measOut'))return;var P=measParse();P.st.forEach(function(t,i){var c=$('mcop'+i);if(c)c.textContent=t;});
+  var n=settings.copPts.length+settings.meas.length;$('btnMeas').textContent='🧪 Mon SCOP personnalisé'+(n?' ('+n+' valeur'+(n>1?'s':'')+')':'');
+  var g=uiCust(),o=$('measOut'),cc=$('sCustCorr').checked,co=uiCorr();o.classList.remove('warn');
+  if(!g.length){o.innerHTML='Saisis tes COP moyens (a) ou tes mesures brutes (b).';return;}
+  var base=copPtsSorted(uiBase()),merged=mergeMeas(base,g),ind=scopEN(merged.length>=2?merged:g);
+  var lab=null,ref=null;
+  if(copCurveUI==='scop'&&uiScop()!==null){ref=uiScop();lab='SCOP de la machine';}
+  else if(base.length>=2){ref=scopEN(base);lab='SCOP de la courbe';}
+  var cov=enCover(g[0].t,g[g.length-1].t),h='<div><b>Tes valeurs</b> (moyenne par température) : '+g.map(function(x){return SGN(x.t)+' °C → <b>'+nf2.format(x.cop)+'</b>'+(x.n>1?' ('+x.n+')':'');}).join(' · ')+'</div>'+
+    (cc?'<div>Correction du scénario appliquée à tes valeurs'+(co?' (−'+nfN.format(co)+' %)':' (0 % actuellement)')+'.</div>':'<div id="measNoCorr">✋ Valeurs mesurées par toi : aucune correction appliquée.</div>')+
+    (base.length?'<div>Elles remplacent la courbe de '+SGN(g[0].t)+' à '+SGN(g[g.length-1].t)+' °C ; ailleurs, courbe de base'+(co?' −'+nfN.format(co)+' %':'')+'.</div>':(g.length<2?'<div>⚠️ Sans machine, il faut au moins 2 températures.</div>':''))+
+    '<div style="margin-top:6px">SCOP indicatif avec tes valeurs (avant correction, pour comparer à la fiche) : <b id="measScop">'+nf2.format(ind)+'</b>'+(ref!==null?' · '+lab+' : '+nf2.format(ref):'')+'</div>';
+  if(ref!==null){var gap=ind/ref-1,gp=(gap>=0?'+':'−')+nf0.format(Math.abs(gap*100))+' %';
+    if(Math.abs(gap)<=0.15)h+='<div id="measVerdict">✅ Écart '+gp+' : cohérent avec le '+lab+'.</div>';
+    else{o.classList.add('warn');h+='<div id="measVerdict">⚠️ Écart '+gp+' avec le '+lab+'. Pas forcément une erreur : le SCOP vient du laboratoire, le débit d\'air réel est incertain et peu de températures sont mesurées. Tes valeurs sont gardées telles quelles.</div>';}}
+  else h+='<div>Choisis une machine (ou une courbe) pour comparer.</div>';
+  h+='<div>Tes valeurs couvrent <b id="measCov">'+nf0.format(cov*100)+' %</b> du besoin de chaleur de la saison (EN 14825)'+(cov<0.5&&base.length?' ; le reste vient de la courbe de base':'')+'. Indicatif.</div>';
+  o.innerHTML=h;}
+function measOpen(on){$('measBox').classList.toggle('hidden',!on);$('btnMeas').setAttribute('aria-expanded',String(on));}
+$('btnMeas').addEventListener('click',function(){measOpen($('measBox').classList.contains('hidden'));});
+$('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.length>=40){toast('40 mesures maximum');return;}measUI.push({t:'',w:'',ti:'',to:'',q:350});renderMeasUI();var r=document.querySelectorAll('#measList .mx-t');if(r.length)r[r.length-1].focus();});
+$('measList').addEventListener('click',function(ev){var b=ev.target.closest('.mx-del');if(!b)return;readMeasUI();measUI.splice(+b.closest('.meas-row').getAttribute('data-i'),1);renderMeasUI();updateCopPreview();scheduleSave(0);});
+$('measList').addEventListener('input',function(){updateCopPreview();});
+$('measList').addEventListener('change',function(){updateCopPreview();});
+// --- électricité (bloc « s ») ---
+function renderSetEl(){var r=readEl('s');renderElInfo('s',r.el,r.bad);}
+$('sElBlock').addEventListener('click',function(ev){var b=ev.target.closest('[data-eltar],[data-eltm],#sPctBtn');if(!b)return;
+  if(b.id==='sPctBtn')$('sPct').value=numStr(HC_SUGGEST);else setElUI('s',b.getAttribute('data-eltar'),b.getAttribute('data-eltm'));renderSetEl();scheduleSave(0);});
+$('sElBlock').addEventListener('input',renderSetEl);$('sElBlock').addEventListener('change',renderSetEl);
 $('sTReal').addEventListener('change',showTReal);
 $('btnGeo').addEventListener('click',function(){
   if(!navigator.geolocation){toast('Position indisponible sur cet appareil');return;}
   navigator.geolocation.getCurrentPosition(function(p){$('sLat').value=numStr(Math.round(p.coords.latitude*100)/100);$('sLon').value=numStr(Math.round(p.coords.longitude*100)/100);scheduleSave(0);},
     function(){toast('Position refusée ou indisponible : tape-la à la main');},{timeout:10000});});
-$('btnTFetch').addEventListener('click',function(){
-  flushSave();if(!locOf(settings)){toast('Mets la latitude et la longitude');return;}
-  if(!settings.tReal&&!showTemp){toast('Active « Températures réelles » (COP) ou la courbe 🌡️ Température d\'un graphique');return;}
-  fetchTemps(true);});
+$('btnMetzDef').addEventListener('click',function(){$('sLat').value='';$('sLon').value='';scheduleSave(0);toast('Météo : Metz-Frescaty par défaut');});
 function fillSettings(){
   Object.keys(REQ).forEach(function(id){$(id).value=numStr(settings[REQ[id]]);});
-  Object.keys(OPT).forEach(function(id){$(id).value=numStr(settings[OPT[id]]);});
-  $('sPct').value=numStr(settings.pctHC);
+  fillEl('s',elOf(settings));renderSetEl();
   compsUI=settings.comps.map(function(c){return {id:c.id,type:c.type,label:c.label,prixRaw:numStr(c.prix),on:c.on,fav:!!c.fav};});renderCompsUI();
-  setElecMode(settings.elecMode);
   setCopMode(settings.copMode);
+  $('sScop').value=numStr(settings.scop);fillMachSel();$('sMach').value=settings.copCurve&&settings.copCurve!=='scop'?'cv:'+settings.copCurve:(settings.copCurve==='scop'?settings.mach:'');$('sSimUse').checked=settings.simUseSet;$('sCustCorr').checked=settings.custCorr;
   copPtsUI=settings.copPts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});
   $('sCorr').value=numStr(settings.copCorr);
-  if(curveOf(settings)&&!samePts(settings.copPts,curveOf(settings).pts))copPtsUI=curvePtsUI(settings.copCurve);
-  renderMonthUI();renderPtsUI();setCurveUI(settings.copCurve);
+  measUI=settings.meas.map(function(m){return {t:numStr(m.t),w:numStr(m.w),ti:numStr(m.ti),to:numStr(m.to),q:m.q};});renderMeasUI();
+  renderTGrid();renderMonthUI();syncCurve();renderPtsUI();measOpen(settings.meas.length+settings.copPts.length>0||(settings.copCurve==='scop'&&SIM_MACH[settings.mach]&&SIM_MACH[settings.mach].scop===null));
   $('sTReal').checked=settings.tReal;$('sLat').value=numStr(settings.lat);$('sLon').value=numStr(settings.lon);showTReal();
   $('sPacPrix').value=numStr(settings.pacPrix);$('sPacAides').value=numStr(settings.pacAides);$('sPacEnt').value=numStr(settings.pacEnt);$('sPacKw').value=settings.pacKw?numStr(Math.round(settings.pacKw*1000)):'';renderPacKwLimit();
   $('sPacDate').value=settings.pacDate||'';
   setTempStatus(tempStatus);
 }
 function labelOf(id){return $(id).previousElementSibling?$(id).previousElementSibling.textContent:id;}
-$('elecBase').addEventListener('click',function(){setElecMode('base');scheduleSave(0);});
-$('elecHphc').addEventListener('click',function(){setElecMode('hphc');scheduleSave(0);});
-$('btnPct').addEventListener('click',function(){$('sPct').value=numStr(HC_SUGGEST);scheduleSave(0);});
 function collectSettings(){ // mêmes règles qu'avant (bouton « Enregistrer »), renvoie {err} ou {s}
   var n=Object.assign({},settings),id,v,raw;
   for(id in REQ){v=parseNum($(id).value);if(isNaN(v)||v<=0)return {err:'Valeur invalide : '+labelOf(id),el:id};n[REQ[id]]=v;}
   if(n.rend>100||n.rendGaz>100)return {err:'Le rendement doit être ≤ 100 %'};
-  for(id in OPT){raw=$(id).value.trim();if(raw===''){n[OPT[id]]=null;continue;}v=parseNum(raw);if(isNaN(v)||v<=0)return {err:'Valeur invalide : '+labelOf(id),el:id};n[OPT[id]]=v;}
-  raw=$('sPct').value.trim();if(raw===''){n.pctHC=null;}else{v=parseNum(raw.replace('%',''));if(isNaN(v)||v<0||v>100)return {err:'% heures creuses : entre 0 et 100',el:'sPct'};n.pctHC=v;}
+  var E=readEl('s');if(E.bad)return {err:E.bad==='sPct'?'% heures creuses : entre 0 et 100':'Prix d\'électricité invalide (ex. 0,2001)',el:E.bad};E=E.el;
+  n.elecMode=E.mode;n.prixElec=E.base;n.prixHP=E.hp;n.prixHC=E.hc;n.pctHC=E.pct;n.tempoMode=E.tm;n.tempo=Object.assign({},E.t);n.tdB=E.tdB;n.tdW=E.tdW;n.tdR=E.tdR;n.redOn=E.redOn;
+  n.peApplyAll=$('sPeAll').checked;n.simUseSet=$('sSimUse').checked;
   readCompsUI();var comps=[],bad=null;
   compsUI.forEach(function(c){var r=String(c.prixRaw||'').trim(),pv=null;if(r!==''){pv=parseNum(r);if(isNaN(pv)||pv<=0){if(!bad)bad=c;return;}}
     var o={id:c.id,type:c.type,label:String(c.label||'').trim().slice(0,40),prix:pv,on:!!c.on};if(c.fav)o.fav=true;comps.push(o);});
   if(bad)return {err:'Prix invalide pour '+(bad.type==='gaz'?'un prix gaz':'un prix fioul')+' (ex. 1,90)',el:'cp_'+bad.id};
   if(!comps.some(function(c){return c.on;}))return {err:'Coche au moins une comparaison (fioul ou gaz)'};
-  n.comps=comps;n.elecMode=elecModeUI;
+  n.comps=comps;
   // --- COP selon la température ---
   var strict=copModeUI==='temp', pts=[], badPt=false;
   readPtsUI();
@@ -1937,21 +2188,25 @@ function collectSettings(){ // mêmes règles qu'avant (bouton « Enregistrer »
     var t=parseNum(tr),c=parseNum(cr);if(!isFinite(t)||t<-50||t>50||!(c>0)||c>20){badPt=true;return;}pts.push({t:t,cop:c});});
   pts.sort(function(a,b){return a.t-b.t;});
   var dup=pts.some(function(p,i){return i&&p.t===pts[i-1].t;});
-  n.copCurve=copCurveUI;
-  if(strict&&!copCurveUI){
-    if(badPt)return {err:'Point de COP invalide (ex. 7 °C → 3,5)'};
-    if(pts.length<2||pts.length>6)return {err:'COP selon la température : mets de 2 à 6 points'};
-    if(dup)return {err:'Deux points ont la même température'};
-  } else if(badPt||dup) pts=settings.copPts.slice();
-  n.copPts=pts.slice(0,6);
+  syncCurve();n.mach=uiMachKey();n.custCorr=$('sCustCorr').checked;raw=$('sScop').value.trim();n.scop=uiScop();if(raw!==''&&n.scop===null){if(strict)return {err:'SCOP invalide (entre 1 et 10, ex. 4)',el:'sScop'};n.scop=settings.scop;}
+  n.copCurve=copCurveUI;if(n.copCurve==='scop'&&(!n.mach||n.scop===null))n.copCurve=null;
+  var MP=measParse();if(MP.bad!==null)return {err:'Mesure n° '+(MP.bad+1)+' incomplète ou invalide (watts > 0, sortie plus chaude que l\'entrée)'};
+  n.meas=MP.ok;
+  if(strict&&badPt)return {err:'COP moyen invalide (ex. 7 °C → 3,5)'};
+  if(strict&&dup)return {err:'Deux COP moyens ont la même température'};
+  if(badPt||dup)pts=settings.copPts.slice();
+  if(strict&&!n.copCurve&&custGroups({copPts:pts,meas:n.meas}).length<2)return {err:'COP selon la température : choisis une machine, ou mets tes COP à 2 températures au moins'};
+  n.copPts=pts.slice(0,8);
   raw=$('sCorr').value.trim().replace('%','');
   if(raw===''){n.copCorr=null;}else{v=parseNum(raw);if(isNaN(v)||v<0||v>=90){if(strict)return {err:'% de correction : entre 0 et 89',el:'sCorr'};v=settings.copCorr;}n.copCorr=v;}
   var tM=[],cO=[],badM=null;
+  tGridInputs().forEach(function(i){var m=+i.getAttribute('data-m'),ta=null;
+    if(tGridManual(i)){ta=parseNum(i.value);if(!isFinite(ta)||ta<-50||ta>50){if(badM===null)badM='Température invalide en '+MONTHS_FR[m];ta=settings.tMonths[m];}}
+    tM[m]=ta;});
   Array.prototype.forEach.call(document.querySelectorAll('#copMonthTbl tr[data-m]'),function(r){var m=+r.getAttribute('data-m');
-    var a=r.querySelector('.mT').value.trim(), b=r.querySelector('.mO').value.trim(), ta=null, ob=null;
-    if(a!==''){ta=parseNum(a);if(!isFinite(ta)||ta<-50||ta>50){if(badM===null)badM='Température invalide en '+MONTHS_FR[m];ta=settings.tMonths[m];}}
+    var b=r.querySelector('.mO').value.trim(), ob=null;
     if(b!==''){ob=parseNum(b);if(!(ob>=1)||ob>20){if(badM===null)badM='COP forcé invalide en '+MONTHS_FR[m]+' (entre 1 et 20)';ob=settings.copOver[m];}}
-    tM[m]=ta;cO[m]=ob;});
+    cO[m]=ob;});
   if(strict&&badM)return {err:badM};
   n.tMonths=tM;n.copOver=cO;
   n.tReal=$('sTReal').checked;
@@ -1960,7 +2215,6 @@ function collectSettings(){ // mêmes règles qu'avant (bouton « Enregistrer »
   if(n.lat!==null&&(!isFinite(n.lat)||n.lat<-90||n.lat>90)){if(true)return {err:'Latitude invalide (ex. 49,12)',el:'sLat'};n.lat=settings.lat;}
   if(n.lon!==null&&(!isFinite(n.lon)||n.lon<-180||n.lon>180)){if(true)return {err:'Longitude invalide (ex. 6,18)',el:'sLon'};n.lon=settings.lon;}
   if(strict&&n.tReal&&(n.lat===null||n.lon===null))return {err:'Températures réelles : mets la latitude et la longitude'};
-  if(strict&&!n.tReal&&tM.some(function(t,m){return t===null&&cO[m]===null;}))return {err:'Remplis la température de chaque mois (ou le bouton « Normales Metz »)'};
   n.copMode=copModeUI;
   // Rentabilité (facultatif)
   raw=$('sPacPrix').value.trim().replace('€','');if(raw===''){n.pacPrix=null;}else{v=parseNum(raw);if(!(v>0))return {err:'Prix de la PAC invalide (ex. 1500)',el:'sPacPrix'};n.pacPrix=v;}
@@ -1978,7 +2232,7 @@ function trySaveSettings(){
   var r=collectSettings();
   if(r.err){setSpStatus('⚠️ Pas encore enregistré : '+r.err,true);return r;}
   if(JSON.stringify(r.s)===JSON.stringify(settings)){if($('spStatus').classList.contains('err'))setSpStatus('');return r;}
-  settings=r.s;save(KEY_SET,settings);renderAll();updateCopPreview();setSpStatus('✓ Enregistré');toast('Enregistré',1200);climSync();
+  settings=r.s;save(KEY_SET,settings);histPush(settings);renderAll();updateCopPreview();setSpStatus('✓ Enregistré');toast('Enregistré',1200);climSync();
   if((settings.copMode==='temp'&&settings.tReal)||showTemp)fetchTemps(false);
   return r;
 }
@@ -1986,14 +2240,14 @@ function scheduleSave(ms){clearTimeout(saveT);saveT=setTimeout(trySaveSettings,m
 function flushSave(){var r=trySaveSettings();if(r&&!r.err)r=null;if(tankT||!$('tkStatus').classList.contains('hidden')){clearTimeout(tankT);tankT=null;r=trySaveTank()||r;}return r;}
 
 $('btnResetSettings').addEventListener('click',function(){
-  if(!confirm('Remettre COP fixe 3, PCI 10, rendement fioul 85 %, rendement gaz 90 % et électricité Base avec un prix vide (à ressaisir) ? Tes comparaisons (prix et noms) et tes points de COP / températures sont conservés.'))return;
-  settings=Object.assign({},settings,{copMode:'fixe',cop:DEFAULTS.cop,pci:DEFAULTS.pci,rend:DEFAULTS.rend,rendGaz:DEFAULTS.rendGaz,elecMode:'base',prixElec:DEFAULTS.prixElec});
-  clearTimeout(saveT);saveT=null;save(KEY_SET,settings);fillSettings();setSpStatus('');renderAll();toast('Valeurs par défaut remises');
+  if(!confirm('Remettre COP fixe 3, PCI 10, rendement fioul 85 %, rendement gaz 90 % et électricité Base au tarif EDF (0,2001 €/kWh) ? Tes comparaisons (prix et noms) et tes points de COP / températures sont conservés. Tes anciens relevés gardent leur prix.'))return;
+  settings=Object.assign({},settings,{copMode:'fixe',cop:DEFAULTS.cop,pci:DEFAULTS.pci,rend:DEFAULTS.rend,rendGaz:DEFAULTS.rendGaz,elecMode:'base',prixElec:EDF.base});
+  clearTimeout(saveT);saveT=null;save(KEY_SET,settings);histPush(settings);fillSettings();setSpStatus('');renderAll();toast('Valeurs par défaut remises');
 });
 
 // ---------- export / import ----------
 $('btnExport').addEventListener('click',function(){
-  var data={app:'suivi-pac-fioul',version:6,exportedAt:new Date().toISOString(),settings:settings,entries:entries,tank:{settings:tank,readings:tankReads},sim:simSt};
+  var data={app:'suivi-pac-fioul',version:7,exportedAt:new Date().toISOString(),settings:settings,elecHist:elecHist,entries:entries,tank:{settings:tank,readings:tankReads},sim:simSt};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='suivi-pac-fioul-'+todayIso()+'.json';
   document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
@@ -2013,7 +2267,9 @@ $('fileImport').addEventListener('change',function(){
       if(!confirm('Importer '+clean.length+' relevé(s) ? Ils remplaceront les '+entries.length+' relevé(s) actuels de ce navigateur.'+
         (hasTank?'\nCuve : '+tkClean.length+' relevé(s) de cuve remplaceront les '+tankReads.length+' actuels.':'\n(Ancienne sauvegarde sans cuve : tes réglages et relevés de cuve actuels sont conservés.)')))return;
       entries=clean;save(KEY_DATA,entries);save(KEY_WELCOME,true);
-      if(d.settings&&typeof d.settings==='object'){settings=normalizeSettings(d.settings);save(KEY_SET,settings);fillSettings();}
+      if(d.settings&&typeof d.settings==='object'){settings=normalizeSettings(d.settings);save(KEY_SET,settings);}
+      var eh=histNorm(d.elecHist);elecHist=(eh&&eh.length)?eh:histSeed(settings);save(KEY_EHIST,elecHist); // ancienne sauvegarde : relevés figés au prix importé
+      fillSettings();
       if(d.sim&&typeof d.sim==='object'){simSt=normSim(d.sim);}else if(d.settings&&typeof d.settings==='object'&&(d.settings.ecsOn||d.settings.ecsPers)){simSt=simMigrate(simSt,normalizeSettings(d.settings));}
       saveSim();simType=simSt.type;simFillFromState();setSimType(simType);
       if(hasTank){tank=normalizeTank(d.tank.settings);tankReads=tkClean;save(KEY_TANK,tank);save(KEY_TREAD,tankReads);fillTank();resetTankForm();}
@@ -2026,22 +2282,24 @@ $('fileImport').addEventListener('change',function(){
 
 // ---------- simulateur v20 : entièrement indépendant du Suivi et des réglages ----------
 var KEY_SIM='pacFioul.sim.v1';
-var SIM_DEF={type:'fioul',per:'annee',perFrom:9,perTo:3,ecsOn:false,ecsPers:null,ecsKwh:800,pci:10,rendF:85,rendG:90,mach:'aeau',cop:null,preset:'neu',tar:'base',hcFrom:22,hcTo:6,pctHc:null,tdB:300,tdW:43,tdR:22,redOn:true};
+var SIM_DEF={type:'fioul',per:'annee',perFrom:9,perTo:3,ecsOn:false,ecsPers:null,ecsKwh:800,pci:10,rendF:85,rendG:90,mach:'aeau',cop:null,preset:'def',el:null,copOwn:false};
 // Machines de référence : SCOP moyens documentés (sources dans « src », affichées sous le choix)
 var SIM_MACH={
-  aeau:{name:'PAC air-eau – moyenne mesurée en France',scop:2.9,curve:true,src:'Source : ADEME 2024, mesures sur 100 maisons (90 PAC air-eau posées à la place d\'une chaudière fioul ou gaz) : COP saisonnier réel moyen 2,9, de moins de 2 à plus de 4 selon la pose et les réglages.'},
-  aeauPl:{name:'PAC air-eau + plancher chauffant',scop:3.5,curve:true,src:'Source : ADEME 2024 : sur plancher chauffant, les PAC air-eau font en moyenne ≈ 30 % de mieux que sur radiateurs (eau moins chaude) → ≈ 3,5.'},
-  geo:{name:'PAC géothermique (eau-eau, sol-eau)',scop:4.3,curve:false,src:'Source : ADEME 2024 : COP saisonnier réel moyen 4,3 pour les PAC géothermiques. Le sol garde une température stable : COP constant toute l\'année.'},
+  aeau:{name:'PAC air-eau – moyenne mesurée en France',scop:2.9,curve:true,src:'Source : ADEME (étude publiée en 2025), mesures sur 100 maisons (90 PAC air-eau posées à la place d\'une chaudière fioul ou gaz) : COP saisonnier réel moyen 2,9, de moins de 2 à plus de 4 selon la pose et les réglages.'},
+  aeauPl:{name:'PAC air-eau + plancher chauffant',scop:3.5,curve:true,src:'Source : ADEME (étude 2025) : sur plancher chauffant, les PAC air-eau font en moyenne ≈ 30 % de mieux que sur radiateurs (eau moins chaude) → ≈ 3,5.'},
+  geo:{name:'PAC géothermique (eau-eau, sol-eau)',scop:4.3,curve:false,src:'Source : ADEME (étude 2025) : COP saisonnier réel moyen 4,3 pour les PAC géothermiques. Le sol garde une température stable : COP constant toute l\'année.'},
   aair:{name:'Clim réversible / PAC air-air (classe A+)',scop:4,curve:true,src:'Source : étiquette énergie UE (règlement 626/2011) : classe A+ en chauffage = SCOP de 4,0 à 4,6 (essai en laboratoire, climat moyen). On prend le bas de la fourchette.'},
   midea:{name:'Midea PortaSplit (fiche fabricant)',scop:4,curve:true,src:'Source : fiche produit Midea PortaSplit (EPREL 2575147) : SCOP 4,0 (classe A+, climat moyen), chauffe jusqu\'à −10 °C, 2,2 kW au point de dimensionnement.'},
   mine:{name:'Ma machine (saisir le COP)',scop:null,curve:false,src:'Tape le SCOP (COP saisonnier) indiqué sur la fiche produit de ta machine. Il est appliqué tel quel à tous les mois.'},
-  perso:{name:'Personnalisé',scop:null,curve:true,src:'COP saisi à la main. Il varie selon le mois comme une PAC air (courbe type), en moyenne égal à ta valeur sur une année.'}
+  perso:{name:'Personnalisé',scop:null,curve:true,src:'COP saisi à la main. Il varie selon la température comme une PAC air (courbe type : −7 °C ≈ 0,72 × SCOP, +7 °C ≈ 1,2 × SCOP), calée pour que le SCOP de la norme EN 14825 (climat moyen) soit égal à ta valeur.'}
 };
 var SIM_ORDER=['aeau','aeauPl','geo','aair','midea','mine','perso'];
-(function(sh){Object.keys(sh).forEach(function(k){SIM_MACH[k].short=sh[k];});})({aeau:'Source : ADEME 2024 (mesures, 100 maisons)',aeauPl:'Source : ADEME 2024 (plancher chauffant)',geo:'Source : ADEME 2024 (géothermie)',aair:'Source : étiquette énergie UE (A+)',midea:'Source : fiche Midea (EPREL)',mine:'Source : ta fiche produit',perso:'COP saisi à la main'});
-var SIM_PRESETS={fav:{f:1.2,name:'Favorable'},neu:{f:1,name:'Neutre'},def:{f:0.9,name:'Défavorable'},tdef:{f:0.8,name:'Très défavorable'}};
+(function(sh){Object.keys(sh).forEach(function(k){SIM_MACH[k].short=sh[k];});})({aeau:'Source : ADEME, étude 2025 (mesures, 100 maisons)',aeauPl:'Source : ADEME, étude 2025 (plancher chauffant)',geo:'Source : ADEME, étude 2025 (géothermie)',aair:'Source : étiquette énergie UE (A+)',midea:'Source : fiche Midea (EPREL)',mine:'Source : ta fiche produit',perso:'COP saisi à la main'});
+var SIM_PRESETS={neu:{f:1,name:'Neutre'},def:{f:0.9,name:'Défavorable'},tdef:{f:0.8,name:'Très défavorable'}}; // v31 : « Favorable » retiré (ancien choix → Neutre)
 var SIM_MDAYS=[31,28,31,30,31,30,31,31,30,31,30,31], SIM_ECS_F=0.8; // COP de l'eau chaude = 80 % du COP saisonnier (eau à ~55 °C), constant toute l'année
-var SIM_CURVE=[{t:-10,cop:2.5},{t:-7,cop:2.8},{t:2,cop:3.9},{t:7,cop:4.5},{t:12,cop:5}]; // forme type d'une PAC air (même courbe que le Suivi)
+// v31 : forme type d'une PAC air plus sensible à la température, cohérente avec la norme EN 14825 (SCOP 4 ≈ COP 2,9 à −7 °C, 3,9 à +2, 4,8 à +7, 5,7 à +12) ;
+// −10 °C prolongé avec la pente −7 → +2. Mise à l'échelle pour que le SCOP EN 14825 (climat moyen, 4 910 h) de la courbe = SCOP saisi.
+var SIM_CURVE=[{t:-10,cop:2.57},{t:-7,cop:2.9},{t:2,cop:3.9},{t:7,cop:4.8},{t:12,cop:5.7}];
 var simType='fioul', simReady=false, simCopUser=false;
 function simNum(v,lo,hi,d){v=typeof v==='number'?v:NaN;return (isFinite(v)&&v>=lo&&v<=hi)?v:d;}
 function normSim(raw){raw=raw&&typeof raw==='object'?raw:{};var o={};
@@ -2049,25 +2307,28 @@ function normSim(raw){raw=raw&&typeof raw==='object'?raw:{};var o={};
   o.perFrom=simNum(raw.perFrom,0,11,9);o.perTo=simNum(raw.perTo,0,11,3);o.perFrom=Math.round(o.perFrom);o.perTo=Math.round(o.perTo);
   o.ecsOn=raw.ecsOn===true;o.ecsPers=simNum(raw.ecsPers,1,30,null);o.ecsKwh=simNum(raw.ecsKwh,1,20000,800);
   o.pci=simNum(raw.pci,1,20,10);o.rendF=simNum(raw.rendF,10,110,85);o.rendG=simNum(raw.rendG,10,110,90);
-  o.mach=SIM_MACH[raw.mach]?raw.mach:'aeau';o.cop=simNum(raw.cop,1,10,null);o.pow=simNum(raw.pow,50,20000,null);if(o.pow!==null)o.pow=Math.round(o.pow);o.preset=SIM_PRESETS[raw.preset]?raw.preset:'neu';
-  o.tar=['base','hphc','tempo'].indexOf(raw.tar)>=0?raw.tar:'base';o.hcFrom=Math.round(simNum(raw.hcFrom,0,23,22));o.hcTo=Math.round(simNum(raw.hcTo,0,23,6));
-  o.pctHc=simNum(raw.pctHc,0,100,null);o.tdB=simNum(raw.tdB,0,366,300);o.tdW=simNum(raw.tdW,0,366,43);o.tdR=simNum(raw.tdR,0,366,22);o.redOn=raw.redOn!==false;
+  o.mach=SIM_MACH[raw.mach]?raw.mach:'aeau';o.cop=simNum(raw.cop,1,10,null);o.pow=simNum(raw.pow,50,20000,null);if(o.pow!==null)o.pow=Math.round(o.pow);o.preset=raw.preset==='fav'?'neu':(SIM_PRESETS[raw.preset]?raw.preset:'def');
+  o.el=(raw.el&&typeof raw.el==='object')?elNorm(raw.el):null; // v31 : null = prix des Réglages
+  // v32 : ancien Simulateur (v29 et avant) avec sa propre option tarifaire → gardée comme réglage propre au Simulateur (prix des Réglages)
+  if(raw.el===undefined&&['base','hphc','tempo'].indexOf(raw.tar)>=0&&typeof settings==='object'&&settings){var oe=elOf(settings),pc=simNum(raw.pctHc,0,100,null);
+    if(raw.tar!==settings.elecMode||(raw.tar==='hphc'&&pc!==null&&pc!==settings.pctHC)){oe.mode=raw.tar;if(pc!==null)oe.pct=pc;
+      if(raw.tar==='tempo'){oe.tdB=simNum(raw.tdB,0,366,oe.tdB);oe.tdW=simNum(raw.tdW,0,366,oe.tdW);oe.tdR=simNum(raw.tdR,0,366,oe.tdR);oe.redOn=raw.redOn!==false;}
+      o.el=elNorm(oe);}}
+  o.copOwn=raw.copOwn===true; // v31 : COP modifié dans le Simulateur (sinon : COP des Réglages si la case est cochée)
   if(SIM_MACH[o.mach].scop!==null&&o.cop===null)o.cop=SIM_MACH[o.mach].scop;
   return o;}
 // v19 → v20 : l'eau chaude réglée dans ⚙️ passe dans le Simulateur (une seule fois)
 function simMigrate(st,s){if(s&&(s.ecsOn||s.ecsPers)){st.ecsOn=s.ecsOn===true;st.ecsPers=s.ecsPers||null;st.ecsKwh=s.ecsKwh||800;}return st;}
-var simSt=(function(){var r=load(KEY_SIM,null);return r?normSim(r):simMigrate(normSim({}),settings);})();
+var simSt=(function(){var r=load(KEY_SIM,null);if(r&&typeof r==='object'&&r.el===undefined&&r.tar){var o=normSim(r);save(KEY_SIM,o);return o;}return r?normSim(r):simMigrate(normSim({}),settings);})(); // v32 : ancien état v29 converti une fois
 simType=simSt.type;
 function saveSim(){save(KEY_SIM,simSt);}
 // --- calculs purs (testés) ---
 var SIM_NOHEAT=[0,0,0,0,1,1,1,1,0,0,0,0]; // pas de chauffage de mai à août (v29) ; septembre → avril chauffés selon les degrés-jours : seule l'eau chaude, qui reste à la chaudière
 function simDju(m){return SIM_NOHEAT[m]?0:DJU_METZ[m];}
 function simMonthList(per,from,to){if(per==='hiver')return [9,10,11,0,1,2,3];if(per==='autre'){var l=[],m=from;for(var g=0;g<12;g++){l.push(m);if(m===to)break;m=(m+1)%12;}return l;}return [0,1,2,3,4,5,6,7,8,9,10,11];}
-function simScale(){ // facteur qui ramène la courbe type à une moyenne annuelle pondérée chauffage = 1
-  var c=METZ_TNORM.map(function(t){return copInterp(t,SIM_CURVE,0);}),dA=0,inv=0;
-  for(var m=0;m<12;m++){dA+=simDju(m);inv+=simDju(m)/c[m];}
-  return dA/inv;}
-function simShape(){ // COP relatif de chaque mois, moyenne annuelle pondérée chauffage = 1
+function simScale(){ // v31 : SCOP EN 14825 de la courbe type (climat moyen, 4 910 h) → COP du mois = SCOP × forme ÷ ce facteur
+  return scopEN(SIM_CURVE);}
+function simShape(){ // COP relatif de chaque mois (température moyenne du lieu), SCOP EN 14825 = 1
   var c=METZ_TNORM.map(function(t){return copInterp(t,SIM_CURVE,0);}),sc=simScale();return c.map(function(x){return x/sc;});}
 function simPts(cop){var sc=simScale();return SIM_CURVE.map(function(p){return {t:p.t,cop:cop*p.cop/sc};});}
 function simHours(a,b){return ((b-a)%24+24)%24;}
@@ -2088,15 +2349,16 @@ function simRun(o){ // o:{type,qty,prix,pe,months,cop,curve,pci,rendF,rendG,ecsY
   var eff=o.type==='gaz'?o.rendG/100:o.pci*o.rendF/100, tot=o.qty*eff, days=0, djM=0, djA=0, m;
   o.months.forEach(function(m){days+=SIM_MDAYS[m];djM+=simDju(m);});for(m=0;m<12;m++)djA+=simDju(m);
   var ecs=o.ecsYear>0?o.ecsYear*days/365:0, ecsH=tot>0?Math.min(ecs,tot):0, qEcs=eff>0?ecsH/eff:0, qCh=o.qty, H=tot-ecsH, cE=o.cop*SIM_ECS_F;
-  var sh=o.curve?simShape():null, copM=function(m){return o.cop*(sh?sh[m]:1);};
+  var sh=o.curve?simShape():null, copM=function(m){return o.copArr?o.copArr[m]:o.cop*(sh?sh[m]:1);};
+  var peOf=function(m){return o.peM?o.peM[m]:o.pe;}, hasPe=o.peM?o.peM.every(function(x){return x!==null&&x!==undefined;}):(o.pe!==null&&o.pe!==undefined);
   var rf=simRedFrac(o.redDays), red=o.redDays>0, Hred=0;
   var capOf=function(m){return o.pow>0?o.pow/1000*24*SIM_MDAYS[m]:Infinity;};
   var rows=o.months.map(function(m){var h0=djM>0?H*simDju(m)/djM:0,hr=h0*rf[m],h=h0-hr,c=copM(m),e=(ecsH>0&&days>0)?ecsH*SIM_MDAYS[m]/days:0,kr=h/c+e/cE,cp=capOf(m),cd=kr>cp+1e-9;Hred+=hr;return {m:m,dju:simDju(m),heat:h,heatRed:hr,ecs:e,cop:c,kwhRaw:kr,kwh:cd?cp:kr,cap:cp,capped:cd,heatApp:cd?(kr-cp)*c:0};});
   var H0=H;H=H0-Hred;var qRed=eff>0?Hred/eff:0;qCh=qCh-qRed;var qHeat=qCh-qEcs; // heures pleines des jours rouges : ni chauffage, ni consommation, ni économie
   var kwhPac=rows.reduce(function(a,r){return a+r.kwh;},0), hApp=rows.reduce(function(a,r){return a+r.heatApp;},0), copEff=kwhPac>0?(H+ecsH-hApp)/kwhPac:o.cop, qApp=eff>0?hApp/eff:0;
-  var coutComb=(o.prix===null||o.prix===undefined)?null:qCh*o.prix, coutElec=(o.pe===null||o.pe===undefined)?null:kwhPac*o.pe, coutApp=(o.prix===null||o.prix===undefined)?null:qApp*o.prix;
-  var k=djM>0?djA/djM:0, Hy0=H0*k, Hy=0, ky=0, hm;var hAppY=0, ecsY=ecsH>0?o.ecsYear:0;for(m=0;m<12;m++){hm=Hy0*simDju(m)/djA*(1-rf[m]);Hy+=hm;var em=ecsY*SIM_MDAYS[m]/365,km=hm/copM(m)+em/cE,cpm=capOf(m);if(km>cpm+1e-9){hAppY+=(km-cpm)*copM(m);km=cpm;}ky+=km;}
-  var qChY=(Hy+ecsY)/eff, cCy=coutComb===null?null:qChY*o.prix, cEy=coutElec===null?null:ky*o.pe, cAy=coutComb===null?null:(eff>0?hAppY/eff:0)*o.prix;
+  var coutComb=(o.prix===null||o.prix===undefined)?null:qCh*o.prix, coutElec=!hasPe?null:rows.reduce(function(a,r){return a+r.kwh*peOf(r.m);},0), coutApp=(o.prix===null||o.prix===undefined)?null:qApp*o.prix;
+  var k=djM>0?djA/djM:0, Hy0=H0*k, Hy=0, ky=0, hm, cEy0=0;var hAppY=0, ecsY=ecsH>0?o.ecsYear:0;for(m=0;m<12;m++){hm=Hy0*simDju(m)/djA*(1-rf[m]);Hy+=hm;var em=ecsY*SIM_MDAYS[m]/365,km=hm/copM(m)+em/cE,cpm=capOf(m);if(km>cpm+1e-9){hAppY+=(km-cpm)*copM(m);km=cpm;}ky+=km;cEy0+=km*(hasPe?peOf(m):0);}
+  var qChY=(Hy+ecsY)/eff, cCy=coutComb===null?null:qChY*o.prix, cEy=coutElec===null?null:cEy0, cAy=coutComb===null?null:(eff>0?hAppY/eff:0)*o.prix;
   return {red:red,heatRed:Hred,qRed:qRed,heatBefore:H0,yearRed:Hy0-Hy,eff:eff,chaleurTot:tot,days:days,ecsH:ecsH,ecsAsked:ecs,ecsAll:ecs>0&&ecs>=tot,qEcs:qEcs,qCh:qCh,qHeat:qHeat,cE:cE,chaleur:H,rows:rows,kwhPac:kwhPac,copEff:copEff,heatApp:hApp,qApp:qApp,coutApp:coutApp,pow:o.pow>0?o.pow:null,djM:djM,djA:djA,share:djA>0?djM/djA:0,
     coutComb:coutComb,coutElec:coutElec,eco:(coutComb===null||coutElec===null)?null:coutComb-coutElec-(coutApp||0),
     year:{k:k,heat:Hy+ecsY,kwhPac:ky,qCh:qChY,coutComb:cCy,coutElec:cEy,heatApp:hAppY,eco:(cCy===null||cEy===null)?null:cCy-cEy-(cAy||0)},full:o.months.length===12};}
@@ -2118,25 +2380,35 @@ function simCopVal(){var v=parseNum($('simCopIn').value);return (isFinite(v)&&v>
 function simFillStatic(){
   $('simMach').innerHTML=SIM_ORDER.map(function(k){var x=SIM_MACH[k];return '<option value="'+k+'">'+esc(x.name)+(x.scop!==null?' · SCOP '+nfN.format(x.scop):'')+(k==='aeau'?' (par défaut)':'')+'</option>';}).join('');
   var mo=MONTHS_FR.map(function(n,i){return '<option value="'+i+'">'+n+'</option>';}).join('');$('simPerFrom').innerHTML=mo;$('simPerTo').innerHTML=mo;
-  var hh='';for(var h=0;h<24;h++)hh+='<option value="'+h+'">'+h+' h</option>';$('simHcFrom').innerHTML=hh;$('simHcTo').innerHTML=hh;
 }
 function simFillFromState(){var s=simSt;
   $('simEcsOn').checked=s.ecsOn;$('simEcsPers').value=numStr(s.ecsPers);$('simEcsKwh').value=numStr(s.ecsKwh);
   $('simPer').value=s.per;$('simPerFrom').value=s.perFrom;$('simPerTo').value=s.perTo;
   $('simPci').value=numStr(s.pci);$('simRend').value=numStr(simType==='gaz'?s.rendG:s.rendF);
   $('simMach').value=s.mach;$('simCopIn').value=s.cop===null?'':nfCop.format(s.cop);$('simPow').value=s.pow===null?'':numStr(s.pow);
-  $('simHcFrom').value=s.hcFrom;$('simHcTo').value=s.hcTo;$('simPctHc').value=s.pctHc===null?'':numStr(s.pctHc);
-  $('simTdB').value=numStr(s.tdB);$('simTdW').value=numStr(s.tdW);$('simTdR').value=numStr(s.tdR);$('simRedOn').checked=s.redOn;}
+  fillEl('sim',simEl());}
+function simEl(){return simSt.el||elOf(settings);}
+// v31 : COP des Réglages utilisé par le Simulateur (case « Utiliser aussi ces réglages dans le Simulateur »)
+function simLinked(){return settings.simUseSet&&!simSt.copOwn;}
+function simSetCop(){var s=settings,arr=[],m,temp=tempReady(s),g=custGroups(s),eff,lab,nc=s.copPts.length+s.meas.length;
+  for(m=0;m<12;m++)arr.push(temp?monthCop(m,s):Math.max(1,s.cop));
+  if(temp){eff=effPts(s);var sc=scopEN(eff);
+    var c=curveOf(s);lab=(c?(s.copCurve==='scop'?machName(s.mach)+' · SCOP '+nfN.format(s.scop):'courbe « '+c.name+' »'):'tes valeurs perso')+(s.copCorr&&(c||s.custCorr)?' −'+nfN.format(s.copCorr)+' %':'')+(g.length&&c?' + tes '+nc+' valeur'+(nc>1?'s':'')+' perso'+(s.custCorr?'':' (sans correction)'):'');
+    return {arr:arr,cop:sc,pts:eff,lab:lab,curve:true};}
+  return {arr:arr,cop:s.cop,pts:null,lab:'COP fixe '+nfCop.format(s.cop),curve:false};}
+function simPresetOfCorr(c){return !c?'neu':c>=20?'tdef':'def';}
+function simSeedOwn(){if(!simLinked())return;var s=settings;simSt.copOwn=true;
+  if(s.copMode!=='temp'){simSt.mach='mine';simSt.cop=s.cop;simSt.preset='neu';}
+  else{if(s.mach){simSt.mach=s.mach;simSt.cop=s.scop;}else{simSt.mach='perso';var R=simSetCop();simSt.cop=Math.round(R.cop/(1-(s.copCorr||0)/100)*100)/100;}simSt.preset=simPresetOfCorr(s.copCorr);}
+  if(simSt.cop===null&&SIM_MACH[simSt.mach].scop!==null)simSt.cop=SIM_MACH[simSt.mach].scop;
+  $('simMach').value=simSt.mach;$('simCopIn').value=simSt.cop===null?'':nfCop.format(simSt.cop);}
 function simReadState(){var s=simSt,v;
   s.type=simType;s.ecsOn=$('simEcsOn').checked;v=parseNum($('simEcsPers').value);s.ecsPers=(v>=1&&v<=30)?v:null;
   v=parseNum($('simEcsKwh').value);s.ecsKwh=(v>0&&v<=20000)?v:($('simEcsKwh').value.trim()===''?800:s.ecsKwh);
   s.per=$('simPer').value;s.perFrom=+$('simPerFrom').value;s.perTo=+$('simPerTo').value;
   v=parseNum($('simPci').value);if(v>=1&&v<=20)s.pci=v;v=parseNum($('simRend').value);if(v>=10&&v<=110){if(simType==='gaz')s.rendG=v;else s.rendF=v;}
-  s.mach=$('simMach').value;s.cop=simCopVal();var pw=$('simPow').value.trim();v=parseNum(pw);s.pow=pw===''?null:((v>=50&&v<=20000)?Math.round(v):s.pow);s.hcFrom=+$('simHcFrom').value;s.hcTo=+$('simHcTo').value;
-  var pr=$('simPctHc').value.trim();v=parseNum(pr);s.pctHc=pr===''?null:((v>=0&&v<=100)?v:s.pctHc);
-  ['tdB','tdW','tdR'].forEach(function(k){var x=parseNum($('sim'+k.charAt(0).toUpperCase()+k.slice(1)).value);if(x>=0&&x<=366)s[k]=Math.round(x);});
-  s.redOn=$('simRedOn').checked;saveSim();}
-function simPctDefault(){return (simSt.tar==='tempo'?8:simHours(simSt.hcFrom,simSt.hcTo))/24*100;}
+  if(!simLinked()){s.mach=$('simMach').value||s.mach;s.cop=simCopVal();}var pw=$('simPow').value.trim();v=parseNum(pw);s.pow=pw===''?null:((v>=50&&v<=20000)?Math.round(v):s.pow);
+  saveSim();}
 function renderSim(){
   var s=simSt, gaz=simType==='gaz', uq=gaz?' kWh':' L', fuel=gaz?'gaz':'fioul';
   // libellés selon l'énergie
@@ -2147,38 +2419,36 @@ function renderSim(){
   $('simPerBox').classList.toggle('hidden',s.per!=='autre');
   var months=simMonthList(s.per,s.perFrom,s.perTo);
   // machine
+  var lk=simLinked(), LK=lk?simSetCop():null;
   var mc=SIM_MACH[s.mach], cop=s.cop, f=SIM_PRESETS[s.preset].f, copUse=cop===null?null:Math.round(cop*f*100)/100;
+  if(lk){copUse=Math.round(LK.cop*100)/100;mc={curve:LK.curve,src:'COP de tes ⚙️ Réglages (section COP). Change-le ici pour simuler autre chose : les Réglages ne bougent pas.',short:'COP de tes Réglages'};}
+  var so=$('simMach').querySelector('option[value=""]');
+  if(settings.simUseSet&&!so){so=document.createElement('option');so.value='';so.textContent='↔︎ COP de mes Réglages';$('simMach').insertBefore(so,$('simMach').firstChild);}else if(!settings.simUseSet&&so)so.remove();
+  $('simMach').value=lk?'':s.mach;if(lk)$('simCopIn').value=nfCop.format(copUse);
+  $('simCopReset').classList.toggle('hidden',!(settings.simUseSet&&s.copOwn));
   $('simMachHint').textContent=mc.src;$('simSrcSum').textContent='ⓘ '+(mc.short||'Source du COP');
-  Array.prototype.forEach.call(document.querySelectorAll('[data-simp]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-simp')===s.preset);});
-  $('simCopHint').innerHTML=cop===null?'Saisis le COP de ta machine (entre 1 et 10).':'COP retenu : <b>'+nfCop.format(cop)+(f!==1?' × '+nfN.format(f)+' = '+nfCop.format(copUse):'')+'</b> ('+SIM_PRESETS[s.preset].name+' : '+(f===1?'SCOP tel quel':(f>1?'+':'−')+Math.round(Math.abs(f-1)*100)+' %')+')';
-  $('simCopPts').innerHTML=(cop===null||!mc.curve)?'':'COP selon la température dehors (scénario inclus) : '+simPts(copUse).map(function(p){return (p.t<0?'−':'+')+Math.abs(p.t)+' °C → <b>'+nfCop.format(p.cop)+'</b>';}).join(' · ');
+  var pz=lk?(settings.copMode==='temp'?(['neu','def','tdef'].filter(function(k){return Math.abs((1-SIM_PRESETS[k].f)*100-(settings.copCorr||0))<1e-9;})[0]||''):''):s.preset;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-simp]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-simp')===pz);});
+  if(lk)$('simCopHint').innerHTML='COP des ⚙️ Réglages : <b>'+esc(LK.lab)+'</b>'+(LK.curve?' → SCOP <b>'+nf2.format(LK.cop)+'</b> (EN 14825, scénario inclus)':'')+'. Eau chaude : 80 % de ce COP.';
+  else $('simCopHint').innerHTML=cop===null?'Saisis le COP de ta machine (entre 1 et 10).':'COP retenu : <b>'+nfCop.format(cop)+(f!==1?' × '+nfN.format(f)+' = '+nfCop.format(copUse):'')+'</b> ('+SIM_PRESETS[s.preset].name+' : '+(f===1?'SCOP tel quel':(f>1?'+':'−')+Math.round(Math.abs(f-1)*100)+' %')+')';
+  var cpts=lk?(LK.pts?[-10,-7,2,7,12].map(function(t){return {t:t,cop:copInterp(t,LK.pts,0)};}):null):((cop===null||!mc.curve)?null:simPts(copUse));
+  $('simCopPts').innerHTML=!cpts?'':'COP selon la température dehors (scénario inclus) : '+cpts.map(function(p){return (p.t<0?'−':'+')+Math.abs(p.t)+' °C → <b>'+nfCop.format(p.cop)+'</b>';}).join(' · ');
   var pwH=$('simPowHint');if(s.pow===null)pwH.textContent='Vide = pas de limite. Sert à plafonner la consommation de la PAC chaque mois (puissance × 24 h × jours du mois).';else pwH.textContent=nf0.format(s.pow)+' W × 24 h × 30 j = '+nf0.format(s.pow*24*30/1000)+' kWh maximum d\'électricité par mois (30 jours).';
-  // tarif
-  Array.prototype.forEach.call(document.querySelectorAll('[data-tar]'),function(b){b.setAttribute('aria-pressed',b.getAttribute('data-tar')===s.tar);});
-  $('simTarBase').classList.toggle('hidden',s.tar!=='base');$('simTarHphc').classList.toggle('hidden',s.tar!=='hphc');$('simTarTempo').classList.toggle('hidden',s.tar!=='tempo');$('simPctBox').classList.toggle('hidden',s.tar==='base');
-  var pd=simPctDefault(), pc=s.pctHc===null?pd:s.pctHc, hcH=s.tar==='tempo'?8:simHours(s.hcFrom,s.hcTo);
-  $('simPctHc').placeholder=nfN.format(Math.round(pd*10)/10);
-  $('simPctHint').textContent='Par défaut '+nfN.format(Math.round(pd*10)/10)+' % = '+hcH+' h creuses sur 24 h (PAC qui tourne de façon régulière). Mets plus si elle chauffe surtout la nuit.';
-  var redOff=s.tar==='tempo'&&!s.redOn;$('simTrHP').disabled=redOff;
-  var yf=simRedFrac(s.tdR),yr=0,ya=0;for(var mm=0;mm<12;mm++){ya+=simDju(mm);yr+=simDju(mm)*yf[mm];}
-  $('simRedInfo').innerHTML=(s.redOn?'Décoche si tu coupes le chauffage en heures pleines (6 h → 22 h) les jours rouges.':'<b>Heures pleines des jours rouges coupées</b> : ces '+nf0.format(s.tdR)+' jours, pas de chauffage ni de conso PAC de 6 h à 22 h ; la nuit (22 h → 6 h) reste chauffée au prix HC rouge. Retiré : ≈ <b id="simRedPct">'+nf1.format(yr/ya*100)+' %</b> du chauffage d\'une année, sans coût ni économie.');
-  var ep={redOff:redOff,tar:s.tar,pctHc:pc,base:simPriceIn('simPBase'),hp:simPriceIn('simPHP'),hc:simPriceIn('simPHC'),tdB:s.tdB,tdW:s.tdW,tdR:s.tdR,
-    tempo:{bHP:simPriceIn('simTbHP'),bHC:simPriceIn('simTbHC'),wHP:simPriceIn('simTwHP'),wHC:simPriceIn('simTwHC'),rHP:simPriceIn('simTrHP'),rHC:simPriceIn('simTrHC')}};
-  var E=simElecPrice(ep), pe=E.pe, ti=$('simTarInfo'), P4=function(x){return nfN.format(Math.round(x*10000)/10000);};
-  var badP=[ep.base,ep.hp,ep.hc].concat(Object.keys(ep.tempo).map(function(k){return ep.tempo[k];})).some(function(x){return typeof x==='number'&&isNaN(x);});
-  if(badP)ti.innerHTML='⚠️ Un prix d\'électricité est invalide (ex. 0,1952).';
-  else if(pe===null)ti.innerHTML='Saisis '+(s.tar==='base'?'ton prix du kWh':s.tar==='hphc'?'tes prix heures pleines et heures creuses':'tes 6 prix Tempo')+' pour calculer le prix moyen de l\'électricité de la PAC.';
-  else if(s.tar==='base')ti.innerHTML='Prix de l\'électricité retenu : <b id="simPe">'+P4(pe)+' €/kWh</b>';
-  else if(s.tar==='hphc')ti.innerHTML='Prix moyen retenu : <b id="simPe">'+P4(pe)+' €/kWh</b> = '+nfN.format(Math.round((100-pc)*10)/10)+' % × '+nfN.format(ep.hp)+' (HP) + '+nfN.format(Math.round(pc*10)/10)+' % × '+nfN.format(ep.hc)+' (HC)';
-  else ti.innerHTML='Prix moyen retenu : <b id="simPe">'+P4(pe)+' €/kWh</b><br>'+(redOff?'Poids dans la conso':'Jours')+' : bleus '+nf1.format(E.w.b*100)+' % · blancs '+nf1.format(E.w.w*100)+' % · rouges '+nf1.format(E.w.r*100)+' %'+(redOff?' (nuits seules)':'')+' ; heures creuses '+nfN.format(Math.round(pc*10)/10)+' %<br>Prix moyen par couleur : bleu '+P4(E.col.b)+' · blanc '+P4(E.col.w)+' · rouge '+P4(E.col.r)+(redOff?' (HC seules)':'')+' €/kWh';
-  var hasSuivi=elecPrice(settings)!==null||settings.comps.some(function(c){return c.prix!==null;});$('simSuiviBox').classList.toggle('hidden',!hasSuivi);
+  // électricité (même bloc que les Réglages)
+  var ER=readEl('sim'), el=ER.el, badP=!!ER.bad;renderElInfo('sim',el,ER.bad);
+  $('simElReset').classList.toggle('hidden',!s.el);
+  var redOff=el.mode==='tempo'&&!el.redOn, redN=redOff?(el.tm==='perso'?el.tdR:TEMPO_DAYS.w.r):0;
+  var peM=[];for(var mm=0;mm<12;mm++)peM.push(badP?null:elPriceMonth(el,mm));var pe=badP?null:elPriceMonth(el,0);
+  var yf=simRedFrac(redN),yr=0,ya=0;for(mm=0;mm<12;mm++){ya+=simDju(mm);yr+=simDju(mm)*yf[mm];}
+  $('simRedInfo').innerHTML=(el.redOn?'Décoche si tu coupes le chauffage en heures pleines (6 h → 22 h) les jours rouges.':'<b>Heures pleines des jours rouges coupées</b> : ces '+nf0.format(redN)+' jours, pas de chauffage ni de conso PAC de 6 h à 22 h ; la nuit (22 h → 6 h) reste chauffée au prix HC rouge. Retiré : ≈ <b id="simRedPct">'+nf1.format(ya?yr/ya*100:0)+' %</b> du chauffage d\'une année, sans coût ni économie.');
+  var hasSuivi=settings.comps.some(function(c){return c.prix!==null;});$('simSuiviBox').classList.toggle('hidden',!hasSuivi);
   // eau chaude
   var ey=ecsYear(s), days=months.reduce(function(a,m){return a+SIM_MDAYS[m];},0), eff=gaz?s.rendG/100:s.pci*s.rendF/100;
   if(s.ecsOn){var ei=$('simEcsInfo');
     if(!ey)ei.innerHTML='Indique le nombre de personnes pour calculer la part eau chaude.';
     else{var eh=ey*days/365;ei.innerHTML='Part eau chaude sur '+(months.length===12?'l\'année':'la période ('+days+' jours)')+' : '+nf0.format(s.ecsPers)+' pers. × '+nf0.format(s.ecsKwh)+' kWh/an'+(months.length===12?'':' × '+days+'/365')+' = <b id="simEcsHeat">'+nf0.format(eh)+' kWh</b> de chaleur ≈ <b>'+nf0.format(eh/eff)+uq+(gaz?' de gaz':' de fioul')+'</b>. Elle est répartie à égalité sur chaque mois (au prorata des jours) et produite par la PAC, avec un COP de l\'eau chaude = 80 % du COP saisonnier (eau à environ 55 °C).';}}
   // explication de la période (une ligne)
-  var r0=simRun({type:simType,qty:1,prix:null,pe:null,months:months,cop:copUse||3,curve:mc.curve,pci:s.pci,rendF:s.rendF,rendG:s.rendG,ecsYear:0});
+  var r0=simRun({type:simType,qty:1,prix:null,pe:null,months:months,cop:copUse||3,copArr:LK?LK.arr:null,curve:mc.curve,pci:s.pci,rendF:s.rendF,rendG:s.rendG,ecsYear:0});
   $('simPerInfo').innerHTML='📐 '+(months.length===12?'Consommation sur 12 mois : ':'Consommation sur '+simPerLabel(months)+', soit '+nf0.format(r0.share*100)+' % du besoin de chauffage d\'une année normale. ')+
     (months.length===12?'le':'Le')+' chauffage est réparti mois par mois selon les degrés-jours ('+(climInfo.mode==='gps'?'ton point GPS':'Metz')+')'+(mc.curve?', avec le COP de chaque mois selon sa température':'')+(months.length===12?'.':' ; l\'année entière est estimée en divisant par '+nf2.format(r0.share)+'.');
   // résultats
@@ -2188,9 +2458,9 @@ function renderSim(){
   if(isNaN(qty)||qty<=0){out.innerHTML='<p class="empty">Entre une consommation pour voir le résultat.</p>';mb.classList.add('hidden');
     fo.innerHTML='<b>Calcul</b><br>Chaleur utile = '+(gaz?'kWh de gaz × rendement':'litres × PCI × rendement')+'<br>kWh élec PAC = Σ (chaleur du mois ÷ COP du mois)<br>Économie = coût '+(gaz?'du gaz':'du fioul')+' évité − coût élec PAC';return;}
   if(isNaN(prix))prix=null;
-  var r=simRun({type:simType,qty:qty,prix:prix,pe:pe,months:months,cop:copUse,curve:mc.curve,pci:s.pci,rendF:s.rendF,rendG:s.rendG,ecsYear:ey,redDays:redOff?s.tdR:0,pow:s.pow}), ecs=r.ecsH>0, rd=r.red&&r.heatRed>0;
+  var r=simRun({type:simType,qty:qty,prix:prix,pe:pe,peM:badP?null:peM,months:months,cop:copUse,copArr:LK?LK.arr:null,curve:mc.curve,pci:s.pci,rendF:s.rendF,rendG:s.rendG,ecsYear:ey,redDays:redN,pow:s.pow}), ecs=r.ecsH>0, rd=r.red&&r.heatRed>0;
   var miss=function(t){return '<b class="miss">'+t+'</b>';}, pl=months.length===12?'':' ('+simPerLabel(months)+')';
-  var priceMsg=prix===null&&pe===null?'saisis tes prix ('+fuel+' et électricité)':prix===null?'saisis ton prix du '+fuel:'saisis ton prix de l\'électricité';
+  var priceMsg=prix===null&&r.coutElec===null?'saisis tes prix ('+fuel+' et électricité)':prix===null?'saisis ton prix du '+fuel:'saisis ton prix de l\'électricité';
   var h='<div class="simres">'+
     '<div class="r"><span>Consommation '+fuel+pl+'</span><b>'+nf2.format(qty)+uq+'</b></div>'+
     (ecs?'<div class="r"><span>💧 dont eau chaude (produite par la PAC)</span><b id="simEcsQty">'+nf2.format(r.qEcs)+uq+'</b></div>'+
@@ -2211,13 +2481,13 @@ function renderSim(){
   if(r.ecsAll)h+='<div class="preview warn">⚠️ La part eau chaude dépasse cette consommation : vérifie la période ou le nombre de personnes.</div>';
   out.innerHTML=h;
   mb.classList.remove('hidden');
-  $('simMonths').innerHTML='<table class="sim-mt"><tr><th>Mois</th><th>Chauffage'+(rd?'*':'')+'</th><th>COP</th>'+(ecs?'<th>Eau chaude</th>':'')+'<th>Élec PAC</th></tr>'+r.rows.map(function(x){return '<tr><td>'+MONTHS_FR[x.m]+'</td><td>'+(x.dju>0?nf0.format(x.heat)+' kWh':'—')+'</td><td>'+(x.dju>0?nf2.format(x.cop):'—')+'</td>'+(ecs?'<td>'+nf0.format(x.ecs)+' kWh</td>':'')+'<td>'+(x.dju>0||x.ecs>0?nf0.format(x.kwh)+' kWh'+(x.capped?' ⚠️':''):'—')+'</td></tr>';}).join('')+'</table>'+(r.rows.some(function(z){return !(z.dju>0);})?'<p class="hint">☀️ Pas de chauffage de mai à août'+(ecs?' : seule l\'eau chaude consomme de l\'électricité (COP de l\'eau chaude '+nf2.format(r.cE)+').':'.')+'</p>':'')+(r.heatApp>0?'<p class="hint">⚠️ Plafonné par la puissance de la PAC : '+r.rows.filter(function(z){return z.capped;}).map(function(z){return MONTHS_FR[z.m]+' (besoin '+nf0.format(z.kwhRaw)+' kWh, max '+nf0.format(z.cap)+' kWh)';}).join(', ')+'.</p>':'')+(rd?'<p class="hint">* hors heures pleines des jours rouges</p>':'');
+  $('simMonths').innerHTML='<table class="sim-mt"><tr><th>Mois</th><th>Chaleur'+(rd?'*':'')+'</th><th>COP</th><th>Élec PAC</th></tr>'+r.rows.map(function(x){return '<tr><td>'+MONTHS_FR[x.m]+'</td><td>'+(x.dju>0?nf0.format(x.heat)+' kWh':'—')+'</td><td>'+(x.dju>0?nf2.format(x.cop):'—')+'</td><td>'+(x.dju>0||x.ecs>0?nf0.format(x.kwh)+' kWh'+(x.capped?' ⚠️':''):'—')+'</td></tr>';}).join('')+'</table>'+(r.rows.some(function(z){return !(z.dju>0);})?'<p class="hint">☀️ Pas de chauffage de mai à août'+(ecs?' : l\'électricité restante, c\'est l\'eau chaude.':'.')+'</p>':'')+(r.heatApp>0?'<p class="hint">⚠️ Plafonné par la puissance de la PAC : '+r.rows.filter(function(z){return z.capped;}).map(function(z){return MONTHS_FR[z.m]+' (besoin '+nf0.format(z.kwhRaw)+' kWh, max '+nf0.format(z.cap)+' kWh)';}).join(', ')+'.</p>':'')+(rd?'<p class="hint">* hors heures pleines des jours rouges</p>':'');
   fo.innerHTML='<b>Calcul</b><br>Chaleur utile = '+(gaz?nf2.format(qty)+' kWh × '+nfN.format(s.rendG)+' %':nf2.format(qty)+' L × '+nfN.format(s.pci)+' kWh/L × '+nfN.format(s.rendF)+' %')+' = <b>'+nf2.format(r.chaleurTot)+' kWh</b><br>'+
     (ecs?'Chaleur chauffage = '+nf2.format(r.chaleurTot)+' − '+nf2.format(r.ecsH)+' kWh d\'eau chaude = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qHeat)+uq+')<br>Eau chaude : '+nf2.format(r.ecsH)+' kWh répartis au prorata des jours de chaque mois, COP de l\'eau chaude = '+nf2.format(r.cE)+' (80 % du COP saisonnier)<br>':'')+
     (rd?'Heures pleines des jours rouges retirées : '+r.rows.filter(function(z){return z.heatRed>0;}).map(function(z){return MONTHS_FR[z.m]+' − '+nf0.format(z.heatRed)+' kWh';}).join(', ')+' → chauffage couvert = '+nf2.format(r.heatBefore)+' − '+nf2.format(r.heatRed)+' = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qHeat)+uq+')<br>':'')+
     'Répartie sur '+months.length+' mois selon les degrés-jours ('+nf0.format(r.djM)+' DJU) ; kWh élec PAC = Σ (chaleur du mois ÷ COP du mois'+(ecs?' + eau chaude ÷ COP eau chaude':'')+') = <b>'+nf2.format(r.kwhPac)+' kWh</b> (COP moyen '+nf2.format(r.copEff)+')<br>'+
     (r.coutComb===null?'':'Coût '+fuel+(ecs?' (chauffage + eau chaude)':'')+' = '+nf2.format(r.qCh)+uq+' × '+nfN.format(prix)+(gaz?' €/kWh':' €/L')+' = <b>'+fE(r.coutComb)+'</b><br>')+
-    (r.coutElec===null?'':'Coût élec = '+nf2.format(r.kwhPac)+' kWh × '+nfN.format(Math.round(pe*10000)/10000)+' €/kWh = <b>'+fE(r.coutElec)+'</b><br>')+
+    (r.coutElec===null?'':(elSeasonal(el)?'Coût élec = Σ (kWh du mois × prix Tempo moyen du mois : hiver ou été) = <b>'+fE(r.coutElec)+'</b> (prix moyen '+nfN.format(Math.round(r.coutElec/r.kwhPac*10000)/10000)+' €/kWh)<br>':'Coût élec = '+nf2.format(r.kwhPac)+' kWh × '+nfN.format(Math.round(pe*10000)/10000)+' €/kWh = <b>'+fE(r.coutElec)+'</b><br>'))+
     (r.heatApp>0?'Plafond : élec du mois = plus petit de (chaleur ÷ COP) et (puissance '+nf0.format(r.pow)+' W × 24 h × jours du mois). Chaleur non fournie par la PAC = '+nf0.format(r.heatApp)+' kWh, chauffée par la chaudière ≈ '+nf2.format(r.qApp)+uq+(r.coutApp===null?'':' × '+nfN.format(prix)+' = <b>'+fE(r.coutApp)+'</b>')+'<br>':'')+
     (r.eco===null?'':'Économie = '+fE(r.coutComb)+' − '+fE(r.coutElec)+(r.heatApp>0?' − '+fE(r.coutApp):'')+' = <b>'+fE(r.eco)+'</b>');
 }
@@ -2230,29 +2500,27 @@ function setSimType(t){
   $('simPrix').value='';$('simRend').value=numStr(t==='gaz'?simSt.rendG:simSt.rendF);
   simSt.type=t;saveSim();renderSim();
 }
-function simFromSuivi(){ // facultatif, sur demande : copie les prix du Suivi
+function simFromSuivi(){ // facultatif, sur demande : copie le prix fioul / gaz des Réglages (l'électricité vient déjà des Réglages)
   var s=settings,c=s.comps.filter(function(x){return x.type===simType&&x.prix!==null&&x.on;})[0]||s.comps.filter(function(x){return x.type===simType&&x.prix!==null;})[0];
-  if(c)$('simPrix').value=numStr(c.prix);
-  if(s.elecMode==='hphc'&&s.prixHP!==null&&s.prixHC!==null){simSt.tar='hphc';$('simPHP').value=numStr(s.prixHP);$('simPHC').value=numStr(s.prixHC);if(s.pctHC!==null){simSt.pctHc=s.pctHC;$('simPctHc').value=numStr(s.pctHC);}}
-  else if(s.prixElec!==null){simSt.tar='base';$('simPBase').value=numStr(s.prixElec);}
-  saveSim();renderSim();toast('Tarif du Suivi copié dans la simulation (copie unique)');
+  if(!c){toast('Aucun prix '+(simType==='gaz'?'gaz':'fioul')+' dans les Réglages');return;}
+  $('simPrix').value=numStr(c.prix);renderSim();toast('Prix '+(simType==='gaz'?'gaz':'fioul')+' des Réglages copié (copie unique)');
 }
 var nfCop=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:2});
 simFillStatic();simFillFromState();
-function simCop(){var c=simCopVal();return c===null?null:Math.round(c*SIM_PRESETS[simSt.preset].f*100)/100;}
+function simCop(){if(simLinked())return Math.round(simSetCop().cop*100)/100;var c=simCopVal();return c===null?null:Math.round(c*SIM_PRESETS[simSt.preset].f*100)/100;}
 function showView(v){
   closeKpi();
   $('tabsNav').style.setProperty('--ti',{suivi:0,cuve:1,sim:2}[v]||0);
   [['suivi','viewSuivi','tabSuivi'],['sim','viewSim','tabSim'],['cuve','viewCuve','tabCuve']].forEach(function(x){
     $(x[1]).classList.toggle('hidden',x[0]!==v);$(x[2]).setAttribute('aria-selected',x[0]===v);});
-  if(v==='sim'){renderSim();} else if(v==='cuve'){renderTank();renderTankChart(tankAnalyze());} else renderChart(resolved());
+  if(v==='sim'){if(!simSt.el)fillEl('sim',simEl());renderSim();} else if(v==='cuve'){renderTank();renderTankChart(tankAnalyze());} else renderChart(resolved());
   window.scrollTo(0,0);
 }
 $('tabSuivi').addEventListener('click',function(){showView('suivi');});
 var spOpen=false;
 function openSettings(sec,focusId){
   fillSettings();fillTank();setSpStatus('');$('tkStatus').classList.add('hidden');
-  if(sec)['secPac','secOld','secGen'].forEach(function(id){$(id).open=id===sec;});
+  if(sec)['secGen','secPac','secCop','secOld','secSave'].forEach(function(id){$(id).open=id===sec;});
   var pg=$('settingsPage');pg.classList.remove('hidden');document.documentElement.classList.add('sp-open');spOpen=true;pg.scrollTop=0;$('btnGear').setAttribute('aria-expanded','true');
   setTimeout(function(){var el=focusId&&$(focusId);
     if(el){el.scrollIntoView({block:'center'});try{el.focus({preventScroll:true});}catch(e){}}
@@ -2277,18 +2545,23 @@ $('simFioul').addEventListener('click',function(){setSimType('fioul');});
 $('simGaz').addEventListener('click',function(){setSimType('gaz');});
 $('sPacKw').addEventListener('input',renderPacKwLimit);
 $('simQty').addEventListener('input',renderSim);$('simPrix').addEventListener('input',renderSim);
-['simEcsOn','simEcsPers','simEcsKwh','simPer','simPerFrom','simPerTo','simPci','simRend','simHcFrom','simHcTo','simPctHc','simPow','simTdB','simTdW','simTdR','simRedOn'].forEach(function(id){
+['simEcsOn','simEcsPers','simEcsKwh','simPer','simPerFrom','simPerTo','simPci','simRend','simPow'].forEach(function(id){
   var h=function(){simReadState();renderSim();};$(id).addEventListener('input',h);$(id).addEventListener('change',h);});
-['simPBase','simPHP','simPHC','simTbHP','simTbHC','simTwHP','simTwHC','simTrHP','simTrHC'].forEach(function(id){$(id).addEventListener('input',renderSim);});
-$('simMach').addEventListener('change',function(){var m=SIM_MACH[this.value];simSt.mach=this.value;
+// v31 : électricité du Simulateur (copie modifiable des Réglages)
+function simElChanged(){var r=readEl('sim');if(!r.bad){var e=elClean(r.el);simSt.el=JSON.stringify(e)===JSON.stringify(elNorm(elOf(settings)))?null:e;saveSim();}renderSim();}
+$('simElBlock').addEventListener('click',function(ev){var b=ev.target.closest('[data-eltar],[data-eltm],#simPctBtn');if(!b)return;
+  if(b.id==='simPctBtn')$('simPct').value=numStr(HC_SUGGEST);else setElUI('sim',b.getAttribute('data-eltar'),b.getAttribute('data-eltm'));simElChanged();});
+$('simElBlock').addEventListener('input',simElChanged);$('simElBlock').addEventListener('change',simElChanged);
+$('simElResetBtn').addEventListener('click',function(){simSt.el=null;saveSim();fillEl('sim',simEl());renderSim();toast('Prix d\'électricité des Réglages remis');});
+$('simCopResetBtn').addEventListener('click',function(){simSt.copOwn=false;saveSim();renderSim();toast('COP des Réglages repris');});
+$('simMach').addEventListener('change',function(){if(!this.value){simSt.copOwn=false;saveSim();renderSim();return;}var v=this.value;simSeedOwn();this.value=v;var m=SIM_MACH[this.value];simSt.mach=this.value;
   if(m.scop!==null){simSt.cop=m.scop;$('simCopIn').value=nfCop.format(m.scop);}else if(this.value==='mine'){simSt.cop=null;$('simCopIn').value='';try{$('simCopIn').focus({preventScroll:true});}catch(e){}}
   saveSim();renderSim();});
-$('simCopIn').addEventListener('input',function(){var cur=simSt.mach;
+$('simCopIn').addEventListener('input',function(){if(simLinked()){var keep=this.value;simSeedOwn();this.value=keep;}var cur=simSt.mach;
   if(SIM_MACH[cur].scop!==null){simSt.mach=SIM_MACH[cur].curve?'perso':'mine';$('simMach').value=simSt.mach;}
   simSt.cop=simCopVal();saveSim();renderSim();});
 $('simCopIn').addEventListener('focus',function(){try{this.setSelectionRange(0,this.value.length);}catch(e){}});
-$('simPresets').addEventListener('click',function(ev){var b=ev.target.closest('[data-simp]');if(!b)return;simSt.preset=b.getAttribute('data-simp');saveSim();renderSim();});
-$('simTarSeg').addEventListener('click',function(ev){var b=ev.target.closest('[data-tar]');if(!b)return;simSt.tar=b.getAttribute('data-tar');saveSim();renderSim();});
+$('simPresets').addEventListener('click',function(ev){var b=ev.target.closest('[data-simp]');if(!b)return;simSeedOwn();simSt.preset=b.getAttribute('data-simp');saveSim();renderSim();});
 $('simFromSuivi').addEventListener('click',simFromSuivi);
 
 
@@ -2473,20 +2746,34 @@ function winterOf(day){var y=+day.slice(0,4),m=+day.slice(5,7);return m>=9?y:y-1
 // https://donneespubliques.meteofrance.fr/FichesClim/FICHECLIM_57039001.pdf (année : 2724,7 DJU)
 var DJU_METZ=[473.5,408,341.2,226.6,117.5,42.6,14.4,18.1,81,208.1,345.2,448.5], DJU_FLOOR=0.5;
 // ---- v29 : climat du point GPS (Open-Meteo, 10 dernières années complètes) à la place de Metz, quand une position est renseignée ----
-var METZ_T0=METZ_TNORM.slice(), DJU_0=DJU_METZ.slice(), KEY_CLIM='pacFioul.clim.v1', climInfo={mode:'metz',msg:''}, climBusy=false;
+var METZ_T0=METZ_TNORM.slice(), DJU_0=DJU_METZ.slice(), KEY_CLIM='pacFioul.clim.v2', climInfo={mode:'metz',msg:''}, climBusy=false;
 function climSet(t,d){for(var m=0;m<12;m++){METZ_TNORM[m]=t[m];DJU_METZ[m]=d[m];}}
-function climText(){var c=climInfo;
-  if(c.mode==='gps')return '🌡️ Climat de ton point GPS ('+nf2.format(settings.lat)+' ; '+nf2.format(settings.lon)+') : moyennes mensuelles et degrés-jours (base 18 °C) des '+c.n+' années '+c.y0+'-'+c.y1+', données Open-Meteo (réanalyse ERA5, point de grille le plus proche de ta position).';
-  if(c.mode==='load')return '⏳ Récupération du climat de ton point GPS (Open-Meteo)… En attendant : normales de Metz-Frescaty (Météo-France 1991-2020).';
-  if(c.mode==='fail')return '⚠️ Climat de ton point GPS indisponible (hors ligne ?) : normales de Metz-Frescaty (Météo-France 1991-2020) utilisées pour l\'instant.';
-  return '🌡️ Climat : normales de Metz-Frescaty (Météo-France 1991-2020), par défaut. Renseigne ta latitude et ta longitude dans ⚙️ Réglages → Général pour utiliser le climat de ton lieu.';}
-function climShow(){var t=climText(),c=climInfo,sm=c.mode==='gps'?'ⓘ Météo : ton point GPS (moyenne 10 ans)':c.mode==='load'?'ⓘ Météo : chargement…':c.mode==='fail'?'⚠️ ⓘ Météo : Metz (GPS indisponible)':'ⓘ Météo : Metz (par défaut)';['climStatus','simClim'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;var u=document.getElementById(id+'Sum');if(u)u.textContent=sm;});}
+function climKm(la1,lo1,la2,lo2){var r=Math.PI/180,dL=(la2-la1)*r,dO=(lo2-lo1)*r,h=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dO/2)*Math.sin(dO/2);return 12742*Math.asin(Math.sqrt(h));}
+function climStats(){var tm=0,dj=0,m;for(m=0;m<12;m++){tm+=METZ_TNORM[m]*SIM_MDAYS[m];dj+=DJU_METZ[m];}return 'Température moyenne : '+nf1.format(tm/365)+' °C par an · '+nf0.format(dj)+' degrés-jours de chauffage par an (base 18 °C).';}
+function climTitle(){var c=climInfo;
+  if(c.mode==='gps')return '📍 Lieu actuel : ton point GPS ('+nf2.format(settings.lat)+' ; '+nf2.format(settings.lon)+')';
+  if(c.mode==='load')return '⏳ Récupération de la météo de ton point GPS…';
+  if(c.mode==='fail')return '⚠️ Météo de ton point GPS indisponible : Metz-Frescaty utilisé pour l\'instant';
+  return '📍 Lieu actuel : Metz-Frescaty (par défaut)';}
+function climDetail(){var c=climInfo;
+  if(c.mode==='gps'){var g=c.g,gtxt=g?' Point de données le plus proche : '+nf2.format(g.lat)+' ; '+nf2.format(g.lon)+', à '+nf0.format(climKm(settings.lat,settings.lon,g.lat,g.lon))+' km de ta position'+(typeof g.elev==='number'?', altitude '+nf0.format(g.elev)+' m':'')+'.':'';
+    return 'Moyenne des '+c.n+' années '+c.y0+' à '+c.y1+' (Open-Meteo, réanalyse ERA5).'+gtxt+' '+climStats();}
+  if(c.mode==='load')return 'En attendant, les normales de Metz-Frescaty sont utilisées.';
+  if(c.mode==='fail')return 'Hors ligne ? Elle sera retentée à la prochaine ouverture ou à la prochaine modification de la position.';
+  return 'Normales 1991-2020 de Météo-France. Renseigne ta position ci-dessous pour utiliser la météo de ton lieu. '+climStats();}
+function climText(){return climTitle()+'. '+climDetail();}
+function climMonthsTxt(){var o=[],m;for(m=0;m<12;m++)o.push(MONTHS_FR[m]+' : '+nf1.format(METZ_TNORM[m])+' °C, '+nf0.format(DJU_METZ[m])+' DJU');return o.join(' · ');}
+function climShow(){var c=climInfo,sm=c.mode==='gps'?'ⓘ Météo : ton point GPS (moyenne 10 ans)':c.mode==='load'?'ⓘ Météo : chargement…':c.mode==='fail'?'⚠️ ⓘ Météo : Metz (GPS indisponible)':'ⓘ Météo : Metz (par défaut)';
+  var b=document.getElementById('climBox');if(b)b.innerHTML='<b>'+climTitle()+'</b><br>'+climDetail();
+  var mo=document.getElementById('climMonths');if(mo)mo.textContent=climMonthsTxt();
+  var e=document.getElementById('simClim');if(e)e.textContent=climText();var u=document.getElementById('simClimSum');if(u)u.textContent=sm;
+  if(document.getElementById('tGrid')&&typeof tGridRefresh==='function')try{tGridRefresh();}catch(e){}}
 function climRefresh(){climShow();try{renderAll();}catch(e){}}
 function climSync(){
   var loc=locOf(settings);
   if(!loc){if(climInfo.mode!=='metz'||DJU_METZ[0]!==DJU_0[0]){climSet(METZ_T0,DJU_0);climInfo={mode:'metz'};climRefresh();}else climShow();return;}
   var c=load(KEY_CLIM,null);
-  if(c&&c.loc===loc&&Array.isArray(c.t)&&c.t.length===12&&Array.isArray(c.dju)&&c.dju.length===12&&c.y1===new Date().getFullYear()-1){climSet(c.t,c.dju);climInfo={mode:'gps',n:c.n,y0:c.y0,y1:c.y1};climRefresh();return;}
+  if(c&&c.loc===loc&&Array.isArray(c.t)&&c.t.length===12&&Array.isArray(c.dju)&&c.dju.length===12&&c.y1===new Date().getFullYear()-1){climSet(c.t,c.dju);climInfo={mode:'gps',n:c.n,y0:c.y0,y1:c.y1,g:c.g};climRefresh();return;}
   if(climBusy)return;climBusy=true;
   var y1=new Date().getFullYear()-1,y0=y1-9;
   climSet(METZ_T0,DJU_0);climInfo={mode:'load'};climShow();
@@ -2497,9 +2784,9 @@ function climSync(){
     for(i=0;i<tt.length;i++){var x=v[i];if(typeof x!=='number'||!isFinite(x))continue;var m=+String(tt[i]).slice(5,7)-1;if(!(m>=0&&m<12))continue;sT[m]+=x;sD[m]+=Math.max(0,18-x);cn[m]++;}
     if(cn.some(function(n){return n<200;}))throw new Error('données insuffisantes');
     var T=[],D=[];for(var k=0;k<12;k++){T.push(Math.round(sT[k]/cn[k]*10)/10);D.push(Math.round(sD[k]/cn[k]*SIM_MDAYS[k]*10)/10);}
-    save(KEY_CLIM,{loc:locOf(settings),t:T,dju:D,y0:y0,y1:y1,n:10});
+    var G=(typeof j.latitude==='number'&&typeof j.longitude==='number')?{lat:j.latitude,lon:j.longitude,elev:j.elevation}:null;save(KEY_CLIM,{loc:locOf(settings),t:T,dju:D,y0:y0,y1:y1,n:10,g:G});
     climBusy=false;if(locOf(settings)!==loc){climSync();return;}
-    climSet(T,D);climInfo={mode:'gps',n:10,y0:y0,y1:y1};climRefresh();
+    climSet(T,D);climInfo={mode:'gps',n:10,y0:y0,y1:y1,g:G};climRefresh();
   }).catch(function(){climBusy=false;climSet(METZ_T0,DJU_0);climInfo={mode:'fail'};climRefresh();});}
 function djuWeight(d){var y=d.getFullYear(),m=d.getMonth(),n=new Date(y,m+1,0).getDate();return Math.max(DJU_METZ[m]/n,DJU_FLOOR);}
 // « Estimé » : litres venant d'un intervalle de plus de EST_GAP jours entre deux relevés de niveau consécutifs
@@ -2759,7 +3046,7 @@ function trySaveTank(){ // mêmes règles qu'avant (bouton « Enregistrer la cuv
 
 var tt;function toast(m,ms){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},ms||2400);}
 
-window.__pac={dju:function(){return DJU_METZ.join(',');},copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){setCurveUI(k);},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={dju:function(){return DJU_METZ.join(',');},copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){$('sMach').value=k?'cv:'+k:'';syncCurve();updateCopPreview();},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 
 fillSettings();setMode('kwh');resetForm();renderAll();setSimType(simSt.type);simReady=true;
 renderTempButtons();climSync();if((settings.copMode==='temp'&&settings.tReal)||showTemp)setTimeout(function(){fetchTemps(false);},300);
