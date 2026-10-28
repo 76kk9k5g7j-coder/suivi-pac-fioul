@@ -1164,14 +1164,15 @@ function readEl(p){var bad=null,g=function(id){var r=$(p+id).value.trim();if(r==
   return {el:el,bad:bad};}
 function elClean(el){var o=JSON.parse(JSON.stringify(el,function(k,v){return (typeof v==='number'&&isNaN(v))?null:v;}));return elNorm(o);}
 function renderElInfo(p,el,bad){
+  var simOn=p==='sim'&&el.mode==='tempo'&&el.redOn;if(p==='sim'&&el.mode==='tempo')el=Object.assign({},el,{redOn:false}); // v39
   var q=elPc(el),pcT=nfN.format(Math.round(q*1000)/10),ti=$(p+'TarInfo');
-  $(p+EL_T.rHP).disabled=el.mode==='tempo'&&!el.redOn&&el.tm!=='perso';
+  $(p+EL_T.rHP).disabled=el.mode==='tempo'&&!el.redOn&&el.tm!=='perso'&&!simOn;
   $(p+'TmHint').textContent=el.tm==='perso'?'Tes 6 prix et ton nombre de jours de chaque couleur : un seul prix moyen toute l\'année. Heures creuses Tempo : 22 h → 6 h.':'Prix EDF pré-remplis, modifiables : les moyennes se recalculent. Heures creuses Tempo : 22 h → 6 h.';
   var a=tempoAvg(el,'w'),b=tempoAvg(el,'s');
-  $(p+'TpAvg').innerHTML=(a&&b)?'<div>❄️ <b>Hiver</b> (15 sept. → 15 avr.) : HC <b id="'+p+'AvWHC">'+P4(a.hc)+'</b> · HP <b id="'+p+'AvWHP">'+P4(a.hp)+'</b> €/kWh'+(el.redOn?'':' <span class="opt">(sans HP rouges)</span>')+'</div><div>☀️ <b>Été</b> (16 avr. → 14 sept.) : HC <b id="'+p+'AvSHC">'+P4(b.hc)+'</b> · HP <b id="'+p+'AvSHP">'+P4(b.hp)+'</b> €/kWh</div>':'Saisis les 6 prix Tempo pour calculer les moyennes.';
+  $(p+'TpAvg').innerHTML=(a&&b)?'<div>❄️ <b>Hiver</b> (15 sept. → 15 avr.) : HC <b id="'+p+'AvWHC">'+P4(a.hc)+'</b> · HP <b id="'+p+'AvWHP">'+P4(a.hp)+'</b> €/kWh'+(el.redOn?'':' <span class="opt">(sans HP rouges)</span>')+(simOn&&okP(el.t.rHP)?' <span class="opt">· HP rouges à part : '+P4(el.t.rHP)+'</span>':'')+'</div><div>☀️ <b>Été</b> (16 avr. → 14 sept.) : HC <b id="'+p+'AvSHC">'+P4(b.hc)+'</b> · HP <b id="'+p+'AvSHP">'+P4(b.hp)+'</b> €/kWh</div>':'Saisis les 6 prix Tempo pour calculer les moyennes.';
   var D=TEMPO_DAYS,f1=function(x){return nf1.format(x);};
   $(p+'TpExpl').innerHTML='Personne ne sait à l\'avance quels jours seront blancs ou rouges : l\'appli prend la moyenne des 5 dernières saisons (données RTE) et l\'applique toute seule selon la date.<br><b>Hiver</b>, du 15 septembre au 15 avril : '+f1(D.w.b)+' jours bleus, '+f1(D.w.w)+' blancs et '+nf0.format(D.w.r)+' rouges en moyenne. HC = ('+f1(D.w.b)+' × bleu HC + '+f1(D.w.w)+' × blanc HC + '+nf0.format(D.w.r)+' × rouge HC) ÷ '+f1(D.w.b+D.w.w+D.w.r)+'. '+
-    (el.redOn?'HP = ('+f1(D.w.b)+' × bleu HP + '+f1(D.w.w)+' × blanc HP + '+nf0.format(D.w.r)+' × rouge HP) ÷ '+f1(D.w.b+D.w.w+D.w.r)+' (case « heures pleines des jours rouges » cochée).':'HP = ('+f1(D.w.b)+' × bleu HP + '+f1(D.w.w)+' × blanc HP) ÷ '+f1(D.w.b+D.w.w)+' : sans les heures pleines des jours rouges (case décochée : tu ne chauffes pas à ce moment-là). Coche la case pour les compter.')+
+    (el.redOn?'HP = ('+f1(D.w.b)+' × bleu HP + '+f1(D.w.w)+' × blanc HP + '+nf0.format(D.w.r)+' × rouge HP) ÷ '+f1(D.w.b+D.w.w+D.w.r)+' (case « heures pleines des jours rouges » cochée).':'HP = ('+f1(D.w.b)+' × bleu HP + '+f1(D.w.w)+' × blanc HP) ÷ '+f1(D.w.b+D.w.w)+(p==='sim'?' : sans les heures pleines des jours rouges. Case cochée, le Simulateur les ajoute à part, au prix HP rouge (lignes 🔴 du résultat).':' : sans les heures pleines des jours rouges (case décochée : tu ne chauffes pas à ce moment-là). Coche la case pour les compter.'))+
     '<br><b>Été</b>, du 16 avril au 14 septembre : '+f1(D.s.b)+' bleus, '+f1(D.s.w)+' blancs, aucun rouge. HC = ('+f1(D.s.b)+' × bleu HC + '+f1(D.s.w)+' × blanc HC) ÷ '+f1(D.s.b+D.s.w)+', HP pareil avec les prix HP.<br>Prix d\'un kWh = HP × (1 − part HC) + HC × part HC. Un relevé (ou un mois) de septembre ou d\'avril mélange les deux saisons au prorata des jours. Si tu changes un des 6 prix, les moyennes se recalculent.';
   if(p==='s')$('sRedInfo').textContent=el.redOn?'Coché : les heures pleines des jours rouges comptent dans le prix moyen (comme si tu chauffais aussi à ce moment-là).':'Décoché : tu ne chauffes pas en heures pleines les jours rouges. En moyenne EDF automatique, elles sont retirées de la moyenne HP d\'hiver ; en personnalisé, un jour rouge ne garde que ses heures creuses.';
   if(bad){ti.innerHTML='⚠️ Un prix ou une valeur est invalide (ex. 0,2001).';return;}
@@ -2553,24 +2554,37 @@ function simRedDays(R){var f=[0,0,0,0,0,0,0,0,0,0,0,0];if(!(R>0))return f;var d=
 function simRedFrac(R){ // part du chauffage de chaque mois retirée : R jours rouges répartis selon les DJU de déc.–févr. (jour rouge = jour moyen du mois), dont 16/24 (heures pleines) retirés
   var f=[0,0,0,0,0,0,0,0,0,0,0,0];if(!(R>0))return f;var d=0;SIM_RED_M.forEach(function(m){d+=simDju(m);});
   SIM_RED_M.forEach(function(m){f[m]=Math.min(1,R*simDju(m)/d/SIM_MDAYS[m])*SIM_RED_HP;});return f;}
-function simRun(o){ // o:{type,qty,prix,pe,months,cop,curve,pci,rendF,rendG,ecsYear,redDays}
+function simRun(o){ // o:{type,qty,prix,pe,peM,months,cop,copArr,curve,pci,rendF,rendG,ecsYear,redDays,pow,peRedHP,redOn}
+  // v39 : base = HP des jours rouges coupées (la chaudière chauffe) ; redOn = la PAC chauffe aussi ces HP : ajouté à la base, à part
   var eff=o.type==='gaz'?o.rendG/100:o.pci*o.rendF/100, tot=o.qty*eff, days=0, djM=0, djA=0, m;
   o.months.forEach(function(m){days+=SIM_MDAYS[m];djM+=simDju(m);});for(m=0;m<12;m++)djA+=simDju(m);
   var ecs=o.ecsYear>0?o.ecsYear*days/365:0, ecsH=tot>0?Math.min(ecs,tot):0, qEcs=eff>0?ecsH/eff:0, qCh=o.qty, H=tot-ecsH, cE=o.cop*SIM_ECS_F;
   var sh=o.curve?simShape():null, copM=function(m){return o.copArr?o.copArr[m]:o.cop*(sh?sh[m]:1);};
   var peOf=function(m){return o.peM?o.peM[m]:o.pe;}, hasPe=o.peM?o.peM.every(function(x){return x!==null&&x!==undefined;}):(o.pe!==null&&o.pe!==undefined);
-  var rf=simRedFrac(o.redDays), rdM=simRedDays(o.redDays), red=o.redDays>0, Hred=0;
-  var capOf=function(m){return o.pow>0?o.pow/1000*24*SIM_MDAYS[m]:Infinity;};
-  var rows=o.months.map(function(m){var h0=djM>0?H*simDju(m)/djM:0,hr=h0*rf[m],h=h0-hr,c=copM(m),e=(ecsH>0&&days>0)?ecsH*SIM_MDAYS[m]/days:0,kr=h/c+e/cE,cp=capOf(m),cd=kr>cp+1e-9;Hred+=hr;return {m:m,dju:simDju(m),heat:h,heatRed:hr,redDays:rdM[m],copRed:c*SIM_RED_COPF,kwhRed:hr>0?hr/(c*SIM_RED_COPF):0,ecs:e,cop:c,kwhRaw:kr,kwh:cd?cp:kr,cap:cp,capped:cd,heatApp:cd?(kr-cp)*c:0};});
-  var H0=H;H=H0-Hred;var qRed=eff>0?Hred/eff:0;qCh=qCh-qRed;var qHeat=qCh-qEcs; // heures pleines des jours rouges : ni chauffage, ni consommation, ni économie
-  var kwhPac=rows.reduce(function(a,r){return a+r.kwh;},0), hApp=rows.reduce(function(a,r){return a+r.heatApp;},0), copEff=kwhPac>0?(H+ecsH-hApp)/kwhPac:o.cop, qApp=eff>0?hApp/eff:0;
-  var kwhRed=rows.reduce(function(a,r){return a+r.kwhRed;},0), okRP=typeof o.peRedHP==='number'&&o.peRedHP>0, eurRedF=(o.prix===null||o.prix===undefined)?null:qRed*o.prix, eurRedE=okRP?kwhRed*o.peRedHP:null; // v36 : ce que les heures pleines rouges auraient coûté (fioul) / coûté en élec PAC (prix HP rouge)
-  var coutComb=(o.prix===null||o.prix===undefined)?null:qCh*o.prix, coutElec=!hasPe?null:rows.reduce(function(a,r){return a+r.kwh*peOf(r.m);},0), coutApp=(o.prix===null||o.prix===undefined)?null:qApp*o.prix;
-  var k=djM>0?djA/djM:0, Hy0=H0*k, Hy=0, ky=0, hm, cEy0=0;var hAppY=0, ecsY=ecsH>0?o.ecsYear:0;for(m=0;m<12;m++){hm=Hy0*simDju(m)/djA*(1-rf[m]);Hy+=hm;var em=ecsY*SIM_MDAYS[m]/365,km=hm/copM(m)+em/cE,cpm=capOf(m);if(km>cpm+1e-9){hAppY+=(km-cpm)*copM(m);km=cpm;}ky+=km;cEy0+=km*(hasPe?peOf(m):0);}
+  var rf=simRedFrac(o.redDays), rdM=simRedDays(o.redDays), red=o.redDays>0, Hred=0, on=red&&o.redOn===true;
+  // v39 : plafond = puissance × heures où la PAC tourne (24 h × jours du mois − 16 h × jours rouges, HP coupées) ; HP rouges : puissance × 16 h × jours rouges
+  var capOf=function(m){return o.pow>0?o.pow/1000*(24*SIM_MDAYS[m]-16*rdM[m]):Infinity;}, capRedOf=function(m){return o.pow>0?o.pow/1000*16*rdM[m]:Infinity;};
+  var redPac=function(hr,c,m){var cr=c*SIM_RED_COPF,need=hr>0?hr/cr:0,cp=capRedOf(m),k=Math.min(need,cp);return {need:need,k:k,heat:k*cr,cap:cp,capped:need>cp+1e-9};}; // ce que la PAC ferait pendant les HP rouges
+  var rows=o.months.map(function(m){var h0=djM>0?H*simDju(m)/djM:0,hr=h0*rf[m],h=h0-hr,c=copM(m),e=(ecsH>0&&days>0)?ecsH*SIM_MDAYS[m]/days:0,kr=h/c+e/cE,cp=capOf(m),cd=kr>cp+1e-9,rp=redPac(hr,c,m);Hred+=hr;
+    return {m:m,dju:simDju(m),heat:h,heatRed:hr,redDays:rdM[m],copRed:c*SIM_RED_COPF,kwhRedNeed:rp.need,kwhRed:rp.k,heatRedPac:rp.heat,capRed:rp.cap,redCapped:hr>0&&rp.capped,ecs:e,cop:c,kwhRaw:kr,kwh:cd?cp:kr,cap:cp,capped:cd,heatApp:cd?(kr-cp)*c:0};});
+  var H0=H;H=H0-Hred;var qRed=eff>0?Hred/eff:0;qCh=qCh-qRed;var qHeat=qCh-qEcs;
+  var sum=function(k){return rows.reduce(function(a,r){return a+r[k];},0);};
+  var kwhPac=sum('kwh'), hApp=sum('heatApp'), qApp=eff>0?hApp/eff:0, kwhRed=sum('kwhRed'), hX=sum('heatRedPac'), qX=eff>0?hX/eff:0, redCapped=rows.some(function(r){return r.redCapped;});
+  var copEff=on?((kwhPac+kwhRed)>0?(H+ecsH-hApp+hX)/(kwhPac+kwhRed):o.cop):(kwhPac>0?(H+ecsH-hApp)/kwhPac:o.cop);
+  var okRP=typeof o.peRedHP==='number'&&o.peRedHP>0, hasP=o.prix!==null&&o.prix!==undefined, ct=function(x){return Math.round(x*100);}; // v39 : tout en centimes, les lignes s'additionnent au centime
+  var cS=hasP?ct(o.qty*o.prix):null, cR=hasP?ct(qRed*o.prix):null, cA=hasP?ct(qApp*o.prix):null, cX=hasP?ct(qX*o.prix):null, cEl=hasPe?ct(rows.reduce(function(a,r){return a+r.kwh*peOf(r.m);},0)):null, cRE=okRP?ct(kwhRed*o.peRedHP):null;
+  var eco0=(cS===null||cEl===null)?null:(cS-cR-cA-cEl)/100, eco1=(eco0===null||cRE===null)?null:(cS-cR-cA-cEl+cX-cRE)/100;
+  var coutComb=hasP?(cS-cR)/100:null, coutElec=cEl===null?null:cEl/100, coutApp=hasP?cA/100:null;
+  var k=djM>0?djA/djM:0, Hy0=H0*k, Hy=0, ky=0, hm, cEy0=0, hAppY=0, ecsY=ecsH>0?o.ecsYear:0, kRy=0, hXy=0;
+  for(m=0;m<12;m++){var h0y=djA>0?Hy0*simDju(m)/djA:0,rpy=redPac(h0y*rf[m],copM(m),m);hm=h0y*(1-rf[m]);Hy+=hm;kRy+=rpy.k;hXy+=rpy.heat;var em=ecsY*SIM_MDAYS[m]/365,km=hm/copM(m)+em/cE,cpm=capOf(m);if(km>cpm+1e-9){hAppY+=(km-cpm)*copM(m);km=cpm;}ky+=km;cEy0+=km*(hasPe?peOf(m):0);}
   var qChY=(Hy+ecsY)/eff, cCy=coutComb===null?null:qChY*o.prix, cEy=coutElec===null?null:cEy0, cAy=coutComb===null?null:(eff>0?hAppY/eff:0)*o.prix;
-  return {red:red,heatRed:Hred,qRed:qRed,kwhRed:kwhRed,redDaysTot:rows.reduce(function(a,r){return a+r.redDays;},0),eurRedF:eurRedF,eurRedE:eurRedE,redNet:(eurRedF===null||eurRedE===null)?null:eurRedF-eurRedE,peRedHP:okRP?o.peRedHP:null,heatBefore:H0,yearRed:Hy0-Hy,eff:eff,chaleurTot:tot,days:days,ecsH:ecsH,ecsAsked:ecs,ecsAll:ecs>0&&ecs>=tot,qEcs:qEcs,qCh:qCh,qHeat:qHeat,cE:cE,chaleur:H,rows:rows,kwhPac:kwhPac,copEff:copEff,heatApp:hApp,qApp:qApp,coutApp:coutApp,pow:o.pow>0?o.pow:null,djM:djM,djA:djA,share:djA>0?djM/djA:0,
-    coutComb:coutComb,coutElec:coutElec,eco:(coutComb===null||coutElec===null)?null:coutComb-coutElec-(coutApp||0),
-    year:{k:k,heat:Hy+ecsY,kwhPac:ky,qCh:qChY,coutComb:cCy,coutElec:cEy,heatApp:hAppY,eco:(cCy===null||cEy===null)?null:cCy-cEy-(cAy||0)},full:o.months.length===12};}
+  var ecoY0=(cCy===null||cEy===null)?null:cCy-cEy-(cAy||0), ecoY=on?((ecoY0===null||!okRP)?null:ecoY0+(eff>0?hXy/eff:0)*o.prix-kRy*o.peRedHP):ecoY0;
+  return {red:red,on:on,heatRed:Hred,qRed:qRed,kwhRed:kwhRed,kwhRedNeed:sum('kwhRedNeed'),heatRedPac:hX,qX:qX,qRest:qRed-qX,redCapped:redCapped,redDaysTot:sum('redDays'),
+    eurStart:hasP?cS/100:null,eurRedF:hasP?cR/100:null,eurX:hasP?cX/100:null,eurRedE:cRE===null?null:cRE/100,peRedHP:okRP?o.peRedHP:null,
+    eco0:eco0,eco1:eco1,redGain:(eco0===null||eco1===null)?null:(cRE-cX)/100, // v39 : couper les HP rouges = économie case décochée − économie case cochée
+    heatBefore:H0,yearRed:Hy0-Hy,eff:eff,chaleurTot:tot,days:days,ecsH:ecsH,ecsAsked:ecs,ecsAll:ecs>0&&ecs>=tot,qEcs:qEcs,qCh:qCh,qHeat:qHeat,cE:cE,chaleur:H,rows:rows,kwhPac:kwhPac,copEff:copEff,heatApp:hApp,qApp:qApp,coutApp:coutApp,pow:o.pow>0?o.pow:null,djM:djM,djA:djA,share:djA>0?djM/djA:0,
+    copEffBase:kwhPac>0?(H+ecsH-hApp)/kwhPac:o.cop,coutComb:coutComb,coutElec:coutElec,eco:on?eco1:eco0,
+    year:{k:k,heat:Hy+ecsY+(on?hXy:0),kwhPac:ky+(on?kRy:0),qCh:qChY,coutComb:cCy,coutElec:cEy,heatApp:hAppY,eco:ecoY},full:o.months.length===12};}
 // Ancien calcul (v19, conservé pour compatibilité des tests) : COP constant, eau chaude déjà en kWh
 function simCompute(type,qty,prix,s,cop,ecsHeat){
   s=s||settings;
@@ -2653,14 +2667,14 @@ function renderSim(){
   else $('simCopHint').innerHTML=cop===null?'Saisis le COP de ta machine (entre 1 et 10).':'COP retenu : <b>'+nfCop.format(cop)+(f!==1?' × '+nfN.format(f)+' = '+nfCop.format(copUse):'')+'</b> ('+SIM_PRESETS[s.preset].name+' : '+(f===1?'SCOP tel quel':(f>1?'+':'−')+Math.round(Math.abs(f-1)*100)+' %')+')';
   var cpts=lk?(LK.pts?[-10,-7,2,7,12].map(function(t){return {t:t,cop:copInterp(t,LK.pts,0)};}):null):((cop===null||!mc.curve)?null:simPts(copUse));
   $('simCopPts').innerHTML=!cpts?'':'COP selon la température dehors (scénario inclus) : '+cpts.map(function(p){return (p.t<0?'−':'+')+Math.abs(p.t)+' °C → <b>'+nfCop.format(p.cop)+'</b>';}).join(' · ');
-  var pwH=$('simPowHint');if(s.pow===null)pwH.textContent='Vide = pas de limite. Sert à plafonner la consommation de la PAC chaque mois (puissance × 24 h × jours du mois).';else pwH.textContent=nf0.format(s.pow)+' W × 24 h × 30 j = '+nf0.format(s.pow*24*30/1000)+' kWh maximum d\'électricité par mois (30 jours).';
+  var pwH=$('simPowHint');if(s.pow===null)pwH.textContent='Vide = pas de limite. Sert à plafonner la consommation de la PAC chaque mois (puissance × heures de marche du mois).';else pwH.textContent=nf0.format(s.pow)+' W × 24 h × 30 j = '+nf0.format(s.pow*24*30/1000)+' kWh maximum d\'électricité par mois (30 jours).';
   // électricité (même bloc que les Réglages)
   var ER=readEl('sim'), el=ER.el, badP=!!ER.bad;renderElInfo('sim',el,ER.bad);
   $('simElReset').classList.toggle('hidden',!s.el);
-  var redOff=el.mode==='tempo'&&!el.redOn, redN=redOff?(el.tm==='perso'?el.tdR:TEMPO_DAYS.w.r):0;
-  var peM=[];for(var mm=0;mm<12;mm++)peM.push(badP?null:elPriceMonth(el,mm));var pe=badP?null:elPriceMonth(el,0);
+  var tRed=el.mode==='tempo', redN=tRed?(el.tm==='perso'?el.tdR:TEMPO_DAYS.w.r):0, elB=tRed?Object.assign({},el,{redOn:false}):el; // v39 : base = HP rouges coupées, quel que soit l'état de la case
+  var peM=[];for(var mm=0;mm<12;mm++)peM.push(badP?null:elPriceMonth(elB,mm));var pe=badP?null:elPriceMonth(elB,0);
   var yf=simRedFrac(redN),yr=0,ya=0;for(mm=0;mm<12;mm++){ya+=simDju(mm);yr+=simDju(mm)*yf[mm];}
-  $('simRedInfo').innerHTML=(el.redOn?'Décoche si tu coupes la PAC en heures pleines (6 h → 22 h) les jours rouges.':'<b>Heures pleines des jours rouges coupées</b> : ces '+nf0.format(redN)+' jours, PAC coupée de 6 h à 22 h, la chaudière chauffe comme avant ; la nuit (22 h → 6 h) reste à la PAC au prix HC rouge. Chiffres dans « 🔴 Jours rouges », sous le résultat.');var redPctY=ya?yr/ya*100:0;
+  $('simRedInfo').innerHTML=!tRed?'':el.redOn?'<b>Coché</b> : la PAC chauffe aussi pendant les HP des jours rouges (6 h → 22 h), au prix HP rouge ; c\'est ajouté au résultat (lignes 🔴).':'<b>Décoché</b> : PAC coupée de 6 h à 22 h les '+nf0.format(redN)+' jours rouges, la chaudière chauffe ; la nuit reste à la PAC (HC rouge).';var redPctY=ya?yr/ya*100:0;
   var hasSuivi=settings.comps.some(function(c){return c.prix!==null;});$('simSuiviBox').classList.toggle('hidden',!hasSuivi);
   // eau chaude
   var ey=ecsYear(s), days=months.reduce(function(a,m){return a+SIM_MDAYS[m];},0), eff=gaz?s.rendG/100:s.pci*s.rendF/100;
@@ -2678,7 +2692,7 @@ function renderSim(){
   if(isNaN(qty)||qty<=0){out.innerHTML='<p class="empty">Entre une consommation pour voir le résultat.</p>';mb.classList.add('hidden');
     fo.innerHTML='<b>Calcul</b><br>Chaleur utile = '+(gaz?'kWh de gaz × rendement':'litres × PCI × rendement')+'<br>kWh élec PAC = Σ (chaleur du mois ÷ COP du mois)<br>Économie = coût '+(gaz?'du gaz':'du fioul')+' évité − coût élec PAC';return;}
   if(isNaN(prix))prix=null;
-  var r=simRun({type:simType,qty:qty,prix:prix,pe:pe,peM:badP?null:peM,months:months,cop:copUse,copArr:LK?LK.arr:null,curve:mc.curve,pci:s.pci,rendF:s.rendF,rendG:s.rendG,ecsYear:ey,redDays:redN,pow:s.pow,peRedHP:(redOff&&el.t)?el.t.rHP:null}), ecs=r.ecsH>0, rd=r.red&&r.heatRed>0;
+  var r=simRun({type:simType,qty:qty,prix:prix,pe:pe,peM:badP?null:peM,months:months,cop:copUse,copArr:LK?LK.arr:null,curve:mc.curve,pci:s.pci,rendF:s.rendF,rendG:s.rendG,ecsYear:ey,redDays:redN,pow:s.pow,redOn:tRed&&el.redOn,peRedHP:(tRed&&el.t&&typeof el.t.rHP==='number'&&el.t.rHP>0)?el.t.rHP:null}), ecs=r.ecsH>0, rd=r.red&&r.heatRed>0, rOn=rd&&r.on;
   var miss=function(t){return '<b class="miss">'+t+'</b>';}, pl=months.length===12?'':' ('+simPerLabel(months)+')';
   var priceMsg=prix===null&&r.coutElec===null?'saisis tes prix ('+fuel+' et électricité)':prix===null?'saisis ton prix du '+fuel:'saisis ton prix de l\'électricité';
   var h='<div class="simres">'+
@@ -2687,64 +2701,70 @@ function renderSim(){
       '<div class="r"><span>Chauffage seul</span><b id="simChQty">'+nf2.format(r.qHeat)+uq+'</b></div>':'')+
     '<div class="r"><span>Chaleur utile'+(ecs?' chauffage':'')+(rd?' (hors HP 🔴)':'')+'</span><b id="simChaleur">'+nf2.format(r.chaleur)+' kWh</b></div>'+(ecs?'<div class="r"><span>Chaleur utile eau chaude</span><b id="simChaleurEcs">'+nf2.format(r.ecsH)+' kWh</b></div>':'')+
     '<div class="r"><span>COP moyen sur la période</span><b id="simCopEff">'+nf2.format(r.copEff)+'</b></div>'+
-    '<div class="r"><span>Électricité PAC</span><b id="simPac">'+nf2.format(r.kwhPac)+' kWh</b></div>'+
+    '<div class="r"><span>Électricité PAC'+(rd?' (hors HP 🔴)':'')+'</span><b id="simPac">'+nf2.format(r.kwhPac)+' kWh</b></div>'+
+    (rOn?'<div class="r"><span>🔴 Électricité PAC HP rouges</span><b id="simPacRed">'+nf2.format(r.kwhRed)+' kWh</b></div>':'')+
     '<div class="r"><span>Coût '+(gaz?'du gaz':'du fioul')+(ecs?' (chauffage + eau chaude)':'')+(rd?' évité':'')+'</span>'+(r.coutComb===null?miss('— saisis ton prix'):'<b id="simCoutComb">'+fE(r.coutComb)+'</b>')+'</div>'+
-    '<div class="r"><span>Coût électricité PAC</span>'+(r.coutElec===null?miss('— saisis ton prix'):'<b id="simCoutElec">'+fE(r.coutElec)+'</b>')+'</div>'+
+    (rOn?'<div class="r"><span>🔴 '+(gaz?'Gaz':'Fioul')+' évité en plus (HP rouges chauffées par la PAC)</span>'+(r.eurX===null?'<b id="simCoutRedX">'+nf2.format(r.qX)+uq+'</b>':'<b id="simCoutRedX">'+fE(r.eurX)+'<small> ≈ '+nf2.format(r.qX)+uq+'</small></b>')+'</div>':'')+
+    '<div class="r"><span>Coût électricité PAC'+(rd?' (hors HP 🔴)':'')+'</span>'+(r.coutElec===null?miss('— saisis ton prix'):'<b id="simCoutElec">'+fE(r.coutElec)+'</b>')+'</div>'+
+    (rOn?'<div class="r"><span>🔴 Coût élec HP rouges</span>'+(r.eurRedE===null?miss('— prix HP rouge'):'<b id="simCoutRedE">'+fE(r.eurRedE)+'<small> à '+P4(r.peRedHP)+' €/kWh</small></b>')+'</div>':'')+
     (r.heatApp>0?'<div class="r"><span>⚠️ Appoint '+fuel+' (PAC plafonnée)</span><b id="simCoutApp">'+(r.coutApp===null?nf2.format(r.qApp)+uq:fE(r.coutApp)+'<small> ≈ '+nf2.format(r.qApp)+uq+'</small>')+'</b></div>':'')+
     '<div class="r total"><span>'+(r.eco!==null&&r.eco<0?'Surcoût avec PAC':'Économie avec PAC')+pl+'</span>'+(r.eco===null?miss('— '+priceMsg):'<b id="simEco" class="'+(r.eco<0?'neg':'')+'">'+fE(r.eco)+'</b>')+'</div></div>';
   if(!r.full)h+='<p class="hint" style="margin:12px 0 4px"><b>Sur une année complète</b> (estimation : ÷ '+nf2.format(r.share)+')</p><div class="simres" id="simYear">'+
-    '<div class="r"><span>Chauffage'+(ecs?' + eau chaude':'')+' sur 12 mois'+(r.red&&r.yearRed>0?' (hors HP rouges)':'')+'</span><b id="simYHeat">'+nf0.format(r.year.heat)+' kWh</b></div>'+
+    '<div class="r"><span>Chauffage'+(ecs?' + eau chaude':'')+' sur 12 mois'+(r.red&&r.yearRed>0&&!r.on?' (hors HP rouges)':'')+'</span><b id="simYHeat">'+nf0.format(r.year.heat)+' kWh</b></div>'+
     '<div class="r"><span>Électricité PAC / an</span><b id="simYPac">'+nf0.format(r.year.kwhPac)+' kWh</b></div>'+
     '<div class="r total"><span>'+(r.year.eco!==null&&r.year.eco<0?'Surcoût / an':'Économie / an')+'</span>'+(r.year.eco===null?miss('— '+priceMsg):'<b id="simYEco" class="'+(r.year.eco<0?'neg':'')+'">'+fE(r.year.eco)+'</b>')+'</div></div>'+
     (r.share<0.15?'<div class="preview warn">⚠️ '+(r.share>0?'Période qui compte peu pour le chauffage : l\'estimation sur l\'année est peu fiable.':'Aucun chauffage sur cette période (le chauffage ne compte que de septembre à avril) : choisis une période qui en contient.')+'</div>':'');
   if(r.ecsAll)h+='<div class="preview warn">⚠️ La part eau chaude dépasse cette consommation : vérifie la période ou le nombre de personnes.</div>';
   // v36 : carte de synthèse en haut, tableau complet replié, bloc 🔴 Jours rouges
   var ecoS=r.eco, ss=function(l,v,c,id){return '<div class="ss-l"><span>'+l+'</span><b'+(id?' id="'+id+'"':'')+(c?' class="'+c+'"':'')+'>'+v+'</b></div>';};
-  // v38 : synthèse en cascade (départ − jours rouges − appoint = évité ; évité − élec = économie) — affichage seul, aucun calcul modifié
-  var hA=r.heatApp>0, hR=rd, Fu=gaz?'Gaz':'Fioul', ic=gaz?'🔥 ':'🛢️ ', okP=r.coutComb!==null, c2=function(x){return Math.round(x*100)/100;};
-  var lS=Math.round(qty), lR=hR?Math.round(r.qRed):0, lA=hA?Math.round(r.qApp):0, lE=lS-lR-lA; // litres arrondis : l'écran s'additionne
-  var eS=okP?c2(qty*prix):null, eR=okP&&hR?c2(r.eurRedF):0, eA=okP&&hA?c2(r.coutApp):0, eEl=r.coutElec===null?null:c2(r.coutElec), eE=okP?c2(eS-eR-eA):null;
-  if(okP&&eEl!==null&&r.eco!==null){var dz=c2(c2(r.eco)+eEl-eE);if(dz!==0&&Math.abs(dz)<=0.03){if(hA&&(!hR||eA>=eR))eA=c2(eA-dz);else if(hR)eR=c2(eR-dz);else eS=c2(eS+dz);eE=c2(eS-eR-eA);}} // écart d'arrondi au centime absorbé
-  var lv=function(l,e){return nf0.format(l)+uq+(e===null?'':' · '+fE(e));}, ng=function(l,e){return '−'+nf0.format(l)+uq+(e===null?'':' · −'+fE(e));},
+  // v39 : cascade = base (case décochée) + addition 🔴 si la case est cochée ; centimes exacts (simRun), litres arrondis comme le détail
+  var hA=r.heatApp>0, hR=rd, on=rOn, Fu=gaz?'Gaz':'Fioul', ic=gaz?'🔥 ':'🛢️ ', okPr=r.coutComb!==null, r2=function(x){return Math.round(Math.round(x*100)/100);}, e2=function(x){return Math.round(x*100)/100;};
+  var lS=r2(qty), lR=hR?r2(r.qRed):0, lA=hA?r2(r.qApp):0, lX=on?r2(r.qX):0, lE=lS-lR-lA+lX, lB=lA+lR-lX; // lB : brûlé par la chaudière
+  var eS=okPr?r.eurStart:null, eR=okPr&&hR?r.eurRedF:0, eA=okPr&&hA?r.coutApp:0, eX=okPr&&on?r.eurX:0, eEl=r.coutElec, eRE=on?r.eurRedE:null, eE=okPr?e2(eS-eR-eA+eX):null;
+  var lv=function(l,e){return nf0.format(l)+uq+(e===null?'':' · '+fE(e));}, ng=function(l,e){return '−'+nf0.format(l)+uq+(e===null?'':' · −'+fE(e));}, ps=function(l,e){return '+'+nf0.format(l)+uq+(e===null?'':' · +'+fE(e));},
     row=function(cls,id,lab,sm,val,bc){return '<div class="ss-l'+(cls?' '+cls:'')+'"><span>'+lab+(sm?'<small>'+sm+'</small>':'')+'</span><b'+(id?' id="'+id+'"':'')+(bc?' class="'+bc+'"':'')+'>'+val+'</b></div>';},
     dd0=function(x){return nf1.format(x).replace(',0','');}, ded=hA||hR;
-  var inRed=el.mode==='tempo'&&el.redOn&&months.some(function(m){return SIM_RED_M.indexOf(m)>=0;})&&el.t&&el.t.rHP>0;
-  var cas=(ded?row('','simSumStart',ic+Fu+' de départ','ta conso sans PAC',lv(lS,okP?eS:null)):'')+
-    (hR?row('ss-sub','simSumRed','− 🔴 Jours rouges','HP coupées ('+dd0(r.redDaysTot)+' j) : la chaudière chauffe',ng(lR,okP?eR:null),'neg'):'')+
-    (hA?row('ss-sub','simSumApp2','− ⚠️ Appoint PAC plafonnée','la chaudière complète',ng(lA,okP?eA:null),'neg'):'')+
-    row(ded?'ss-tot':'','simSumEvit',(ded?'= ':'')+ic+Fu+(ded?' réellement':'')+' évité',null,lv(lE,okP?eE:null))+
-    row('ss-sub','simSumElec','− ⚡ Électricité PAC',inRed?'🔴 jours rouges inclus (HP à '+P4(el.t.rHP)+' €/kWh)':null,nf0.format(r.kwhPac)+' kWh'+(eEl===null?'':' · −'+fE(eEl)),'neg')+
-    (hR?'<div class="ss-note" id="simSumRedKwh">🔴 Jours rouges : <b>'+nf0.format(r.kwhRed)+' kWh</b> d\'élec PAC non consommés'+(r.eurRedE===null?'':' · <b>'+fE(r.eurRedE)+'</b>')+' (pas dans cette ligne)</div>':'')+
+  var cas=(ded?row('','simSumStart',ic+Fu+' de départ','ta conso sans PAC',lv(lS,okPr?eS:null)):'')+
+    (hR?row('ss-sub','simSumRed','− 🔴 Jours rouges',on?'HP 6 h → 22 h ('+dd0(r.redDaysTot)+' j), comme case décochée':'HP coupées ('+dd0(r.redDaysTot)+' j) : la chaudière chauffe',ng(lR,okPr?eR:null),'neg'):'')+
+    (hA?row('ss-sub','simSumApp2','− ⚠️ Appoint PAC plafonnée','la chaudière complète',ng(lA,okPr?eA:null),'neg'):'')+
+    (on?row('ss-sub','simSumRedAdd','+ 🔴 Jours rouges chauffés par la PAC',r.redCapped?'plafond : '+nf0.format(lR-lX)+uq+' restent à la chaudière':'case cochée : la PAC chauffe ces HP',ps(lX,okPr?eX:null),'pos'):'')+
+    row(ded?'ss-tot':'','simSumEvit',(ded?'= ':'')+ic+Fu+(ded?' réellement':'')+' évité',null,lv(lE,okPr?eE:null))+
+    row('ss-sub','simSumElec','− ⚡ Électricité PAC',on?'hors HP des jours rouges':null,nf0.format(r.kwhPac)+' kWh'+(eEl===null?'':' · −'+fE(eEl)),'neg')+
+    (on?row('ss-sub','simSumRedElec','− ⚡ Électricité jours rouges',r.peRedHP===null?'prix HP rouge manquant':'HP rouges à '+P4(r.peRedHP)+' €/kWh',nf0.format(r.kwhRed)+' kWh'+(eRE===null?'':' · −'+fE(eRE)),'neg'):'')+
+    (hR&&!on?'<div class="ss-note" id="simSumRedKwh">🔴 Jours rouges : <b>'+nf0.format(r.kwhRed)+' kWh</b> d\'élec PAC non consommés'+(r.eurRedE===null?'':' · <b>'+fE(r.eurRedE)+'</b>')+' (pas dans cette ligne)</div>':'')+
     row('ss-tot','simSumEco2','= '+(r.eco!==null&&r.eco<0?'Surcoût':'Économie'),null,r.eco===null?'—':fE(r.eco),r.eco!==null&&r.eco<0?'neg':'pos')+
-    (ded?'<div class="ss-info" id="simSumNote">ℹ️ <b>'+nf0.format(lA+lR)+uq+' de '+fuel+'</b> sont forcément brûlés par la chaudière pour compenser'+(hA&&hR?' (appoint '+nf0.format(lA)+uq+' + jours rouges '+nf0.format(lR)+uq+')':hA?' (appoint PAC plafonnée)':' (heures coupées des jours rouges)')+'.</div>':'');
+    (ded&&lB>0?'<div class="ss-info" id="simSumNote">ℹ️ <b>'+nf0.format(lB)+uq+' de '+fuel+'</b> sont forcément brûlés par la chaudière pour compenser'+
+      (hA&&lB>lA?' (appoint '+nf0.format(lA)+uq+' + jours rouges '+nf0.format(lB-lA)+uq+')':hA?' (appoint PAC plafonnée)':on?' (HP rouges au-delà du plafond)':' (heures coupées des jours rouges)')+'.</div>':'');
   var sum='<div class="simsum" id="simSum"><div class="ss-k">'+(ecoS!==null&&ecoS<0?'Surcoût avec PAC':'Économie avec PAC')+(r.full?' / an':pl)+'</div>'+
     (ecoS===null?'<div class="ss-big miss">— '+priceMsg+'</div>':'<div class="ss-big'+(ecoS<0?' neg':'')+'" id="simSumEco">'+fE(ecoS)+'</div>')+
     cas+(r.full?'':ss('Sur 12 mois (estimation)',r.year.eco===null?'—':fE(r.year.eco)))+'</div>';
   var redB='';
-  if(rd){var rm=r.rows.filter(function(z){return z.heatRed>0;}).sort(function(x,y){return (x.m+1)%12-(y.m+1)%12;}), dd=function(x){return nf1.format(x).replace(',0','');};
-    redB='<details class="simbox simred" id="simRedBox"><summary>🔴 Jours rouges : '+dd(r.redDaysTot)+' j, HP coupées</summary><div class="in">'+
-      '<p class="hint">De 6 h à 22 h ces jours-là, la PAC est coupée et la chaudière chauffe, comme avant la PAC. Le calcul retire ces heures des deux côtés : ni économie, ni coût PAC.</p>'+
+  if(rd){var rm=r.rows.filter(function(z){return z.heatRed>0;}).sort(function(x,y){return (x.m+1)%12-(y.m+1)%12;}), dd=function(x){return nf1.format(x).replace(',0','');}, G=r.redGain, kp=r.peRedHP!==null;
+    redB='<details class="simbox simred" id="simRedBox"><summary>🔴 Jours rouges : '+dd(r.redDaysTot)+' j, '+(rOn?'PAC en HP':'HP coupées')+'</summary><div class="in">'+
+      '<p class="hint">'+(rOn?'Case cochée : de 6 h à 22 h ces jours-là, la PAC chauffe aussi'+(r.redCapped?', limitée par son plafond (le reste à la chaudière)':'')+'. C\'est ajouté au résultat en haut.':'Case décochée : de 6 h à 22 h ces jours-là, la PAC est coupée et la chaudière chauffe, comme avant la PAC.')+'</p>'+
       '<div class="simres">'+
       '<div class="r"><span>Jours rouges</span><b id="simRedDays">'+dd(r.redDaysTot)+' j</b></div>'+
-      '<div class="r redr redk"><span>⚡ Élec PAC non consommée</span><b id="simRedKwh" class="redh">'+nf0.format(r.kwhRed)+' kWh<small>'+(r.eurRedE===null?'prix HP rouge manquant':fE(r.eurRedE)+' à '+P4(r.peRedHP)+' €/kWh')+'</small></b></div>'+
-      '<div class="r redr"><span>Chaleur non fournie par la PAC</span><b id="simRedHeat" class="redh">'+nf2.format(r.heatRed)+' kWh<small><span id="simRedPct">'+nf1.format(r.heatBefore>0?r.heatRed/r.heatBefore*100:redPctY)+' %</span> du chauffage</small></b></div>'+
-      '<div class="r redr redsec"><span>'+(gaz?'Gaz':'Fioul')+' brûlé par la chaudière à la place</span><b id="simRedQty" class="redh">'+nf2.format(r.qRed)+uq+(r.eurRedF===null?'':'<small>'+fE(r.eurRedF)+' de '+fuel+'</small>')+'</b></div>'+
-      '<div class="r total"><span>Couper plutôt que PAC</span>'+(r.redNet===null?miss('— saisis tes prix'):'<b id="simRedNet" class="'+(r.redNet>0?'neg':'')+'">'+(r.redNet<=0?'+ ':'− ')+fE(Math.abs(r.redNet))+'</b>')+'</div></div>'+
-      (r.redNet===null?'':'<p class="hint">'+(r.redNet<=0?'Couper la PAC ces heures-là est gagnant : à '+P4(r.peRedHP)+' €/kWh, elle y coûterait plus cher que le '+fuel+' brûlé par la chaudière.':'Couper la PAC ces heures-là est perdant : même à '+P4(r.peRedHP)+' €/kWh, elle y reviendrait moins cher que le '+fuel+' brûlé par la chaudière.')+' Écart = élec PAC évitée − '+fuel+' brûlé = '+fE(r.eurRedE)+' − '+fE(r.eurRedF)+'. Indicatif : en haut, ces heures sont comptées au '+fuel+' (PAC coupée).</p>')+
-      '<table class="sim-mt red5"><tr><th>Mois</th><th>Jours</th><th>Chaleur</th><th>COP</th><th>Élec</th></tr>'+rm.map(function(z){return '<tr><td>'+MONTHS_FR[z.m]+'</td><td>'+dd(z.redDays)+'</td><td>'+nf0.format(z.heatRed)+'</td><td>'+nf2.format(z.copRed)+'</td><td>'+nf0.format(z.kwhRed)+'</td></tr>';}).join('')+
+      '<div class="r redr redk"><span>⚡ Élec PAC '+(rOn?'consommée':'non consommée')+' (HP rouges)</span><b id="simRedKwh" class="redh">'+nf0.format(r.kwhRed)+' kWh<small>'+(!kp?'prix HP rouge manquant':fE(r.eurRedE)+' à '+P4(r.peRedHP)+' €/kWh')+'</small></b></div>'+
+      '<div class="r redr"><span>Chaleur de ces heures</span><b id="simRedHeat" class="redh">'+nf2.format(r.heatRed)+' kWh<small><span id="simRedPct">'+nf1.format(r.heatBefore>0?r.heatRed/r.heatBefore*100:redPctY)+' %</span> du chauffage</small></b></div>'+
+      '<div class="r redr redsec"><span>'+(gaz?'Gaz':'Fioul')+' '+(rOn?'évité par la PAC':'brûlé par la chaudière à la place')+'</span><b id="simRedQty" class="redh">'+nf2.format(rOn?r.qX:r.qRed)+uq+((rOn?r.eurX:r.eurRedF)===null?'':'<small>'+fE(rOn?r.eurX:r.eurRedF)+' de '+fuel+'</small>')+'</b></div>'+
+      (r.redCapped?'<div class="r redr redsec"><span>'+(rOn?'Reste à la chaudière (plafond '+nf0.format(r.pow)+' W)':'dont évitable par la PAC (plafond '+nf0.format(r.pow)+' W)')+'</span><b id="simRedX" class="redh">'+nf2.format(rOn?r.qRest:r.qX)+uq+(r.eurRedF===null?'':'<small>'+fE(rOn?e2(r.eurRedF-r.eurX):r.eurX)+'</small>')+'</b></div>':'')+
+      '<div class="r total"><span>Couper plutôt que PAC</span>'+(G===null?miss('— saisis tes prix'):'<b id="simRedNet" class="'+(G<0?'neg':'')+'">'+(G>=0?'+ ':'− ')+fE(Math.abs(G))+'</b>')+'</div></div>'+
+      (G===null?'':'<p class="hint">'+(G>=0?'Couper la PAC ces heures-là est gagnant':'Couper la PAC ces heures-là est perdant')+' : écart = élec PAC des HP rouges − '+fuel+' qu\'elle évite = '+fE(r.eurRedE)+' − '+fE(r.eurX)+'. C\'est la différence d\'économie entre case décochée ('+fE(r.eco0)+') et cochée ('+fE(r.eco1)+').</p>')+
+      '<table class="sim-mt red5"><tr><th>Mois</th><th>Jours</th><th>Chaleur</th><th>COP</th><th>Élec</th></tr>'+rm.map(function(z){return '<tr><td>'+MONTHS_FR[z.m]+'</td><td>'+dd(z.redDays)+'</td><td>'+nf0.format(z.heatRed)+'</td><td>'+nf2.format(z.copRed)+'</td><td>'+nf0.format(z.kwhRed)+(z.redCapped?' ⚠️':'')+'</td></tr>';}).join('')+
       '<tr><th>Total</th><th>'+dd(r.redDaysTot)+'</th><th>'+nf0.format(r.heatRed)+'</th><th></th><th>'+nf0.format(r.kwhRed)+'</th></tr></table>'+
-      '<p class="hint">Chaleur et élec en kWh. Jours répartis selon les degrés-jours de déc. à févr. COP d\'un jour rouge = COP du mois − 10 % (plus froid que la moyenne). Élec non consommée = chaleur ÷ ce COP. '+(gaz?'Gaz':'Fioul')+' brûlé par la chaudière = chaleur ÷ '+(gaz?nfN.format(s.rendG)+' %':nfN.format(Math.round(r.eff*1000)/1000)+' kWh/L')+'.</p></div></details>';}
+      '<p class="hint">Chaleur et élec en kWh, HP 6 h → 22 h. Jours répartis selon les degrés-jours de déc. à févr. COP d\'un jour rouge = COP du mois − 10 % (plus froid que la moyenne). Élec = chaleur ÷ ce COP'+(r.pow?', au plus '+nf0.format(r.pow)+' W × 16 h × jours rouges (⚠️ = plafonné)':'')+'. '+(gaz?'Gaz':'Fioul')+' = chaleur ÷ '+(gaz?nfN.format(s.rendG)+' %':nfN.format(Math.round(r.eff*1000)/1000)+' kWh/L')+'.</p></div></details>';}
   out.innerHTML=sum+'<details class="simbox" id="simResBox"><summary>📋 Détail du résultat</summary><div class="in">'+h+'</div></details>'+redB;
   mb.classList.remove('hidden');
   $('simMonths').innerHTML='<table class="sim-mt"><tr><th>Mois</th><th>Chaleur'+(rd?'*':'')+'</th><th>COP</th><th>Élec PAC</th></tr>'+r.rows.map(function(x){return '<tr><td>'+MONTHS_FR[x.m]+'</td><td>'+(x.dju>0?nf0.format(x.heat)+' kWh':'—')+'</td><td>'+(x.dju>0?nf2.format(x.cop):'—')+'</td><td>'+(x.dju>0||x.ecs>0?nf0.format(x.kwh)+' kWh'+(x.capped?' ⚠️':''):'—')+'</td></tr>';}).join('')+'</table>'+(r.rows.some(function(z){return !(z.dju>0);})?'<p class="hint">☀️ Pas de chauffage de mai à août'+(ecs?' : l\'électricité restante, c\'est l\'eau chaude.':'.')+'</p>':'')+(r.heatApp>0?'<p class="hint">⚠️ Plafonné par la puissance de la PAC : '+r.rows.filter(function(z){return z.capped;}).map(function(z){return MONTHS_FR[z.m]+' (besoin '+nf0.format(z.kwhRaw)+' kWh, max '+nf0.format(z.cap)+' kWh)';}).join(', ')+'.</p>':'')+(rd?'<p class="hint">* hors heures pleines des jours rouges (voir 🔴 Jours rouges)</p>':'');
   fo.innerHTML='<b>Calcul</b><br>Chaleur utile = '+(gaz?nf2.format(qty)+' kWh × '+nfN.format(s.rendG)+' %':nf2.format(qty)+' L × '+nfN.format(s.pci)+' kWh/L × '+nfN.format(s.rendF)+' %')+' = <b>'+nf2.format(r.chaleurTot)+' kWh</b><br>'+
     (ecs?'Chaleur chauffage = '+nf2.format(r.chaleurTot)+' − '+nf2.format(r.ecsH)+' kWh d\'eau chaude = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qHeat)+uq+')<br>Eau chaude : '+nf2.format(r.ecsH)+' kWh répartis au prorata des jours de chaque mois, COP de l\'eau chaude = '+nf2.format(r.cE)+' (80 % du COP saisonnier)<br>':'')+
     (rd?'Heures pleines des jours rouges retirées (détail dans 🔴 Jours rouges) : chauffage couvert = '+nf2.format(r.heatBefore)+' − '+nf2.format(r.heatRed)+' = <b>'+nf2.format(r.chaleur)+' kWh</b> (soit '+nf2.format(r.qHeat)+uq+')<br>':'')+
-    'Répartie sur '+months.length+' mois selon les degrés-jours ('+nf0.format(r.djM)+' DJU) ; kWh élec PAC = Σ (chaleur du mois ÷ COP du mois'+(ecs?' + eau chaude ÷ COP eau chaude':'')+') = <b>'+nf2.format(r.kwhPac)+' kWh</b> (COP moyen '+nf2.format(r.copEff)+')<br>'+
+    'Répartie sur '+months.length+' mois selon les degrés-jours ('+nf0.format(r.djM)+' DJU) ; kWh élec PAC = Σ (chaleur du mois ÷ COP du mois'+(ecs?' + eau chaude ÷ COP eau chaude':'')+') = <b>'+nf2.format(r.kwhPac)+' kWh</b> (COP moyen '+nf2.format(r.copEffBase)+')<br>'+
     (r.coutComb===null?'':'Coût '+fuel+(ecs?' (chauffage + eau chaude)':'')+' = '+nf2.format(r.qCh)+uq+' × '+nfN.format(prix)+(gaz?' €/kWh':' €/L')+' = <b>'+fE(r.coutComb)+'</b><br>')+
     (r.coutElec===null?'':(elSeasonal(el)?'Coût élec = Σ (kWh du mois × prix Tempo moyen du mois : hiver ou été) = <b>'+fE(r.coutElec)+'</b> (prix moyen '+nfN.format(Math.round(r.coutElec/r.kwhPac*10000)/10000)+' €/kWh)<br>':'Coût élec = '+nf2.format(r.kwhPac)+' kWh × '+nfN.format(Math.round(pe*10000)/10000)+' €/kWh = <b>'+fE(r.coutElec)+'</b><br>'))+
-    (r.heatApp>0?'Plafond : élec du mois = plus petit de (chaleur ÷ COP) et (puissance '+nf0.format(r.pow)+' W × 24 h × jours du mois). Chaleur non fournie par la PAC = '+nf0.format(r.heatApp)+' kWh, chauffée par la chaudière ≈ '+nf2.format(r.qApp)+uq+(r.coutApp===null?'':' × '+nfN.format(prix)+' = <b>'+fE(r.coutApp)+'</b>')+'<br>':'')+
-    (r.eco===null?'':'Économie = '+fE(r.coutComb)+' − '+fE(r.coutElec)+(r.heatApp>0?' − '+fE(r.coutApp):'')+' = <b>'+fE(r.eco)+'</b>');
+    (r.heatApp>0?'Plafond : élec du mois = plus petit de (chaleur ÷ COP) et (puissance '+nf0.format(r.pow)+' W × heures de marche : 24 h × jours du mois'+(rd?' − 16 h × jours rouges':'')+'). Chaleur non fournie par la PAC = '+nf0.format(r.heatApp)+' kWh, chauffée par la chaudière ≈ '+nf2.format(r.qApp)+uq+(r.coutApp===null?'':' × '+nfN.format(prix)+' = <b>'+fE(r.coutApp)+'</b>')+'<br>':'')+
+    (rOn?'🔴 HP rouges chauffées par la PAC : '+nf2.format(r.kwhRed)+' kWh'+(r.eurRedE===null?'':' × '+P4(r.peRedHP)+' €/kWh = <b>'+fE(r.eurRedE)+'</b>')+' ; '+fuel+' évité '+nf2.format(r.qX)+uq+(r.eurX===null?'':' = <b>'+fE(r.eurX)+'</b>')+'<br>':'')+
+    (r.eco===null?'':'Économie = '+fE(r.coutComb)+' − '+fE(r.coutElec)+(r.heatApp>0?' − '+fE(r.coutApp):'')+(rOn?' + '+fE(r.eurX)+' − '+fE(r.eurRedE):'')+' = <b>'+fE(r.eco)+'</b>');
 }
 function setSimType(t){
   simType=t;
