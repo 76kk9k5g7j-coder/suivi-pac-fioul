@@ -466,7 +466,8 @@ html{scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))} /* champ fo
 #measOut.warn{outline:1px solid rgba(230,160,40,.55)}
 .meas-row.mx-warn,.meas-row.mx-bad{border-radius:8px;background:var(--mxbg);box-shadow:0 0 0 3px var(--mxbg)} /* v40 : contrôle de cohérence (sans changer la mise en page) */
 .meas-row.mx-warn{--mxbg:rgba(245,158,11,.17)}.meas-row.mx-bad{--mxbg:rgba(220,38,38,.14)}
-.mx-msg{font-weight:700;font-size:.78rem;overflow:hidden;text-overflow:ellipsis}.mx-warn .mx-msg{color:#b45309}.mx-bad .mx-msg{color:#b91c1c}
+.mx-msg{font-weight:700;font-size:.78rem;overflow:hidden;text-overflow:ellipsis}
+.meas-cop .mx-msg{min-width:0;flex:0 1 auto}.meas-cop .mx-d{order:9;margin-left:auto;flex:none;font-size:10.5px;font-weight:400;color:var(--muted);padding-right:4px} /* v44 : date de la mesure, informative */.mx-warn .mx-msg{color:#b45309}.mx-bad .mx-msg{color:#b91c1c}
 @media (prefers-color-scheme: dark){.meas-row.mx-warn{--mxbg:rgba(251,191,36,.16)}.meas-row.mx-bad{--mxbg:rgba(248,113,113,.17)}.mx-warn .mx-msg{color:#fbbf24}.mx-bad .mx-msg{color:#fca5a5}}
 .el-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .el-2col>*{min-width:0}
@@ -1108,7 +1109,7 @@ function normalizeSettings(raw){
   s.custOn=raw.custOn!==false; // v33 : décoché = tes COP moyens et mesures sont gardés mais pas utilisés (absent = utilisés)
   if(raw.v32!==true){if(s.copCurve)s.copPts=[];else if(s.copPts.length)s.custCorr=true;}
   s.v32=true;
-  s.meas=Array.isArray(raw.meas)?raw.meas.map(function(m){return m&&{t:finOrNull(m.t,-30,40),w:finOrNull(m.w,1,10000),ti:finOrNull(m.ti,-20,60),to:finOrNull(m.to,-20,80),q:MEAS_Q_OK.indexOf(Number(m&&m.q))>=0?Number(m.q):350};}).filter(function(m){return m&&m.t!==null&&m.w!==null&&m.ti!==null&&m.to!==null&&m.to>m.ti;}).slice(0,40):[];
+  s.meas=Array.isArray(raw.meas)?raw.meas.map(function(m){return m&&measDSet({t:finOrNull(m.t,-30,40),w:finOrNull(m.w,1,10000),ti:finOrNull(m.ti,-20,60),to:finOrNull(m.to,-20,80),q:MEAS_Q_OK.indexOf(Number(m&&m.q))>=0?Number(m.q):350},m.d);}).filter(function(m){return m&&m.t!==null&&m.w!==null&&m.ti!==null&&m.to!==null&&m.to>m.ti;}).slice(0,40):[];
   s.measErr=finOrNull(raw.measErr,0,50);if(s.measErr===null)s.measErr=MEAS_ERR_DEF;
   // v41 : sessions « mesures sur la durée » (relevés : d = date-heure locale AAAA-MM-JJTHH:MM, k = compteur kWh, t/ti/to = dehors/entrée/sortie, q = débit)
   s.sess=Array.isArray(raw.sess)?raw.sess.filter(function(x){return x&&typeof x==='object'&&Array.isArray(x.rel);}).slice(0,SESS_MAX).map(function(x){return {id:typeof x.id==='string'&&x.id?x.id.slice(0,40):uid(),open:x.open!==false,
@@ -1327,6 +1328,10 @@ var MEAS_CARNOT=0.75, MEAS_NB_DT=3, MEAS_NB_MIN=3, MEAS_NB_TOL=0.20;
 function measCarnotCap(m){var d=m.to-m.t;return d>0?MEAS_CARNOT*(m.to+273.15)/d:Infinity;}
 function measCarnotOk(m){return measCop(m)<=measCarnotCap(m)+1e-9;} // faux = valeur irréaliste, non comptée
 function measUse(a){return (a||[]).filter(measCarnotOk);}
+// v44 : date facultative d'une mesure brute (informative, jamais utilisée dans un calcul)
+function measDOk(d){return typeof d==='string'&&/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d$/.test(d)?d:null;}
+function measDSet(o,d){d=measDOk(d);if(d)o.d=d;return o;}
+function measDTxt(d){d=measDOk(d);if(!d)return '';var y=d.slice(0,4);return 'le '+d.slice(8,10)+'/'+d.slice(5,7)+(y!==String(new Date().getFullYear())?'/'+y:'')+' '+d.slice(11,16);}
 function measMed(a){var b=a.slice().sort(function(x,y){return x-y;}),n=b.length;return n%2?b[(n-1)/2]:(b[n/2-1]+b[n/2])/2;}
 // par mesure : {x:true,cap} si non comptée ; sinon {dev} (écart à la médiane des voisines comptées à ±3 °C, null si ≤ 20 % ou < 3 voisines)
 function measCheck(ms,e){var ok=ms.map(measCarnotOk);return ms.map(function(m,i){if(!ok[i])return {x:true,cap:measCarnotCap(m),dev:null};
@@ -2410,20 +2415,22 @@ function measRowHtml(m,i){var q=String(m.q||390);
     '<button class="icon-btn del mx-del" type="button" aria-label="Supprimer la mesure '+(i+1)+'">🗑️</button><div class="meas-cop" id="mcop'+i+'"></div></div>';}
 function renderMeasUI(){$('measList').innerHTML=measUI.map(measRowHtml).join('')||'<p class="hint">Aucune mesure.</p>';renderMeasOut();}
 function readMeasUI(){Array.prototype.forEach.call(document.querySelectorAll('#measList .meas-row'),function(r){var i=+r.getAttribute('data-i');if(!measUI[i])return;
-  measUI[i]={t:r.querySelector('.mx-t').value,w:r.querySelector('.mx-w').value,ti:r.querySelector('.mx-i').value,to:r.querySelector('.mx-o').value,q:+r.querySelector('.mx-q').value};});}
+  measUI[i]=measDSet({t:r.querySelector('.mx-t').value,w:r.querySelector('.mx-w').value,ti:r.querySelector('.mx-i').value,to:r.querySelector('.mx-o').value,q:+r.querySelector('.mx-q').value},measUI[i].d);});}
 function measParse(){readMeasUI();var ok=[],idx=[],bad=null,st=[],e=uiMeasErrSafe();
   measUI.forEach(function(r,i){var raw=[r.t,r.w,r.ti,r.to].map(function(x){return String(x===null||x===undefined?'':x).trim();});
     if(raw.every(function(x){return x==='';})){st[i]='';return;}
     var t=parseNum(raw[0]),w=parseNum(raw[1]),ti=parseNum(raw[2]),to=parseNum(raw[3]),q=MEAS_Q.indexOf(+r.q)>=0?+r.q:350;
     if(!(isFinite(t)&&t>=-30&&t<=40)||!(w>=1&&w<=10000)||!(isFinite(ti)&&ti>=-20&&ti<=60)||!(isFinite(to)&&to<=80)){st[i]='⚠️ incomplet';if(bad===null)bad=i;return;}
     if(!(to>ti)){st[i]='⚠️ sortie ≤ entrée';if(bad===null)bad=i;return;}
-    var m={t:t,w:w,ti:ti,to:to,q:q};st[i]='COP '+nf2.format(measCopE(m,e))+' = '+(e?nf1.format(q*(1-e/100))+' m³/h ('+q+' − '+nfN.format(e)+' %)':q+' m³/h (non corrigé)')+' × 0,335 × '+nf1.format(to-ti)+' ÷ '+nf0.format(w);ok.push(m);idx.push(i);});
+    var m=measDSet({t:t,w:w,ti:ti,to:to,q:q},r.d);st[i]='COP '+nf2.format(measCopE(m,e))+' = '+(e?nf1.format(q*(1-e/100))+' m³/h ('+q+' − '+nfN.format(e)+' %)':q+' m³/h (non corrigé)')+' × 0,335 × '+nf1.format(to-ti)+' ÷ '+nf0.format(w);ok.push(m);idx.push(i);});
   return {ok:ok,idx:idx,bad:bad,st:st};}
 function renderMeasOut(){renderMeasOut0();sessCalcUI();} // v41 : la session suit l'erreur de débit et les mesures brutes
 function renderMeasOut0(){if(!$('measOut'))return;var P=measParse(),K=measCheck(P.ok,uiMeasErrSafe()),F={},nx=0,nw=0;P.idx.forEach(function(r,k){F[r]=K[k];});
   Array.prototype.forEach.call(document.querySelectorAll('#measList .meas-row'),function(row){var i=+row.getAttribute('data-i'),f=F[i],x=!!(f&&f.x),w=!!(f&&!f.x&&f.dev!==null),c=$('mcop'+i);
     row.classList.toggle('mx-bad',x);row.classList.toggle('mx-warn',w);nx+=x?1:0;nw+=w?1:0;if(!c)return;var s=P.st[i]||'',k=s.indexOf(' = ');
-    if(/^COP /.test(s)&&k>0){c.innerHTML='<b class="mx-cop">'+esc(s.slice(0,k))+'</b>';c.title=s;}else{c.textContent=s;c.removeAttribute('title');}if(!x&&!w)return; // v40 : ligne courte, calcul détaillé dans title
+    if(/^COP /.test(s)&&k>0){c.innerHTML='<b class="mx-cop">'+esc(s.slice(0,k))+'</b>';c.title=s;}else{c.textContent=s;c.removeAttribute('title');}
+    var md=measUI[i]?measDTxt(measUI[i].d):'';if(md){var sd=document.createElement('span');sd.className='mx-d';sd.textContent=md;sd.title='Mesure ajoutée '+md;c.appendChild(sd);} // v44
+    if(!x&&!w)return; // v40 : ligne courte, calcul détaillé dans title
     var d=document.createElement('span');d.className='mx-msg';
     if(x){d.textContent='⛔ Non comptée : valeur irréaliste';d.title='COP au débit notice '+nf1.format(measCop(P.ok[P.idx.indexOf(i)]))+' > '+nf1.format(f.cap)+' (75 % du maximum physique) : vérifie la saisie.';}
     else{d.textContent='⚠️ écart '+(f.dev>0?'+':'−')+nf0.format(Math.abs(f.dev*100))+' % voisines';d.title='Médiane des mesures voisines (±3 °C) : '+nf2.format(f.med)+'. Vitesse ou température mal saisie ?';}c.appendChild(d);});
@@ -2464,7 +2471,7 @@ function custSwSync(){var on=$('sCustOn').checked,n=settings.copPts.length+setti
   $('custBody').classList.toggle('cust-dis',!on);return on;}
 $('btnCustOn').addEventListener('click',function(){var c=$('sCustOn');c.checked=!c.checked;c.dispatchEvent(new Event('change',{bubbles:true}));toast(c.checked?'Mon SCOP personnalisé : actif':'Mon SCOP personnalisé : inactif (valeurs gardées)');});
 $('btnMeas').addEventListener('click',function(){measOpen($('measBox').classList.contains('hidden'));});
-$('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.length>=40){toast('40 mesures maximum');return;}measUI.push({t:'',w:'',ti:'',to:'',q:390});renderMeasUI();var r=document.querySelectorAll('#measList .mx-t');if(r.length)r[r.length-1].focus();});
+$('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.length>=40){toast('40 mesures maximum');return;}measUI.push({t:'',w:'',ti:'',to:'',q:390,d:sessNow()});renderMeasUI();var r=document.querySelectorAll('#measList .mx-t');if(r.length)r[r.length-1].focus();});
 $('measList').addEventListener('click',function(ev){var b=ev.target.closest('.mx-del');if(!b)return;readMeasUI();measUI.splice(+b.closest('.meas-row').getAttribute('data-i'),1);renderMeasUI();updateCopPreview();scheduleSave(0);});
 $('measList').addEventListener('input',function(){updateCopPreview();});
 $('measList').addEventListener('change',function(){updateCopPreview();});
@@ -2560,7 +2567,7 @@ function fillSettings(){
   $('sScop').value=numStr(settings.scop);fillMachSel();$('sMach').value=settings.copCurve&&settings.copCurve!=='scop'?'cv:'+settings.copCurve:(settings.copCurve==='scop'?settings.mach:'');$('sSimUse').checked=settings.simUseSet;$('sCustCorr').checked=settings.custCorr;$('sCustOn').checked=settings.custOn;
   copPtsUI=settings.copPts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});
   $('sCorr').value=numStr(settings.copCorr);$('sMeasErr').value=numStr(measErrOf(settings));
-  measUI=settings.meas.map(function(m){return {t:numStr(m.t),w:numStr(m.w),ti:numStr(m.ti),to:numStr(m.to),q:m.q};});renderMeasUI();sessLoad();custTab(!settings.copPts.length&&settings.meas.length?'b':'a');
+  measUI=settings.meas.map(function(m){return measDSet({t:numStr(m.t),w:numStr(m.w),ti:numStr(m.ti),to:numStr(m.to),q:m.q},m.d);});renderMeasUI();sessLoad();custTab(!settings.copPts.length&&settings.meas.length?'b':'a');
   renderTGrid();renderMonthUI();syncCurve();renderPtsUI();measOpen(settings.custOn!==false&&settings.meas.length+settings.copPts.length>0); // v35 : SCOP machine hors du menu ; inactif = menu replié au départ
   $('sTReal').checked=settings.tReal;$('sLat').value=numStr(settings.lat);$('sLon').value=numStr(settings.lon);showTReal();
   $('sPacPrix').value=numStr(settings.pacPrix);$('sPacAides').value=numStr(settings.pacAides);$('sPacEnt').value=numStr(settings.pacEnt);$('sPacKw').value=settings.pacKw?numStr(Math.round(settings.pacKw*1000)):'';renderPacKwLimit();
