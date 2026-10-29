@@ -430,6 +430,24 @@ html.ks-open{overflow:hidden}
 .meas-err{display:flex;align-items:center;gap:8px;margin-top:8px}.meas-err label{margin:0;flex:1;font-size:.88rem}.meas-err input{width:5.5em;text-align:center;font-size:16px}
 #measOut{margin-top:10px;font-size:.85rem;line-height:1.45;padding:8px 10px;border-radius:10px;background:var(--card2,rgba(127,127,127,.08))}
 #measOut>div+div{margin-top:3px}
+/* v41 : mesures sur la durée (sessions) */
+.sess-box{margin-top:16px;padding-top:10px;border-top:1px solid var(--line)}
+.sess-bar{display:flex;gap:6px;align-items:center;margin-top:6px}.sess-bar select{flex:1 1 auto;min-width:0;min-height:0;height:40px;padding:4px 6px;font-size:16px}.sess-bar .btn{flex:0 0 auto;white-space:nowrap;min-height:40px}
+.sess-head,.sess-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 2.25fr 34px;gap:3px;align-items:center}
+.sess-head{font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.15;row-gap:1px}
+.sess-row{margin-top:5px;row-gap:3px}.sess-row+.sess-row{border-top:1px dashed var(--line);padding-top:5px}
+.sess-row input,.sess-row select{min-width:0;width:100%;height:32px;min-height:0;padding:3px 2px;font-size:16px;text-align:center}
+.sess-row .sx-d,.sess-head .sh-d{grid-column:1/4}.sess-row .sx-d{text-align:left;padding:3px 2px 3px 5px}.sess-row .sx-d::-webkit-calendar-picker-indicator{display:none}
+.sess-row select.sx-q{-webkit-appearance:none;appearance:none;padding:3px 0;background-image:none;text-align-last:center}
+.sess-row .pm-btn{height:32px;min-height:0}.sess-row .icon-btn.sx-del{width:34px;height:32px;min-width:0;min-height:0;padding:0}
+.sess-seg{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;min-width:0;font-size:.78rem;color:var(--muted);line-height:1.2;padding:1px 0 0 2px}
+.sess-seg .mx-cop{font-size:.95rem;font-weight:800;color:var(--accent)}.sess-seg .mx-msg{font-weight:700}.sess-seg>*{white-space:nowrap}
+.sess-row.mx-warn,.sess-row.mx-bad{border-radius:8px;background:var(--mxbg);box-shadow:0 0 0 3px var(--mxbg)}
+.sess-row.mx-warn{--mxbg:rgba(245,158,11,.17)}.sess-row.mx-bad{--mxbg:rgba(220,38,38,.14)}
+@media (prefers-color-scheme: dark){.sess-row.mx-warn{--mxbg:rgba(251,191,36,.16)}.sess-row.mx-bad{--mxbg:rgba(248,113,113,.17)}}
+#sessOut{margin-top:8px;font-size:.85rem;line-height:1.45;padding:8px 10px;border-radius:10px;background:var(--card2,rgba(127,127,127,.08))}#sessOut>div+div{margin-top:3px}
+#sessOut .sess-cop{font-size:1.15rem;color:var(--accent)}
+.sess-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sess-acts .btn{min-height:40px}
 #measOut.warn{outline:1px solid rgba(230,160,40,.55)}
 .meas-row.mx-warn,.meas-row.mx-bad{border-radius:8px;background:var(--mxbg);box-shadow:0 0 0 3px var(--mxbg)} /* v40 : contrôle de cohérence (sans changer la mise en page) */
 .meas-row.mx-warn{--mxbg:rgba(245,158,11,.17)}.meas-row.mx-bad{--mxbg:rgba(220,38,38,.14)}
@@ -828,6 +846,13 @@ html.ks-open{overflow:hidden}
         <div class="meas-head"><span>Dehors °C</span><span>Entrée °C</span><span>Sortie °C</span><span>Watts</span><span>Vitesse m³/h</span><span></span></div>
         <div id="measList"></div>
         <div class="actions" style="margin-top:8px"><button class="btn small" type="button" id="btnMeasAdd">+ Ajouter une mesure</button></div>
+        <div id="sessBox" class="sess-box">
+          <div class="meas-h"><b>⏱️ Mesures sur la durée</b></div>
+          <p class="hint" id="sessHint">Relève le compteur d'énergie (kWh) de temps en temps, à intervalles réguliers ou non (2 relevés minimum). Par intervalle : chaleur = débit corrigé × 0,335 × (sortie − entrée) × heures ÷ 1000 ; COP = chaleur ÷ kWh consommés. Erreur de débit : celle ci-dessus. À part : ne change ni le SCOP ni le Suivi.</p>
+          <div class="sess-bar"><select id="sessSel" aria-label="Session"></select></div>
+          <div id="sessBody"></div>
+          <div class="sess-acts"><span id="sessMgmt" style="display:contents"></span><button class="btn small" type="button" id="btnSessNew">+ Nouvelle session</button></div>
+        </div>
         </div>
         </div>
         <div class="preview" id="measOut"></div>
@@ -979,7 +1004,7 @@ var DEFAULTS={cop:3, pci:10, rend:85, rendGaz:90, ecsOn:false, ecsPers:null, ecs
   comps:[{id:'f1',type:'fioul',label:'',prix:null,on:true}],
   elecMode:'base', prixElec:EDF.base, prixHP:EDF.hp, prixHC:EDF.hc, pctHC:null, tempoMode:'auto', tempo:Object.assign({},EDF.t), tdB:300, tdW:43, tdR:22, redOn:false, peApplyAll:false, mach:'', scop:null, meas:[], custOn:true,
   copMode:'fixe', copPts:[], copCorr:null, copCurve:null, tMonths:[null,null,null,null,null,null,null,null,null,null,null,null], copOver:[null,null,null,null,null,null,null,null,null,null,null,null], tReal:false, lat:null, lon:null, pacPrix:null, pacAides:null, pacDate:null, pacEnt:null};
-var MAX_COMPS=8, MEAS_Q_OK=[350,370,390,405,420], MEAS_ERR_DEF=15;
+var MAX_COMPS=8, MEAS_Q_OK=[350,370,390,405,420], MEAS_ERR_DEF=15, SESS_MAX=20, REL_MAX=60;
 // v34 : profils de chaudière (préremplissent le rendement, modifiable). Fioul : sur PCI (prix au litre). Gaz : sur PCS, car le prix et les kWh de la facture gaz sont en PCS.
 var BOIL_PROF={fioul:[{k:'fStd',n:'Ancienne standard (avant 1990)',v:80,est:true},{k:'fBosch',n:'Basse température – Bosch Olio 1500 F FBON 20H (ma chaudière)',v:90},{k:'fCond',n:'Fioul à condensation',v:95,est:true}],
   gaz:[{k:'gOld',n:'Ancienne (avant 2000)',v:72,pci:80},{k:'gBt',n:'Basse température',v:79,pci:88},{k:'gCond',n:'Condensation (après 2015), radiateurs fonte',v:87,pci:97}]};
@@ -1051,7 +1076,10 @@ function normalizeSettings(raw){
   if(raw.v32!==true){if(s.copCurve)s.copPts=[];else if(s.copPts.length)s.custCorr=true;}
   s.v32=true;
   s.meas=Array.isArray(raw.meas)?raw.meas.map(function(m){return m&&{t:finOrNull(m.t,-30,40),w:finOrNull(m.w,1,10000),ti:finOrNull(m.ti,-20,60),to:finOrNull(m.to,-20,80),q:MEAS_Q_OK.indexOf(Number(m&&m.q))>=0?Number(m.q):350};}).filter(function(m){return m&&m.t!==null&&m.w!==null&&m.ti!==null&&m.to!==null&&m.to>m.ti;}).slice(0,40):[];
-  s.measErr=finOrNull(raw.measErr,0,50);if(s.measErr===null)s.measErr=MEAS_ERR_DEF; // v40 : erreur de débit des mesures brutes (%), absente = 15
+  s.measErr=finOrNull(raw.measErr,0,50);if(s.measErr===null)s.measErr=MEAS_ERR_DEF;
+  // v41 : sessions « mesures sur la durée » (relevés : d = date-heure locale AAAA-MM-JJTHH:MM, k = compteur kWh, t/ti/to = dehors/entrée/sortie, q = débit)
+  s.sess=Array.isArray(raw.sess)?raw.sess.filter(function(x){return x&&typeof x==='object'&&Array.isArray(x.rel);}).slice(0,SESS_MAX).map(function(x){return {id:typeof x.id==='string'&&x.id?x.id.slice(0,40):uid(),open:x.open!==false,
+    rel:x.rel.filter(function(r){return r&&typeof r==='object';}).slice(0,REL_MAX).map(function(r){return {d:typeof r.d==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(r.d)?r.d:'',k:finOrNull(r.k,0,1e7),t:finOrNull(r.t,-30,40),ti:finOrNull(r.ti,-20,60),to:finOrNull(r.to,-20,80),q:MEAS_Q_OK.indexOf(Number(r.q))>=0?Number(r.q):390};})};}):[]; // v40 : erreur de débit des mesures brutes (%), absente = 15
   s.tMonths=[];s.copOver=[];
   for(var mi=0;mi<12;mi++){s.tMonths.push(finOrNull(Array.isArray(raw.tMonths)?raw.tMonths[mi]:null,-50,50));s.copOver.push(finOrNull(Array.isArray(raw.copOver)?raw.copOver[mi]:null,1,20));}
   // v31 : températures des mois = celles du lieu (case vide) ; une ancienne valeur égale à la normale de Metz redevient « valeur du lieu »
@@ -1272,6 +1300,19 @@ function measCheck(ms,e){var ok=ms.map(measCarnotOk);return ms.map(function(m,i)
   var nb=[];ms.forEach(function(o,j){if(j!==i&&ok[j]&&Math.abs(o.t-m.t)<=MEAS_NB_DT+1e-9)nb.push(measCopE(o,e));});
   if(nb.length<MEAS_NB_MIN)return {x:false,dev:null,n:nb.length};var med=measMed(nb),d=measCopE(m,e)/med-1;
   return {x:false,dev:Math.abs(d)>MEAS_NB_TOL+1e-9?d:null,med:med,n:nb.length,raw:d};});}
+// v41 : mesures sur la durée. Intervalle i−1 → i : élec = kWh_i − kWh_(i−1) ; chaleur (kWh) = débit moyen corrigé (m³/h) × 0,335 (Wh/m³/K) × ΔT moyen (K) × durée (h) ÷ 1000
+// COP de l'intervalle = chaleur ÷ élec ; COP de la session = Σ chaleur ÷ Σ élec (les longs intervalles pèsent plus). Intervalle avec heure ou compteur incohérent : non compté.
+var SESS_DT=3, SESS_LONG=3;
+function sessMs(s){var m=/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(s||'');return m?new Date(+m[1],m[2]-1,+m[3],+m[4],+m[5]).getTime():NaN;}
+function sessRelOk(r){return !!r&&isFinite(sessMs(r.d))&&typeof r.k==='number'&&typeof r.t==='number'&&typeof r.ti==='number'&&typeof r.to==='number'&&r.to>r.ti;}
+function sessCalc(rel,e){var f=1-(e||0)/100,V=[];(rel||[]).forEach(function(r,i){if(sessRelOk(r))V.push({i:i,ms:sessMs(r.d),r:r});});
+  var segs=[],H=0,EL=0,Q=0,TH=0;
+  // relevé en baisse ou à une heure pas après : intervalle rouge, et ce relevé n'est pas repris comme départ (l'intervalle suivant part du dernier relevé sûr)
+  for(var j=1,a=V[0];j<V.length;j++){var b=V[j],h=(b.ms-a.ms)/36e5,el=b.r.k-a.r.k,q=(a.r.q+b.r.q)/2*f,dT=((a.r.to-a.r.ti)+(b.r.to-b.r.ti))/2,heat=q*AIR_C*dT*h/1000,dTo=Math.abs(b.r.t-a.r.t);
+    var bad=h<=0?'heure':el<0?'baisse':el<1e-9?'zero':null,sg={from:a.i,to:b.i,h:h,el:el,q:q,dT:dT,heat:heat,dTo:dTo,cop:bad?null:heat/el,bad:bad,warn:!bad&&dTo>SESS_DT+1e-9,long:!bad&&h>SESS_LONG+1e-9};
+    segs.push(sg);if(!bad){H+=h;EL+=el;Q+=heat;TH+=(a.r.t+b.r.t)/2*h;}if(bad!=='heure'&&bad!=='baisse')a=b;}
+  var ts=V.map(function(v){return v.r.t;}),tm=H>0?TH/H:(ts.length?ts.reduce(function(x,y){return x+y;},0)/ts.length:null);
+  return {segs:segs,n:V.length,h:H,el:EL,heat:Q,cop:EL>0?Q/EL:null,tMean:tm,tVar:ts.length?Math.max.apply(null,ts)-Math.min.apply(null,ts):0,k0:V.length?V[0].r.k:null,k1:V.length?V[V.length-1].r.k:null,nOk:segs.filter(function(s){return !s.bad;}).length};}
 function measErrOf(s){return s&&typeof s.measErr==='number'&&isFinite(s.measErr)?s.measErr:MEAS_ERR_DEF;}
 function avgGroups(a){var g={};a.forEach(function(x){var c=x.cop;if(!(c>0)||!isFinite(c)||!isFinite(x.t))return;var k=String(x.t);if(!g[k])g[k]={t:x.t,s:0,n:0};g[k].s+=c;g[k].n++;});
   return Object.keys(g).map(function(k){return {t:g[k].t,cop:g[k].s/g[k].n,n:g[k].n};}).sort(function(a,b){return a.t-b.t;});}
@@ -2343,7 +2384,8 @@ function measParse(){readMeasUI();var ok=[],idx=[],bad=null,st=[],e=uiMeasErrSaf
     if(!(to>ti)){st[i]='⚠️ sortie ≤ entrée';if(bad===null)bad=i;return;}
     var m={t:t,w:w,ti:ti,to:to,q:q};st[i]='COP '+nf2.format(measCopE(m,e))+' = '+(e?nf1.format(q*(1-e/100))+' m³/h ('+q+' − '+nfN.format(e)+' %)':q+' m³/h (non corrigé)')+' × 0,335 × '+nf1.format(to-ti)+' ÷ '+nf0.format(w);ok.push(m);idx.push(i);});
   return {ok:ok,idx:idx,bad:bad,st:st};}
-function renderMeasOut(){if(!$('measOut'))return;var P=measParse(),K=measCheck(P.ok,uiMeasErrSafe()),F={},nx=0,nw=0;P.idx.forEach(function(r,k){F[r]=K[k];});
+function renderMeasOut(){renderMeasOut0();sessCalcUI();} // v41 : la session suit l'erreur de débit et les mesures brutes
+function renderMeasOut0(){if(!$('measOut'))return;var P=measParse(),K=measCheck(P.ok,uiMeasErrSafe()),F={},nx=0,nw=0;P.idx.forEach(function(r,k){F[r]=K[k];});
   Array.prototype.forEach.call(document.querySelectorAll('#measList .meas-row'),function(row){var i=+row.getAttribute('data-i'),f=F[i],x=!!(f&&f.x),w=!!(f&&!f.x&&f.dev!==null),c=$('mcop'+i);
     row.classList.toggle('mx-bad',x);row.classList.toggle('mx-warn',w);nx+=x?1:0;nw+=w?1:0;if(!c)return;var s=P.st[i]||'',k=s.indexOf(' = ');
     if(/^COP /.test(s)&&k>0){c.innerHTML='<b class="mx-cop">'+esc(s.slice(0,k))+'</b>';c.title=s;}else{c.textContent=s;c.removeAttribute('title');}if(!x&&!w)return; // v40 : ligne courte, calcul détaillé dans title
@@ -2384,6 +2426,72 @@ $('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.lengt
 $('measList').addEventListener('click',function(ev){var b=ev.target.closest('.mx-del');if(!b)return;readMeasUI();measUI.splice(+b.closest('.meas-row').getAttribute('data-i'),1);renderMeasUI();updateCopPreview();scheduleSave(0);});
 $('measList').addEventListener('input',function(){updateCopPreview();});
 $('measList').addEventListener('change',function(){updateCopPreview();});
+// ---- v41 : mesures sur la durée (sessions)
+var sessUI=null,sessCur=-1,sessT=null;
+function sf2(x){return x.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}function sf1(x){return nf1.format(x).replace(/,0$/,'');}
+function sessNow(){var d=new Date(),p=function(x){return (x<10?'0':'')+x;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+function sessDur(h){var m=Math.round(h*60);if(m<60)return m+' min';var mm=m%60;return Math.floor(m/60)+' h'+(mm?' '+(mm<10?'0':'')+mm:'');}
+function sessHm(s){return s?s.slice(8,10)+'/'+s.slice(5,7)+' '+s.slice(11,16):'';}
+function sessName(x){var c=sessCalc(x.rel,uiMeasErrSafe()),d=(x.rel[0]&&x.rel[0].d)||'';return (d?sessHm(d):'Session')+(c.tMean!==null?' · '+SGN(+c.tMean.toFixed(1))+' °C':'')+(x.open?' · en cours':' · clôturée');}
+function sessLoad(){sessUI=JSON.parse(JSON.stringify(settings.sess||[]));if(sessCur<0||sessCur>=sessUI.length)sessCur=sessUI.length-1;sessRender();}
+function sessSave(ms){clearTimeout(sessT);sessT=setTimeout(function(){sessT=null;settings=Object.assign({},settings,{sess:JSON.parse(JSON.stringify(sessUI))});save(KEY_SET,settings);},ms||0);}
+function sessRowHtml(r,i,dis){var q=String(r.q||390),D=dis?' disabled':'';
+  return '<div class="sess-row" data-i="'+i+'">'+
+    '<input type="datetime-local" class="sx-d" aria-label="Date et heure, relevé '+(i+1)+'" value="'+esc(r.d||'')+'"'+D+'>'+
+    '<input type="text" inputmode="decimal" class="sx-k" aria-label="Compteur en kWh, relevé '+(i+1)+'" placeholder="kWh" value="'+esc(numStr(r.k))+'"'+D+'>'+
+    '<button class="icon-btn del sx-del" type="button" aria-label="Supprimer le relevé '+(i+1)+'"'+D+'>🗑️</button>'+
+    '<span class="pm-w">'+pmBtn('température dehors, relevé '+(i+1)).replace('>±',D+'>±')+'<input type="text" inputmode="decimal" class="sx-t" aria-label="Température dehors, relevé '+(i+1)+'" placeholder="7" value="'+esc(numStr(r.t))+'"'+D+'></span>'+
+    '<input type="text" inputmode="decimal" class="sx-i" aria-label="Température d\'entrée de l\'air, relevé '+(i+1)+'" placeholder="20" value="'+esc(numStr(r.ti))+'"'+D+'>'+
+    '<input type="text" inputmode="decimal" class="sx-o" aria-label="Température de sortie de l\'air, relevé '+(i+1)+'" placeholder="38" value="'+esc(numStr(r.to))+'"'+D+'>'+
+    '<select class="sx-q" aria-label="Vitesse du ventilateur (m³/h), relevé '+(i+1)+'"'+D+'>'+MEAS_Q.map(function(v){return '<option value="'+v+'"'+(String(v)===q?' selected':'')+'>'+v+' ('+MEAS_QP[v].replace(' ','\u202f')+')</option>';}).join('')+'</select><span></span>'+
+    '<div class="sess-seg" id="sseg'+i+'"></div></div>';}
+function sessRender(){if(!sessUI)return;var sel=$('sessSel'),b=$('sessBody');
+  sel.classList.toggle('hidden',!sessUI.length);sel.innerHTML=sessUI.map(function(x,i){return '<option value="'+i+'"'+(i===sessCur?' selected':'')+'>'+esc(sessName(x))+'</option>';}).join('');
+  if(!sessUI.length){b.innerHTML='<p class="hint" id="sessEmpty">Aucune session. « + Nouvelle session » crée un 1er relevé à l\'heure actuelle.</p>';$('sessMgmt').innerHTML='';return;}
+  var x=sessUI[sessCur],dis=!x.open;
+  b.innerHTML='<div class="sess-head"><span class="sh-d">Date et heure</span><span>Compteur kWh</span><span></span><span>Dehors °C</span><span>Entrée °C</span><span>Sortie °C</span><span>Vitesse m³/h</span><span></span></div>'+
+    '<div id="sessList">'+x.rel.map(function(r,i){return sessRowHtml(r,i,dis);}).join('')+'</div>'+
+    (x.open?'<div class="sess-acts"><button class="btn small" type="button" id="btnRelAdd">+ Ajouter un relevé</button></div>':'')+'<div id="sessOut"></div>';
+  $('sessMgmt').innerHTML='<button class="btn small" type="button" id="btnSessClose">'+(x.open?'Clôturer':'Rouvrir')+'</button><button class="btn small" type="button" id="btnSessDel">🗑️ Supprimer</button>';
+  sessCalcUI();}
+function sessRead(){var x=sessUI&&sessUI[sessCur];if(!x)return;Array.prototype.forEach.call(document.querySelectorAll('#sessList .sess-row'),function(row){var i=+row.getAttribute('data-i'),r=x.rel[i];if(!r)return;
+  var g=function(c,min,max){var v=parseNum(row.querySelector(c).value);return isFinite(v)&&v>=min&&v<=max?v:null;},d=row.querySelector('.sx-d').value.slice(0,16);
+  r.d=/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(d)?d:'';r.k=g('.sx-k',0,1e7);r.t=g('.sx-t',-30,40);r.ti=g('.sx-i',-20,60);r.to=g('.sx-o',-20,80);var q=+row.querySelector('.sx-q').value;r.q=MEAS_Q.indexOf(q)>=0?q:390;});}
+function sessCalcUI(){var x=sessUI&&sessUI[sessCur],o=$('sessOut');if(!x||!o)return;var e=uiMeasErrSafe(),c=sessCalc(x.rel,e),S={},first=null;c.segs.forEach(function(s){S[s.to]=s;});
+  x.rel.forEach(function(r,i){if(first===null&&sessRelOk(r))first=i;});
+  Array.prototype.forEach.call(document.querySelectorAll('#sessList .sess-row'),function(row){var i=+row.getAttribute('data-i'),r=x.rel[i],s=S[i],el=$('sseg'+i),h='',t='';
+    row.classList.toggle('mx-bad',!!(s&&s.bad));row.classList.toggle('mx-warn',!!(s&&s.warn));
+    if(!sessRelOk(r))h=r&&r.to!==null&&r.ti!==null&&!(r.to>r.ti)?'⚠️ sortie ≤ entrée':'⚠️ incomplet';
+    else if(s&&s.bad)h='<span class="mx-msg">⛔ Non compté : '+(s.bad==='heure'?'heure pas après le relevé précédent':s.bad==='baisse'?'compteur en baisse':'compteur inchangé')+'</span>',t='Compteur ou heure incohérent : intervalle non compté.';
+    else if(s){var fr=s.from<i-1&&x.rel[s.from]?' depuis '+x.rel[s.from].d.slice(11,16):'';h='<b class="mx-cop">COP '+sf2(s.cop)+'</b><span>'+sessDur(s.h)+fr+' · '+sf2(s.el)+' → '+sf2(s.heat)+' kWh</span>'+(s.warn?'<span class="mx-msg">⚠️ Dehors varie de '+sf1(s.dTo)+' °C</span>':'')+(s.long?'<span>ℹ️ plus de 3 h : ajoute des relevés</span>':'');
+      t='COP '+sf2(s.cop)+' = chaleur '+sf2(s.heat)+' kWh ÷ électricité '+sf2(s.el)+' kWh ; chaleur = '+nf1.format(s.q)+' m³/h × 0,335 × '+sf1(s.dT)+' °C × '+sf2(s.h)+' h ÷ 1000'+(s.warn?'. Dehors varie de '+sf1(s.dTo)+' °C : COP moyen sur plusieurs conditions':'');}
+    else if(i===first)h='Début';
+    if(el){el.innerHTML=h;if(t)el.title=t;else el.removeAttribute('title');}});
+  var nb=c.segs.filter(function(s){return s.bad;}).length,nw=c.segs.filter(function(s){return s.warn;}).length,H='';
+  if(c.n<2)H='<div id="sessNeed">Ajoute au moins 2 relevés complets pour calculer le COP.</div>';
+  else if(!c.nOk)H='<div id="sessNone">⛔ Aucun intervalle compté : vérifie compteur et heures.</div>';
+  else{H='<div>COP de la session : <b class="sess-cop" id="sessCop">'+sf2(c.cop)+'</b></div>'+
+    '<div id="sessTot">'+sessDur(c.h)+' · électricité <b>'+sf2(c.el)+' kWh</b> · chaleur <b>'+sf2(c.heat)+' kWh</b></div>'+
+    '<div id="sessK">Compteur : début '+nf2.format(c.k0)+' → fin '+nf2.format(c.k1)+' kWh · dehors moyen '+SGN(+c.tMean.toFixed(1))+' °C</div>';
+    var R=measUse(measParse().ok).filter(function(m){return Math.abs(m.t-c.tMean)<=SESS_DT+1e-9;});
+    if(R.length)H+='<div id="sessCmp">COP instantané moyen des mesures brutes à ±3 °C : <b>'+sf2(R.reduce(function(a,m){return a+measCopE(m,e);},0)/R.length)+'</b> ('+R.length+' mesure'+(R.length>1?'s':'')+')</div>';}
+  if(c.n===2&&c.tVar>SESS_DT+1e-9)H+='<div id="sess2W">⚠️ 2 relevés seulement et dehors varie de '+sf1(c.tVar)+' °C : ajoute des relevés intermédiaires.</div>';
+  else if(nw)H+='<div id="sessVarW">⚠️ Dehors varie de plus de 3 °C sur '+nw+' intervalle'+(nw>1?'s':'')+' : COP moyen sur plusieurs conditions.</div>';
+  if(nb)H+='<div id="sessBadW">⛔ '+nb+' intervalle'+(nb>1?'s':'')+' non compté'+(nb>1?'s':'')+' : compteur ou heure incohérent.</div>';
+  o.innerHTML=H;var op=$('sessSel').options[sessCur];if(op)op.textContent=sessName(x);}
+// nouveau relevé : dehors et vitesse repris du relevé précédent (le dernier dans le temps ; sans heure valide : le dernier saisi)
+function sessPrev(rel){var b=null,bm=-Infinity;rel.forEach(function(r){var m=sessMs(r.d);if(isFinite(m)&&m>=bm){bm=m;b=r;}});return b||rel[rel.length-1]||null;}
+function sessAddRel(){var x=sessUI[sessCur];if(x.rel.length>=REL_MAX){toast(REL_MAX+' relevés maximum');return;}var pv=sessPrev(x.rel);x.rel.push({d:sessNow(),k:null,t:pv?pv.t:null,ti:null,to:null,q:pv?pv.q:390});sessRender();sessSave();
+  var k=document.querySelectorAll('#sessList .sx-k');if(k.length)k[k.length-1].focus();}
+$('btnSessNew').addEventListener('click',function(){sessRead();if(sessUI.length>=SESS_MAX){toast(SESS_MAX+' sessions maximum');return;}sessUI.push({id:uid(),open:true,rel:[]});sessCur=sessUI.length-1;sessAddRel();});
+$('sessSel').addEventListener('change',function(){sessRead();sessCur=+this.value;sessRender();});
+$('sessBody').addEventListener('input',function(){sessRead();sessCalcUI();sessSave(400);});
+$('sessBody').addEventListener('change',function(){sessRead();sessCalcUI();sessSave(0);});
+$('sessBox').addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('button');if(!t||!sessUI[sessCur])return;var x=sessUI[sessCur];
+  if(t.id==='btnRelAdd'){sessRead();sessAddRel();}
+  else if(t.id==='btnSessClose'){sessRead();x.open=!x.open;sessRender();sessSave();toast(x.open?'Session rouverte':'Session clôturée',1200);}
+  else if(t.id==='btnSessDel'){if(!confirm('Supprimer cette session et ses '+x.rel.length+' relevé'+(x.rel.length>1?'s':'')+' ?'))return;sessUI.splice(sessCur,1);sessCur=sessUI.length-1;sessRender();sessSave();}
+  else if(t.classList.contains('sx-del')){sessRead();x.rel.splice(+t.closest('.sess-row').getAttribute('data-i'),1);sessRender();sessSave();}});
 $('sMeasErr').addEventListener('input',function(){updateCopPreview();});
 // v40 : bouton ± (clavier décimal sans signe moins) : bascule le signe du champ voisin
 document.addEventListener('mousedown',function(ev){if(ev.target.closest&&ev.target.closest('.pm-btn'))ev.preventDefault();});
@@ -2410,7 +2518,7 @@ function fillSettings(){
   $('sScop').value=numStr(settings.scop);fillMachSel();$('sMach').value=settings.copCurve&&settings.copCurve!=='scop'?'cv:'+settings.copCurve:(settings.copCurve==='scop'?settings.mach:'');$('sSimUse').checked=settings.simUseSet;$('sCustCorr').checked=settings.custCorr;$('sCustOn').checked=settings.custOn;
   copPtsUI=settings.copPts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});
   $('sCorr').value=numStr(settings.copCorr);$('sMeasErr').value=numStr(measErrOf(settings));
-  measUI=settings.meas.map(function(m){return {t:numStr(m.t),w:numStr(m.w),ti:numStr(m.ti),to:numStr(m.to),q:m.q};});renderMeasUI();custTab(!settings.copPts.length&&settings.meas.length?'b':'a');
+  measUI=settings.meas.map(function(m){return {t:numStr(m.t),w:numStr(m.w),ti:numStr(m.ti),to:numStr(m.to),q:m.q};});renderMeasUI();sessLoad();custTab(!settings.copPts.length&&settings.meas.length?'b':'a');
   renderTGrid();renderMonthUI();syncCurve();renderPtsUI();measOpen(settings.custOn!==false&&settings.meas.length+settings.copPts.length>0); // v35 : SCOP machine hors du menu ; inactif = menu replié au départ
   $('sTReal').checked=settings.tReal;$('sLat').value=numStr(settings.lat);$('sLon').value=numStr(settings.lon);showTReal();
   $('sPacPrix').value=numStr(settings.pacPrix);$('sPacAides').value=numStr(settings.pacAides);$('sPacEnt').value=numStr(settings.pacEnt);$('sPacKw').value=settings.pacKw?numStr(Math.round(settings.pacKw*1000)):'';renderPacKwLimit();
@@ -3424,7 +3532,7 @@ function trySaveTank(){ // mêmes règles qu'avant (bouton « Enregistrer la cuv
 
 var tt;function toast(m,ms){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},ms||2400);}
 
-window.__pac={measCheck:function(ms,e){return measCheck(ms,e);},measCarnotOk:function(m){return measCarnotOk(m);},dju:function(){return DJU_METZ.join(',');},copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){$('sMach').value=k?'cv:'+k:'';syncCurve();updateCopPreview();},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={sessCalc:function(r,e){return sessCalc(r,e);},measCheck:function(ms,e){return measCheck(ms,e);},measCarnotOk:function(m){return measCarnotOk(m);},dju:function(){return DJU_METZ.join(',');},copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){$('sMach').value=k?'cv:'+k:'';syncCurve();updateCopPreview();},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 window.__pac.ov=function(){return kwhOverlaps(entries);}; // v34 : test
 window.__pac.kpiC=function(){return kpiData().c;}; // v34 : test
 window.__pac.evol=function(){return evolLast?{unit:evolLast.unit,units:evolLast.ser.map(function(x){return x.unit;}),ser:evolLast.ser.map(function(x){return x.short;}),xc:(evolLast.xc||[]).map(function(x){return x.short;}),data:evolLast.data.map(function(d){return {k:d.k,v:d.v,x:d.x};})}:null;}; // v34 : test
