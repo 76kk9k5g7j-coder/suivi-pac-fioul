@@ -543,6 +543,12 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
 @media (prefers-color-scheme: dark){#viewMes .sess-seg .mx-cop,#viewMes #sessOut .sess-cop{color:#0e1419}}
 #viewMes .sess-fold .mx-cop.na{background:var(--line);color:var(--muted)}
 </style>
+<style id="v48">/* v48 : liste des sessions, une ligne repliée chacune */
+#sessItems{margin-top:8px;border-top:1px dashed var(--line)}
+#sessItems .sess-item{border-bottom:1px dashed var(--line)}
+#sessItems .sess-fold{margin:0;border:0}
+#sessItems #sessDet{padding:0 0 10px}
+</style>
 </head>
 <body>
 <main>
@@ -803,9 +809,8 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
     <div id="sessBox" class="sess-box">
       <h2>⏱️ Mesures sur la durée</h2>
       <p class="hint mes-short" id="sessHint">Relève le compteur kWh, 2 relevés minimum.</p>
-      <div class="sess-bar"><select id="sessSel" aria-label="Session"></select></div>
       <div id="sessBody"></div>
-      <div class="sess-acts"><span id="sessMgmt" style="display:contents"></span><button class="btn small" type="button" id="btnSessNew">+ Nouvelle session</button></div>
+      <div class="sess-acts"><button class="btn small" type="button" id="btnSessNew">+ Nouvelle session</button></div>
     </div>
   </section>
   </div>
@@ -2546,19 +2551,25 @@ function sessRowHtml(r,i,dis){var q=String(r.q||390),D=dis?' disabled':'';
     '<input type="text" inputmode="decimal" class="sx-o" aria-label="Température de sortie de l\'air, relevé '+(i+1)+'" placeholder="38" value="'+esc(numStr(r.to))+'"'+D+'>'+
     '<select class="sx-q" aria-label="Vitesse du ventilateur (m³/h), relevé '+(i+1)+'"'+D+'>'+MEAS_Q.map(function(v){return '<option value="'+v+'"'+(String(v)===q?' selected':'')+'>'+v+' ('+MEAS_QP[v].replace(' ','\u202f')+')</option>';}).join('')+'</select><span></span>'+
     '<div class="sess-seg" id="sseg'+i+'"></div></div>';}
-function sessRender(){if(!sessUI)return;var sel=$('sessSel'),b=$('sessBody');
-  sel.classList.toggle('hidden',!sessUI.length);sel.innerHTML=sessUI.map(function(x,i){return '<option value="'+i+'"'+(i===sessCur?' selected':'')+'>'+esc(sessName(x))+'</option>';}).join('');
-  if(!sessUI.length){b.innerHTML='<p class="hint" id="sessEmpty">Aucune session. « + Nouvelle session » crée un 1er relevé à l\'heure actuelle.</p>';$('sessMgmt').innerHTML='';return;}
-  var x=sessUI[sessCur],dis=!x.open,fk=sessFoldKey(x),unf=!!sessUnf[fk]; // v47
-  b.innerHTML=(dis?'<button type="button" class="sess-fold" id="sessFold" aria-expanded="'+unf+'" aria-controls="sessDet"><span class="meas-cop" id="sessFoldT"></span><span class="sf-c" aria-hidden="true">▾</span></button><div id="sessDet"'+(unf?'':' hidden')+'>':'')+'<div class="sess-head"><span class="sh-d">Date et heure</span><span>Compteur kWh</span><span></span><span>Dehors °C</span><span>Entrée °C</span><span>Sortie °C</span><span>Vitesse m³/h</span><span></span></div>'+
-    '<div id="sessList">'+x.rel.map(function(r,i){return sessRowHtml(r,i,dis);}).join('')+'</div>'+
-    (x.open?'<div class="sess-acts"><button class="btn small" type="button" id="btnRelAdd">+ Ajouter un relevé</button></div>':'')+'<div id="sessOut"></div>'+(dis?'</div>':'');
-  $('sessMgmt').innerHTML='<button class="btn small" type="button" id="btnSessClose">'+(x.open?'Clôturer':'Rouvrir')+'</button><button class="btn small" type="button" id="btnSessDel">🗑️ Supprimer</button>';
+function sessRender(){if(!sessUI)return;var b=$('sessBody');
+  if(!sessUI.length){b.innerHTML='<p class="hint" id="sessEmpty">Aucune session. « + Nouvelle session » crée un 1er relevé à l\'heure actuelle.</p>';return;}
+  if(sessExp>=sessUI.length||(sessExp>=0&&sessExp!==sessCur))sessExp=-2;
+  if(sessExp===-2){if(sessUI[sessCur]&&sessUI[sessCur].open)sessExp=sessCur;else{var j=-1;sessUI.forEach(function(x,i){if(x.open)j=i;});if(j>=0)sessCur=sessExp=j;else sessExp=-1;}} // v48 : en cours dépliée, clôturées repliées
+  b.innerHTML='<div class="sess-items" id="sessItems">'+sessUI.map(function(x,i){var on=i===sessExp,dis=!x.open;
+    return '<div class="sess-item'+(on?' on':'')+'" data-s="'+i+'"><button type="button" class="sess-fold" data-s="'+i+'"'+(on?' id="sessFold" aria-controls="sessDet"':'')+' aria-expanded="'+on+'"><span class="meas-cop sf-t"></span><span class="sf-c" aria-hidden="true">▾</span></button>'+
+      (on?'<div id="sessDet"><div class="sess-head"><span class="sh-d">Date et heure</span><span>Compteur kWh</span><span></span><span>Dehors °C</span><span>Entrée °C</span><span>Sortie °C</span><span>Vitesse m³/h</span><span></span></div>'+
+      '<div id="sessList">'+x.rel.map(function(r,k){return sessRowHtml(r,k,dis);}).join('')+'</div>'+
+      (x.open?'<div class="sess-acts"><button class="btn small" type="button" id="btnRelAdd">+ Ajouter un relevé</button></div>':'')+'<div id="sessOut"></div>'+
+      '<div class="sess-acts" id="sessMgmt"><button class="btn small" type="button" id="btnSessClose">'+(x.open?'Clôturer':'Rouvrir')+'</button><button class="btn small" type="button" id="btnSessDel">🗑️ Supprimer</button></div></div>':'')+'</div>';}).join('')+'</div>';
   sessCalcUI();}
+function sessFoldAll(){var e=uiMeasErrSafe();Array.prototype.forEach.call(document.querySelectorAll('#sessBody .sess-fold'),function(bt){var x=sessUI&&sessUI[+bt.getAttribute('data-s')];if(!x)return;
+  var c=sessCalc(x.rel,e),d0=(x.rel[0]&&x.rel[0].d)||'',ok=c.n>=2&&c.nOk,on=bt.getAttribute('aria-expanded')==='true';
+  bt.querySelector('.sf-t').innerHTML='<b class="mx-cop '+(ok?copCls(c.cop):'na')+'">COP '+(ok?sf2(c.cop):'—')+'</b><span class="mx-d">'+(d0?esc(sessHm(d0)):'Session')+' · '+(ok?sessDur(c.h):x.rel.length+' relevé'+(x.rel.length>1?'s':''))+'</span>';
+  bt.setAttribute('aria-label','Session '+(x.open?'en cours':'clôturée')+' du '+(d0?sessHm(d0):'?')+(ok?', '+sessDur(c.h)+', COP '+sf2(c.cop):', COP non calculé')+'. Toucher pour '+(on?'replier':'afficher les relevés'));});}
 function sessRead(){var x=sessUI&&sessUI[sessCur];if(!x)return;Array.prototype.forEach.call(document.querySelectorAll('#sessList .sess-row'),function(row){var i=+row.getAttribute('data-i'),r=x.rel[i];if(!r)return;
   var g=function(c,min,max){var v=parseNum(row.querySelector(c).value);return isFinite(v)&&v>=min&&v<=max?v:null;},d=row.querySelector('.sx-d').value.slice(0,16);
   r.d=/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(d)?d:'';r.k=g('.sx-k',0,1e7);r.t=g('.sx-t',-30,40);r.ti=g('.sx-i',-20,60);r.to=g('.sx-o',-20,80);var q=+row.querySelector('.sx-q').value;r.q=MEAS_Q.indexOf(q)>=0?q:390;});}
-function sessCalcUI(){var x=sessUI&&sessUI[sessCur],o=$('sessOut');if(!x||!o)return;var e=uiMeasErrSafe(),c=sessCalc(x.rel,e),S={},first=null;c.segs.forEach(function(s){S[s.to]=s;});
+function sessCalcUI(){sessFoldAll();var x=sessUI&&sessUI[sessCur],o=$('sessOut');if(!x||!o)return;var e=uiMeasErrSafe(),c=sessCalc(x.rel,e),S={},first=null;c.segs.forEach(function(s){S[s.to]=s;});
   x.rel.forEach(function(r,i){if(first===null&&sessRelOk(r))first=i;});
   Array.prototype.forEach.call(document.querySelectorAll('#sessList .sess-row'),function(row){var i=+row.getAttribute('data-i'),r=x.rel[i],s=S[i],el=$('sseg'+i),h='',t='';
     row.classList.toggle('mx-bad',!!(s&&s.bad));row.classList.toggle('mx-warn',!!(s&&s.warn));
@@ -2579,23 +2590,21 @@ function sessCalcUI(){var x=sessUI&&sessUI[sessCur],o=$('sessOut');if(!x||!o)ret
   if(c.n===2&&c.tVar>SESS_DT+1e-9)H+='<div id="sess2W">⚠️ 2 relevés seulement et dehors varie de '+sf1(c.tVar)+' °C : ajoute des relevés intermédiaires.</div>';
   else if(nw)H+='<div id="sessVarW">⚠️ Dehors varie de plus de 3 °C sur '+nw+' intervalle'+(nw>1?'s':'')+' : COP moyen sur plusieurs conditions.</div>';
   if(nb)H+='<div id="sessBadW">⛔ '+nb+' intervalle'+(nb>1?'s':'')+' non compté'+(nb>1?'s':'')+' : compteur ou heure incohérent.</div>';
-  o.innerHTML=H;var op=$('sessSel').options[sessCur];if(op)op.textContent=sessName(x);
-  var ft=$('sessFoldT');if(ft){var d0=(x.rel[0]&&x.rel[0].d)||'',ok=c.n>=2&&c.nOk;ft.innerHTML='<b class="mx-cop '+(ok?copCls(c.cop):'na')+'">COP '+(ok?sf2(c.cop):'—')+'</b><span class="mx-d">'+(d0?esc(sessHm(d0)):'Session')+' · '+(ok?sessDur(c.h):x.rel.length+' relevé'+(x.rel.length>1?'s':''))+'</span>';
-    $('sessFold').setAttribute('aria-label','Session clôturée du '+(d0?sessHm(d0):'?')+(ok?', '+sessDur(c.h)+', COP '+sf2(c.cop):', COP non calculé')+'. Toucher pour '+($('sessFold').getAttribute('aria-expanded')==='true'?'replier':'afficher les relevés'));}} // v47
+  o.innerHTML=H;} // v47
 // nouveau relevé : dehors et vitesse repris du relevé précédent (le dernier dans le temps ; sans heure valide : le dernier saisi)
-var sessUnf={};function copCls(v){var x=Math.round(v*100)/100;return x<3?'lo':x<4.5?'mid':'hi';} /* seuils de la maquette B, sur la valeur affichée */function sessFoldKey(x){return x.id||('i'+sessUI.indexOf(x));} // v47 : sessions dépliées (non enregistré)
+var sessExp=-2; /* v48 : session dépliée (-1 : aucune, -2 : par défaut = la session en cours) ; mémoire d'écran seulement */function copCls(v){var x=Math.round(v*100)/100;return x<3?'lo':x<4.5?'mid':'hi';} /* seuils de la maquette B, sur la valeur affichée */function sessFoldKey(x){return x.id||('i'+sessUI.indexOf(x));} // v47 : sessions dépliées (non enregistré)
 function sessPrev(rel){var b=null,bm=-Infinity;rel.forEach(function(r){var m=sessMs(r.d);if(isFinite(m)&&m>=bm){bm=m;b=r;}});return b||rel[rel.length-1]||null;}
 function sessAddRel(){var x=sessUI[sessCur];if(x.rel.length>=REL_MAX){toast(REL_MAX+' relevés maximum');return;}var pv=sessPrev(x.rel);x.rel.push({d:sessNow(),k:null,t:null,ti:null,to:null,q:pv?pv.q:390}); /* v46 : Dehors vide */sessRender();sessSave();
   var k=document.querySelectorAll('#sessList .sx-k');if(k.length)k[k.length-1].focus();}
-$('btnSessNew').addEventListener('click',function(){sessRead();if(sessUI.length>=SESS_MAX){toast(SESS_MAX+' sessions maximum');return;}sessUI.push({id:uid(),open:true,rel:[]});sessCur=sessUI.length-1;sessAddRel();});
-$('sessSel').addEventListener('change',function(){sessRead();sessCur=+this.value;sessRender();});
+$('btnSessNew').addEventListener('click',function(){sessRead();if(sessUI.length>=SESS_MAX){toast(SESS_MAX+' sessions maximum');return;}sessUI.push({id:uid(),open:true,rel:[]});sessCur=sessExp=sessUI.length-1;sessAddRel();});
 $('sessBody').addEventListener('input',function(){sessRead();sessCalcUI();sessSave(400);});
 $('sessBody').addEventListener('change',function(){sessRead();sessCalcUI();sessSave(0);});
-$('sessBox').addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('button');if(!t||!sessUI[sessCur])return;var x=sessUI[sessCur];
+$('sessBox').addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('button');if(!t)return;
+  if(t.classList.contains('sess-fold')){var si=+t.getAttribute('data-s');if(!sessUI[si])return;sessRead();if(si===sessExp)sessExp=-1;else sessCur=sessExp=si;sessRender();return;} // v48 : un toucher déplie (et rend active) ou replie
+  if(!sessUI[sessCur])return;var x=sessUI[sessCur];
   if(t.id==='btnRelAdd'){sessRead();sessAddRel();}
-  else if(t.id==='sessFold'){var u=!sessUnf[sessFoldKey(x)];sessUnf[sessFoldKey(x)]=u;t.setAttribute('aria-expanded',String(u));$('sessDet').hidden=!u;sessCalcUI();} // v47 : déplier / replier
-  else if(t.id==='btnSessClose'){sessRead();x.open=!x.open;if(!x.open)delete sessUnf[sessFoldKey(x)];sessRender();sessSave();toast(x.open?'Session rouverte':'Session clôturée',1200);}
-  else if(t.id==='btnSessDel'){if(!confirm('Supprimer cette session et ses '+x.rel.length+' relevé'+(x.rel.length>1?'s':'')+' ?'))return;sessUI.splice(sessCur,1);sessCur=sessUI.length-1;sessRender();sessSave();}
+  else if(t.id==='btnSessClose'){sessRead();x.open=!x.open;if(!x.open)sessExp=-1;sessRender();sessSave();toast(x.open?'Session rouverte':'Session clôturée',1200);}
+  else if(t.id==='btnSessDel'){if(!confirm('Supprimer cette session et ses '+x.rel.length+' relevé'+(x.rel.length>1?'s':'')+' ?'))return;sessUI.splice(sessCur,1);sessCur=sessUI.length-1;sessExp=-2;sessRender();sessSave();}
   else if(t.classList.contains('sx-del')){sessRead();x.rel.splice(+t.closest('.sess-row').getAttribute('data-i'),1);sessRender();sessSave();}});
 $('sMeasErr').addEventListener('input',function(){updateCopPreview();});
 // v40 : bouton ± (clavier décimal sans signe moins) : bascule le signe du champ voisin
