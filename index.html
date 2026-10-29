@@ -168,7 +168,7 @@ details.simred{border-color:rgba(192,57,43,.45)}details.simred>summary{color:var
     box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 -1px 0 var(--gl-lo),var(--gl-sh)}}
 @media (prefers-color-scheme: dark){.tabs{--gl-bg:rgba(30,42,52,.62);--gl-bd:rgba(255,255,255,.13);--gl-hi:rgba(255,255,255,.16);--gl-lo:rgba(0,0,0,.35);--gl-sh:0 12px 34px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.3);
   --bb-bg:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.07));--bb-bd:rgba(255,255,255,.22);--bb-sh:0 2px 10px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 1px rgba(45,212,191,.12)}}
-.tabs .tab-bubble{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px)/3);border-radius:24px;background:var(--bb-bg);border:1px solid var(--bb-bd);box-shadow:var(--bb-sh);pointer-events:none;
+.tabs .tab-bubble{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px)/4);border-radius:24px;background:var(--bb-bg);border:1px solid var(--bb-bd);box-shadow:var(--bb-sh);pointer-events:none;
   transform:translateX(calc(var(--ti)*100%));transition:transform .45s cubic-bezier(.3,1.35,.5,1)}
 .tabs button{position:relative;z-index:1;flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:24px;background:transparent;color:var(--muted);font-size:.8rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .25s}
 .tabs button .ti{font-size:1.3rem;line-height:1;transition:transform .3s}
@@ -432,6 +432,21 @@ html.ks-open{overflow:hidden}
 #measOut>div+div{margin-top:3px}
 /* v41 : mesures sur la durée (sessions) */
 .sess-box{margin-top:16px;padding-top:10px;border-top:1px solid var(--line)}
+/* v43 : onglet Mesures + raccourcis des Réglages */
+html{scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))} /* champ focalisé jamais caché sous la barre d'onglets */
+#viewMes .sess-box{margin-top:0;padding-top:0;border-top:0}
+#viewMes .card>h2{margin-bottom:2px}
+.mes-st{margin:0 0 10px;font-size:.85rem;color:var(--ok)}.mes-st.err{color:var(--danger);font-weight:600}
+.sp-chips{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 2px}
+.sp-chip{flex:none;min-height:32px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:99px;padding:4px 10px;font-size:.8rem;font-weight:600;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sp-chip[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){.sp-chip[aria-current="true"]{color:#0e1419}}
+.sp-chip.warn{border-color:var(--danger)}
+.mes-curve{margin:0 0 12px;padding:10px 12px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);font-size:.95rem;line-height:1.45}
+.mes-curve .mc-h{font-weight:700;margin-bottom:2px}.mes-curve .mc-h small{font-weight:400;color:var(--muted)}
+.mes-curve .mc-s{margin-top:4px}.mes-curve .mc-s b{font-size:1.1rem;color:var(--accent)}.mes-curve .mc-n{color:var(--muted);font-size:.85rem}
+.mes-short{margin:2px 0 8px}#mesHow{margin-top:6px}#mesHowSess{margin-top:8px}
+.mes-curve .mc-p{white-space:nowrap}.mes-curve.empty{background:var(--card);color:var(--muted)}
 .sess-bar{display:flex;gap:6px;align-items:center;margin-top:6px}.sess-bar select{flex:1 1 auto;min-width:0;min-height:0;height:40px;padding:4px 6px;font-size:16px}.sess-bar .btn{flex:0 0 auto;white-space:nowrap;min-height:40px}
 .sess-head,.sess-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 2.25fr 34px;gap:3px;align-items:center}
 .sess-head{font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.15;row-gap:1px}
@@ -719,6 +734,28 @@ html.ks-open{overflow:hidden}
     <button class="btn small block hidden more-btn" type="button" id="btnTankAll"></button>
   </section>
   </div>
+  <div id="viewMes" role="tabpanel" aria-labelledby="tabMes" class="hidden">
+  <div class="mes-curve" id="mesCurve" aria-live="polite"></div>
+  <p class="mes-st hidden" id="mesStatus" role="status" aria-live="polite"></p>
+  <section class="card" id="measCard">
+    <h2>🧪 Mesures brutes</h2>
+    <p class="hint mes-short" id="measHint">Relevés stabilisés. <button type="button" class="linkbtn" id="btnMesHow">ⓘ Détail des calculs</button></p>
+    <div class="meas-err"><label for="sMeasErr">Erreur de débit (%)</label><input type="text" inputmode="decimal" id="sMeasErr" placeholder="15" autocomplete="off" aria-describedby="measHint"></div>
+    <div class="meas-head"><span>Dehors °C</span><span>Entrée °C</span><span>Sortie °C</span><span>Watts</span><span>Vitesse m³/h</span><span></span></div>
+    <div id="measList"></div>
+    <div class="actions" style="margin-top:8px"><button class="btn small" type="button" id="btnMeasAdd">+ Ajouter une mesure</button></div>
+    <p class="hint hidden" id="mesUse"></p>
+  </section>
+  <section class="card">
+    <div id="sessBox" class="sess-box">
+      <h2>⏱️ Mesures sur la durée</h2>
+      <p class="hint mes-short" id="sessHint">Relève le compteur kWh, 2 relevés minimum.</p>
+      <div class="sess-bar"><select id="sessSel" aria-label="Session"></select></div>
+      <div id="sessBody"></div>
+      <div class="sess-acts"><span id="sessMgmt" style="display:contents"></span><button class="btn small" type="button" id="btnSessNew">+ Nouvelle session</button></div>
+    </div>
+  </section>
+  </div>
 </main>
 
 <nav class="tabs" role="tablist" aria-label="Sections" id="tabsNav">
@@ -726,6 +763,7 @@ html.ks-open{overflow:hidden}
   <button type="button" role="tab" id="tabSuivi" aria-selected="true" aria-controls="viewSuivi"><span class="ti" aria-hidden="true">📊</span><span>Suivi</span></button>
   <button type="button" role="tab" id="tabCuve" aria-selected="false" aria-controls="viewCuve"><span class="ti" aria-hidden="true">🛢️</span><span>Cuve</span></button>
   <button type="button" role="tab" id="tabSim" aria-selected="false" aria-controls="viewSim"><span class="ti" aria-hidden="true">🧮</span><span>Simulateur</span></button>
+  <button type="button" role="tab" id="tabMes" aria-selected="false" aria-controls="viewMes"><span class="ti" aria-hidden="true">🌡️</span><span>Mesures</span></button>
 </nav>
 
 <div id="settingsPage" class="spage hidden" role="dialog" aria-modal="true" aria-labelledby="spTitle">
@@ -733,6 +771,7 @@ html.ks-open{overflow:hidden}
     <button class="icon-btn" type="button" id="btnSpClose" aria-label="Fermer les réglages">←</button>
     <h2 id="spTitle">⚙️ Réglages</h2>
     <span class="sp-auto">Enregistrement automatique</span>
+    <div class="sp-chips" id="spChips" role="group" aria-label="Aller à une section"><button type="button" class="sp-chip" data-sec="secGen">🌍 Général</button><button type="button" class="sp-chip" data-sec="secElec">⚡ Électricité</button><button type="button" class="sp-chip" data-sec="secPac">🔌 PAC</button><button type="button" class="sp-chip" data-sec="secCop">🌀 COP</button><button type="button" class="sp-chip" data-sec="secOld">🛢️ Ancien chauffage</button><button type="button" class="sp-chip" data-sec="secSave">💾 Sauvegarde</button></div>
     <p class="sp-status hidden" id="spStatus" role="status" aria-live="polite"></p>
   </div>
   <div class="sp-body">
@@ -829,29 +868,19 @@ html.ks-open{overflow:hidden}
       <input type="checkbox" id="sCustOn" checked hidden tabindex="-1" aria-hidden="true">
       <div id="measBox" class="hidden meas-box">
         <div id="custBody">
-        <label class="chk" id="sCustCorrLab" style="margin-top:0"><input type="checkbox" id="sCustCorr"> <span>Appliquer la correction (scénario) à mes COP moyens (a)</span></label>
+        <label class="chk" id="sCustCorrLab" style="margin-top:0"><input type="checkbox" id="sCustCorr"> <span>Appliquer la correction (scénario) à mes COP moyens</span></label>
         <div id="custVals">
-        <div class="seg seg-sm cust-tabs" role="group" aria-label="Mes valeurs personnalisées">
+        <div class="seg seg-sm cust-tabs hidden" role="group" aria-label="Mes valeurs personnalisées">
           <button type="button" id="custTabA" data-ctab="a" aria-pressed="true" aria-controls="custPaneA">a) COP moyens<span id="custTabAN"></span></button>
-          <button type="button" id="custTabB" data-ctab="b" aria-pressed="false" aria-controls="custPaneB">b) Mesures brutes<span id="custTabBN"></span></button>
+          <button type="button" id="custTabB" data-ctab="b" aria-pressed="false" aria-controls="custPaneB">b) Mesures brutes</button>
         </div>
         <div id="custPaneA">
         <p class="hint" style="margin-top:6px">Mes COP moyens par température : COP déjà calculés (moyenne de tes relevés), par ex. à −7, +2, +7 et +12 °C. Groupés par 1 °C avec tes mesures.</p>
         <table class="ptable ctable" id="copPtsTbl"></table>
         <div class="actions"><button class="btn small" type="button" id="btnAddPt">+ Ajouter un point de température</button></div>
         </div>
-        <div id="custPaneB" class="hidden">
-        <p class="hint" style="margin-top:6px" id="measHint">Mes mesures brutes, relevés stabilisés : COP = débit corrigé × 0,335 × (sortie − entrée) ÷ watts. Débit notice : vitesse mini (1 %) 350, 50 % 390, 100 % 420 m³/h ; 25 % et 75 % : débit interpolé (370 et 405). Le débit réel est souvent plus bas que la notice : l'erreur de débit le réduit (15 % par défaut, 0 = aucune correction). Dehors sous zéro : bouton ±. Groupées par 1 °C pour la courbe (5,8 → +6 °C).</p>
-        <div class="meas-err"><label for="sMeasErr">Erreur de débit (%)</label><input type="text" inputmode="decimal" id="sMeasErr" placeholder="15" autocomplete="off" aria-describedby="measHint"></div>
-        <div class="meas-head"><span>Dehors °C</span><span>Entrée °C</span><span>Sortie °C</span><span>Watts</span><span>Vitesse m³/h</span><span></span></div>
-        <div id="measList"></div>
-        <div class="actions" style="margin-top:8px"><button class="btn small" type="button" id="btnMeasAdd">+ Ajouter une mesure</button></div>
-        <div id="sessBox" class="sess-box">
-          <div class="meas-h"><b>⏱️ Mesures sur la durée</b></div>
-          <p class="hint" id="sessHint">Relève le compteur d'énergie (kWh) de temps en temps, à intervalles réguliers ou non (2 relevés minimum). Par intervalle : chaleur = débit corrigé × 0,335 × (sortie − entrée) × heures ÷ 1000 ; COP = chaleur ÷ kWh consommés. Erreur de débit : celle ci-dessus. À part : ne change ni le SCOP ni le Suivi.</p>
-          <div class="sess-bar"><select id="sessSel" aria-label="Session"></select></div>
-          <div id="sessBody"></div>
-          <div class="sess-acts"><span id="sessMgmt" style="display:contents"></span><button class="btn small" type="button" id="btnSessNew">+ Nouvelle session</button></div>
+        <div id="custPaneB">
+        <p class="hint" style="margin-top:10px">📏 Mes mesures<span id="custTabBN"></span> : onglet <button type="button" class="linkbtn" id="btnGoMes">🌡️ Mesures</button>.</p>
         </div>
         </div>
         </div>
@@ -871,6 +900,10 @@ html.ks-open{overflow:hidden}
     </div>
     <label class="chk" style="margin-top:12px"><input type="checkbox" id="sSimUse" checked> <span>Utiliser aussi ces réglages dans le Simulateur</span></label>
     <p class="hint">Coché : le Simulateur part de ce COP (machine, scénario, ton SCOP personnalisé), modifiable là-bas sans toucher aux Réglages. Décoché : il garde ses propres réglages.</p>
+    <details class="ihelp ifo" id="mesHow"><summary>ⓘ Comment sont calculées les mesures</summary>
+      <p class="hint"><b>Mesures brutes</b> (relevés stabilisés) : COP = débit corrigé × 0,335 × (sortie − entrée) ÷ watts. Débit notice : vitesse mini (1 %) 350, 50 % 390, 100 % 420 m³/h ; 25 % et 75 % : débit interpolé (370 et 405). Le débit réel est souvent plus bas que la notice : l'erreur de débit le réduit (15 % par défaut, 0 = aucune correction ; réglée dans l'onglet Mesures). Dehors sous zéro : bouton ±. Groupées par 1 °C pour la courbe (5,8 → +6 °C).</p>
+      <p class="hint" id="mesHowSess"><b>Mesures sur la durée</b> : relève le compteur d'énergie (kWh) de temps en temps, à intervalles réguliers ou non (2 relevés minimum). Par intervalle : chaleur = débit corrigé × 0,335 × (sortie − entrée) × heures ÷ 1000 ; COP = chaleur ÷ kWh consommés. Même erreur de débit que les mesures brutes. À part : ne change ni le SCOP ni le Suivi.</p>
+    </details>
     </div>
   </details>
 
@@ -2397,7 +2430,7 @@ function renderMeasOut0(){if(!$('measOut'))return;var P=measParse(),K=measCheck(
   var chk=(nx?'<div id="measExcl">⛔ '+nx+' mesure'+(nx>1?'s':'')+' non comptée'+(nx>1?'s':'')+' (valeur irréaliste au-delà de 75 % du maximum physique) : vérifie la saisie.</div>':'')+(nw?'<div id="measNbW">⚠️ '+nw+' mesure'+(nw>1?'s':'')+' à vérifier (écart de plus de 20 % avec les voisines à ±3 °C : vitesse ou température mal saisie ?), comptée'+(nw>1?'s':'')+' quand même.</div>':'');
   var on=custSwSync();$('sCustCorr').disabled=!on;
   var g=uiCustAll(),o=$('measOut'),cc=$('sCustCorr').checked,co=uiCorr(),nMe=P.ok.length,eM=uiMeasErrSafe();o.classList.remove('warn');
-  if(!g.length){o.innerHTML=chk+'Saisis tes COP moyens (a) ou tes mesures brutes (b).';return;}
+  if(!g.length){o.innerHTML=chk+'Saisis tes COP moyens (a) ou tes mesures brutes (b).';mesCurve(null);return;}
   var base=copPtsSorted(uiBase()),merged=mergeMeas(base,g),ind=scopEN(merged.length>=2?merged:g);
   var lab=null,ref=null;
   if(copCurveUI==='scop'&&uiScop()!==null){ref=uiScop();lab='SCOP de la machine';}
@@ -2413,9 +2446,15 @@ function renderMeasOut0(){if(!$('measOut'))return;var P=measParse(),K=measCheck(
   else h+='<div>Choisis une machine (ou une courbe) pour comparer.</div>';
   h+='<div>Tes valeurs couvrent <b id="measCov">'+nf0.format(cov*100)+' %</b> du besoin de chaleur de la saison (EN 14825)'+(on&&cov<0.5&&base.length?' ; le reste vient de la courbe de base':'')+'. Indicatif.</div>';
   (function(){var have={},miss=[];g.forEach(function(x){have[x.t]=1;});for(var t=0;t<=5;t++)if(!have[t])miss.push(SGN(t));if(miss.length)h+='<div id="measGap">Manque entre 0 et +5 °C (zone clé du SCOP) : '+miss.join(', ')+' °C.</div>';})();
-  o.innerHTML=chk+h;}
-function custTab(t){t=t==='b'?'b':'a';$('custTabA').setAttribute('aria-pressed',String(t==='a'));$('custTabB').setAttribute('aria-pressed',String(t==='b'));
-  $('custPaneA').classList.toggle('hidden',t!=='a');$('custPaneB').classList.toggle('hidden',t!=='b');}
+  o.innerHTML=chk+h;mesCurve({g:g,ind:ind,ref:ref,lab:lab,on:on});}
+function mesCurve(c){var el=$('mesCurve');if(!el)return;el.classList.toggle('empty',!c);
+  if(!c){el.innerHTML='📈 Ta courbe : pas encore de valeur. Ajoute une mesure ci-dessous.';return;}
+  var v=c.ref===null?'':(Math.abs(c.ind/c.ref-1)<=0.15?' ✅':' ⚠️');
+  el.innerHTML='<div class="mc-h">📈 Ta courbe <small>(moyenne par 1 °C)</small></div>'+
+    '<div class="mc-pts" id="mesPts">'+c.g.map(function(x){return '<span class="mc-p">'+SGN(x.t)+' °C → <b>'+nf2.format(x.cop)+'</b>'+(x.n>1?' ('+x.n+')':'')+'</span>';}).join(' · ')+'</div>'+
+    '<div class="mc-s">SCOP indicatif : <b id="mesScop">'+nf2.format(c.ind)+'</b>'+(c.ref!==null?' <span class="mc-n">· '+c.lab+' : '+nf2.format(c.ref)+v+'</span>':'')+'</div>'+
+    (c.on?'':'<div class="mc-n">⏸️ Inactif : pas utilisé dans les calculs.</div>');}
+function custTab(t){} // v43 : plus d'onglets a/b dans les Réglages (mesures brutes dans l'onglet 🌡️ Mesures)
 $('custTabA').addEventListener('click',function(){custTab('a');});$('custTabB').addEventListener('click',function(){custTab('b');});
 function measOpen(on){$('measBox').classList.toggle('hidden',!on);$('btnMeas').setAttribute('aria-expanded',String(on));$('btnMeas').setAttribute('aria-label',on?'Replier le menu':'Ouvrir le menu');}
 // v35 : le bouton « Mon SCOP personnalisé » est l'interrupteur (état gardé dans #sCustOn, caché) ; ▾ ouvre / replie le menu
@@ -2589,7 +2628,7 @@ function collectSettings(){ // mêmes règles qu'avant (bouton « Enregistrer »
   return {s:n};
 }
 var saveT=null;
-function setSpStatus(t,err){var el=$('spStatus');el.textContent=t||'';el.classList.toggle('hidden',!t);el.classList.toggle('err',!!err);}
+function setSpStatus(t,err){['spStatus','mesStatus'].forEach(function(id){var el=$(id);if(!el)return;el.textContent=t||'';el.classList.toggle('hidden',!t);el.classList.toggle('err',!!err);});}
 function trySaveSettings(){
   clearTimeout(saveT);saveT=null;
   var r=collectSettings();
@@ -2946,13 +2985,23 @@ simFillStatic();simFillFromState();
 function simCop(){if(simLinked())return Math.round(simSetCop().cop*100)/100;var c=simCopVal();return c===null?null:Math.round(c*SIM_PRESETS[simSt.preset].f*100)/100;}
 function showView(v){
   closeKpi();
-  $('tabsNav').style.setProperty('--ti',{suivi:0,cuve:1,sim:2}[v]||0);
-  [['suivi','viewSuivi','tabSuivi'],['sim','viewSim','tabSim'],['cuve','viewCuve','tabCuve']].forEach(function(x){
+  if(saveT)trySaveSettings();sessFlush(); // v43 : rien en attente en changeant d'onglet
+  if(v!=='mes')setSpStatus('');
+  $('tabsNav').style.setProperty('--ti',{suivi:0,cuve:1,sim:2,mes:3}[v]||0);
+  [['suivi','viewSuivi','tabSuivi'],['sim','viewSim','tabSim'],['cuve','viewCuve','tabCuve'],['mes','viewMes','tabMes']].forEach(function(x){
     $(x[1]).classList.toggle('hidden',x[0]!==v);$(x[2]).setAttribute('aria-selected',x[0]===v);});
-  if(v==='sim'){if(!simSt.el)fillEl('sim',simEl());renderSim();} else if(v==='cuve'){renderTank();renderTankChart(tankAnalyze());} else renderChart(resolved());
+  if(v==='sim'){if(!simSt.el)fillEl('sim',simEl());renderSim();} else if(v==='cuve'){renderTank();renderTankChart(tankAnalyze());} else if(v==='mes'){mesUseHint();renderMeasOut();} else renderChart(resolved());
   window.scrollTo(0,0);
 }
 $('tabSuivi').addEventListener('click',function(){showView('suivi');});
+$('tabMes').addEventListener('click',function(){showView('mes');});
+// v43 : mesures non utilisées si COP fixe ou « Mon SCOP personnalisé » inactif
+function mesUseHint(){var el=$('mesUse');if(!el)return;var S=settings,t='';
+  if(S.copMode!=='temp')t='ⓘ Tes mesures ne comptent pas pour l\'instant : ⚙️ Réglages › COP est en « COP fixe ».';
+  else if(S.custOn===false)t='ⓘ Tes mesures ne comptent pas pour l\'instant : « Mon SCOP personnalisé » est inactif (⚙️ Réglages › COP).';
+  el.textContent=t;el.classList.toggle('hidden',!t);}
+$('btnGoMes').addEventListener('click',function(){closeSettings();showView('mes');});
+$('btnMesHow').addEventListener('click',function(){openSettings('secCop','mesHow');});
 var spOpen=false;
 // v34 : sections repliables (toutes fermées à chaque ouverture des Réglages), résumé d'une ligne, ⚠️ si une valeur est à corriger
 var SP_SECS=['secGen','secElec','secPac','secCop','secOld','secSave'], KEY_LASTEXP='pacFioul.lastExport.v1', spErr=null, spTankErr=null;
@@ -3000,28 +3049,48 @@ function spSum(){if(!SP_SECS||typeof settings!=='object'||!settings||!$('sumGen'
   var w={};if(spErr&&spErr.sec)w[spErr.sec]=spErr.msg;if(spTankErr&&!w.secOld)w.secOld='Cuve : '+spFirstLow(spTankErr);
   SP_SECS.forEach(function(id){var el=$('sum'+id.slice(3));if(!el)return;var t=w[id]?'⚠️ À corriger : '+w[id]:(o[id]||'');
     el.textContent=t;el.title=t;el.classList.toggle('warn',!!w[id]);});
+  if($('spChips'))spChipsSync();
   var a=$('custTabAN'),b=$('custTabBN');if(a&&b){var na=(settings.copPts||[]).length,nb=(settings.meas||[]).length,ea=spErr&&/COP moyen/.test(spErr.msg),eb=spErr&&/^Mesure/.test(spErr.msg);
     a.textContent=(na?' ('+na+')':'')+(ea?' ⚠️':'');b.textContent=(nb?' ('+nb+')':'')+(eb?' ⚠️':'');}}
+// v43 : saisies de l'onglet Mesures gardées quand on ouvre / ferme les Réglages (même incomplètes)
+function sessFlush(){if(sessT){clearTimeout(sessT);sessT=null;sessRead();settings=Object.assign({},settings,{sess:JSON.parse(JSON.stringify(sessUI))});save(KEY_SET,settings);}}
+function measKeep(){readMeasUI();return {m:JSON.parse(JSON.stringify(measUI)),e:$('sMeasErr').value};}
+function measPut(k){measUI=k.m;renderMeasUI();$('sMeasErr').value=k.e;}
+function spRecheck(){var r=collectSettings();if(r.err){spErr={sec:spErrSec(r),msg:r.err};setSpStatus('⚠️ Pas encore enregistré : '+r.err,true);}else{spErr=null;setSpStatus('');}spSum();}
 function openSettings(sec,focusId){
-  fillSettings();fillTank();setSpStatus('');$('tkStatus').classList.add('hidden');spErr=null;spTankErr=null;
+  var fm=focusId?$(focusId):null;if(fm&&fm.closest&&fm.closest('#viewMes')){if(spOpen)closeSettings();showView('mes');setTimeout(function(){fm.scrollIntoView({block:'center'});try{fm.focus({preventScroll:true});}catch(e){}},60);return;}
+  sessFlush();var keep=collectSettings().err?measKeep():null;
+  fillSettings();fillTank();setSpStatus('');$('tkStatus').classList.add('hidden');spErr=null;spTankErr=null;if(keep){measPut(keep);spRecheck();}
   var fe=focusId?$(focusId):null;if(!sec&&fe){var fs=spSecOf(fe);if(fs)sec=fs.id;}
   SP_SECS.forEach(function(id){$(id).open=!!sec&&id===sec;});if(fe)spReveal(fe);spSum();
   var pg=$('settingsPage');pg.classList.remove('hidden');document.documentElement.classList.add('sp-open');spOpen=true;pg.scrollTop=0;$('btnGear').setAttribute('aria-expanded','true');
   setTimeout(function(){var el=focusId&&$(focusId);
     if(el){spReveal(el);el.scrollIntoView({block:'center'});try{el.focus({preventScroll:true});}catch(e){}}
-    else if(sec){$(sec).scrollIntoView({block:'start'});pg.scrollTop=Math.max(0,pg.scrollTop-70);}
+    else if(sec)spScrollTo(sec);
     else $('btnSpClose').focus({preventScroll:true});},60);
 }
 function closeSettings(){
-  var r=flushSave();
-  if(r&&r.err)toast('⚠️ Pas enregistré : '+r.err);
-  $('settingsPage').classList.add('hidden');document.documentElement.classList.remove('sp-open');spOpen=false;$('btnGear').setAttribute('aria-expanded','false');
+  sessFlush();var r=flushSave();
+  if(r&&r.err){toast('⚠️ Pas enregistré : '+r.err);var k=measKeep();fillSettings();measPut(k);spRecheck();}
+  $('settingsPage').classList.add('hidden');document.documentElement.classList.remove('sp-open');spOpen=false;$('btnGear').setAttribute('aria-expanded','false');mesUseHint();
 }
 $('btnGear').addEventListener('click',function(){openSettings();});
+// v43 : raccourcis en haut des Réglages ; une seule section ouverte à la fois (on peut tout fermer)
+function spScrollTo(id){var pg=$('settingsPage'),h=document.querySelector('.sp-head');pg.scrollTop=Math.max(0,pg.scrollTop+$(id).getBoundingClientRect().top-h.getBoundingClientRect().bottom-8);}
+function spChipsSync(){var o=null;SP_SECS.forEach(function(id){if($(id).open&&!o)o=id;});
+  Array.prototype.forEach.call(document.querySelectorAll('#spChips .sp-chip'),function(b){var id=b.getAttribute('data-sec');b.setAttribute('aria-current',String(id===o));var s=$('sum'+id.slice(3));b.classList.toggle('warn',!!(s&&s.classList.contains('warn')));});}
+SP_SECS.forEach(function(id){$(id).addEventListener('toggle',function(){var d=$(id);
+  if(d.open){SP_SECS.forEach(function(x){if(x!==id&&$(x).open)$(x).open=false;});
+    if(spOpen){var h=document.querySelector('.sp-head').getBoundingClientRect().bottom;if(d.getBoundingClientRect().top<h)spScrollTo(id);}}
+  spChipsSync();});});
+$('spChips').addEventListener('click',function(ev){var b=ev.target.closest('.sp-chip');if(!b)return;var id=b.getAttribute('data-sec');
+  SP_SECS.forEach(function(x){$(x).open=x===id;});spChipsSync();spScrollTo(id);});
 $('btnSpClose').addEventListener('click',closeSettings);
 document.addEventListener('keydown',function(ev){if(spOpen&&ev.key==='Escape')closeSettings();});
 // Enregistrement automatique : saisie (petit délai) ou changement (immédiat). Cuve et import à part.
-function autoTarget(t){return t&&t.closest&&!t.closest('#tankBox')&&!t.closest('#peUpdBox')&&t.id!=='fileImport'&&t.closest('#settingsPage');}
+function autoTarget(t){return t&&t.closest&&!t.closest('#tankBox')&&!t.closest('#peUpdBox')&&t.id!=='fileImport'&&(t.closest('#settingsPage')||t.closest('#viewMes'));}
+$('viewMes').addEventListener('input',function(ev){if(autoTarget(ev.target))scheduleSave(700);});
+$('viewMes').addEventListener('change',function(ev){if(autoTarget(ev.target))scheduleSave(0);});
 $('settingsPage').addEventListener('input',function(ev){if(ev.target.closest('#tankBox')){scheduleTank(700);return;}if(autoTarget(ev.target))scheduleSave(700);});
 $('settingsPage').addEventListener('change',function(ev){if(ev.target.closest('#tankBox')){scheduleTank(0);return;}if(autoTarget(ev.target))scheduleSave(0);});
 $('tabSim').addEventListener('click',function(){showView('sim');});
