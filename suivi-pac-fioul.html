@@ -412,15 +412,29 @@ html.ks-open{overflow:hidden}
 .tcell input{padding:6px 2px;text-align:center;font-size:16px;min-width:0} /* v32 : 16 px = pas de zoom auto sur iPhone */
 .tcell.man input{border-color:var(--accent);font-weight:600}
 .tcell.man span::after{content:' ✎';color:var(--accent)}
-.meas-head,.meas-row{display:grid;grid-template-columns:1fr 1.2fr 1fr 1fr 1.25fr 36px;gap:4px;align-items:center}
+.meas-head,.meas-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 2.25fr 34px;gap:3px;align-items:center} /* v40 : (±) Dehors, Entrée, Sortie, Watts, Vitesse, 🗑️ */
 .meas-head{font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.15}
 .meas-row{margin-top:6px}
 .meas-row input,.meas-row select{min-width:0;padding:7px 2px;font-size:16px;text-align:center} /* v32 : 16 px (iPhone) */
 .meas-row .icon-btn{width:36px;height:36px;padding:0}
 .meas-cop{grid-column:1/-1;font-size:.76rem;color:var(--muted)}
+.meas-row{margin-top:4px}.meas-row input,.meas-row select{padding-top:3px;padding-bottom:3px;height:32px;min-height:0}.meas-row .icon-btn,.meas-row .pm-btn{height:32px;min-height:0} /* v40 : lignes compactes (plus de mesures visibles) */
+.meas-cop{display:flex;align-items:baseline;gap:8px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;padding:1px 0 0 2px;margin-top:1px}
+.meas-cop .mx-cop{font-size:.95rem;font-weight:800;color:var(--accent)} /* v40 : seulement le COP retenu, bien visible ; le calcul en info-bulle (title) */
+.mx-bad .meas-cop .mx-cop{color:var(--muted);text-decoration:line-through} /* non compté */
+.pm-w{display:flex;align-items:center;gap:2px;min-width:0}.pm-w input{flex:1 1 auto;min-width:0;width:100%}
+.pm-btn{flex:0 0 22px;width:22px;min-width:22px;height:36px;padding:0;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--text);font-size:15px;line-height:1;cursor:pointer;touch-action:manipulation} /* v40 : ± (le clavier décimal iPhone n'a pas de « − ») */
+.ctable .pm-w{max-width:7.6em}.ctable .pm-btn{height:40px}
+.meas-row .icon-btn.mx-del{width:34px;min-width:0} /* v40 : tient dans sa colonne (v39 débordait de 8 px) */
+.meas-row select.mx-q{-webkit-appearance:none;appearance:none;padding:7px 0;background-image:none;text-align:center;text-align-last:center} /* v40 : sans flèche pour que « 390 (50 %) » tienne à 390 px */
+.meas-err{display:flex;align-items:center;gap:8px;margin-top:8px}.meas-err label{margin:0;flex:1;font-size:.88rem}.meas-err input{width:5.5em;text-align:center;font-size:16px}
 #measOut{margin-top:10px;font-size:.85rem;line-height:1.45;padding:8px 10px;border-radius:10px;background:var(--card2,rgba(127,127,127,.08))}
 #measOut>div+div{margin-top:3px}
 #measOut.warn{outline:1px solid rgba(230,160,40,.55)}
+.meas-row.mx-warn,.meas-row.mx-bad{border-radius:8px;background:var(--mxbg);box-shadow:0 0 0 3px var(--mxbg)} /* v40 : contrôle de cohérence (sans changer la mise en page) */
+.meas-row.mx-warn{--mxbg:rgba(245,158,11,.17)}.meas-row.mx-bad{--mxbg:rgba(220,38,38,.14)}
+.mx-msg{font-weight:700;font-size:.78rem;overflow:hidden;text-overflow:ellipsis}.mx-warn .mx-msg{color:#b45309}.mx-bad .mx-msg{color:#b91c1c}
+@media (prefers-color-scheme: dark){.meas-row.mx-warn{--mxbg:rgba(251,191,36,.16)}.meas-row.mx-bad{--mxbg:rgba(248,113,113,.17)}.mx-warn .mx-msg{color:#fbbf24}.mx-bad .mx-msg{color:#fca5a5}}
 .el-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .el-2col>*{min-width:0}
 .tp-avg{font-size:.85rem;line-height:1.5}
@@ -797,7 +811,7 @@ html.ks-open{overflow:hidden}
       <input type="checkbox" id="sCustOn" checked hidden tabindex="-1" aria-hidden="true">
       <div id="measBox" class="hidden meas-box">
         <div id="custBody">
-        <label class="chk" id="sCustCorrLab" style="margin-top:0"><input type="checkbox" id="sCustCorr"> <span>Appliquer la correction (scénario) aux valeurs personnalisées</span></label>
+        <label class="chk" id="sCustCorrLab" style="margin-top:0"><input type="checkbox" id="sCustCorr"> <span>Appliquer la correction (scénario) à mes COP moyens (a)</span></label>
         <div id="custVals">
         <div class="seg seg-sm cust-tabs" role="group" aria-label="Mes valeurs personnalisées">
           <button type="button" id="custTabA" data-ctab="a" aria-pressed="true" aria-controls="custPaneA">a) COP moyens<span id="custTabAN"></span></button>
@@ -809,8 +823,9 @@ html.ks-open{overflow:hidden}
         <div class="actions"><button class="btn small" type="button" id="btnAddPt">+ Ajouter un point de température</button></div>
         </div>
         <div id="custPaneB" class="hidden">
-        <p class="hint" style="margin-top:6px">Mes mesures brutes, relevés stabilisés : COP = débit × 0,335 × (sortie − entrée) ÷ watts. Débit : vitesse mini 350, 50 % 390, 100 % 420 m³/h.</p>
-        <div class="meas-head"><span>Dehors °C</span><span>Watts</span><span>Entrée °C</span><span>Sortie °C</span><span>Vitesse</span><span></span></div>
+        <p class="hint" style="margin-top:6px" id="measHint">Mes mesures brutes, relevés stabilisés : COP = débit corrigé × 0,335 × (sortie − entrée) ÷ watts. Débit notice : vitesse mini (1 %) 350, 50 % 390, 100 % 420 m³/h ; 25 % et 75 % : débit interpolé (370 et 405). Le débit réel est souvent plus bas que la notice : l'erreur de débit le réduit (15 % par défaut, 0 = aucune correction). Dehors sous zéro : bouton ±.</p>
+        <div class="meas-err"><label for="sMeasErr">Erreur de débit (%)</label><input type="text" inputmode="decimal" id="sMeasErr" placeholder="15" autocomplete="off" aria-describedby="measHint"></div>
+        <div class="meas-head"><span>Dehors °C</span><span>Entrée °C</span><span>Sortie °C</span><span>Watts</span><span>Vitesse m³/h</span><span></span></div>
         <div id="measList"></div>
         <div class="actions" style="margin-top:8px"><button class="btn small" type="button" id="btnMeasAdd">+ Ajouter une mesure</button></div>
         </div>
@@ -964,7 +979,7 @@ var DEFAULTS={cop:3, pci:10, rend:85, rendGaz:90, ecsOn:false, ecsPers:null, ecs
   comps:[{id:'f1',type:'fioul',label:'',prix:null,on:true}],
   elecMode:'base', prixElec:EDF.base, prixHP:EDF.hp, prixHC:EDF.hc, pctHC:null, tempoMode:'auto', tempo:Object.assign({},EDF.t), tdB:300, tdW:43, tdR:22, redOn:false, peApplyAll:false, mach:'', scop:null, meas:[], custOn:true,
   copMode:'fixe', copPts:[], copCorr:null, copCurve:null, tMonths:[null,null,null,null,null,null,null,null,null,null,null,null], copOver:[null,null,null,null,null,null,null,null,null,null,null,null], tReal:false, lat:null, lon:null, pacPrix:null, pacAides:null, pacDate:null, pacEnt:null};
-var MAX_COMPS=8, MEAS_Q_OK=[350,390,420];
+var MAX_COMPS=8, MEAS_Q_OK=[350,370,390,405,420], MEAS_ERR_DEF=15;
 // v34 : profils de chaudière (préremplissent le rendement, modifiable). Fioul : sur PCI (prix au litre). Gaz : sur PCS, car le prix et les kWh de la facture gaz sont en PCS.
 var BOIL_PROF={fioul:[{k:'fStd',n:'Ancienne standard (avant 1990)',v:80,est:true},{k:'fBosch',n:'Basse température – Bosch Olio 1500 F FBON 20H (ma chaudière)',v:90},{k:'fCond',n:'Fioul à condensation',v:95,est:true}],
   gaz:[{k:'gOld',n:'Ancienne (avant 2000)',v:72,pci:80},{k:'gBt',n:'Basse température',v:79,pci:88},{k:'gCond',n:'Condensation (après 2015), radiateurs fonte',v:87,pci:97}]};
@@ -1036,6 +1051,7 @@ function normalizeSettings(raw){
   if(raw.v32!==true){if(s.copCurve)s.copPts=[];else if(s.copPts.length)s.custCorr=true;}
   s.v32=true;
   s.meas=Array.isArray(raw.meas)?raw.meas.map(function(m){return m&&{t:finOrNull(m.t,-30,40),w:finOrNull(m.w,1,10000),ti:finOrNull(m.ti,-20,60),to:finOrNull(m.to,-20,80),q:MEAS_Q_OK.indexOf(Number(m&&m.q))>=0?Number(m.q):350};}).filter(function(m){return m&&m.t!==null&&m.w!==null&&m.ti!==null&&m.to!==null&&m.to>m.ti;}).slice(0,40):[];
+  s.measErr=finOrNull(raw.measErr,0,50);if(s.measErr===null)s.measErr=MEAS_ERR_DEF; // v40 : erreur de débit des mesures brutes (%), absente = 15
   s.tMonths=[];s.copOver=[];
   for(var mi=0;mi<12;mi++){s.tMonths.push(finOrNull(Array.isArray(raw.tMonths)?raw.tMonths[mi]:null,-50,50));s.copOver.push(finOrNull(Array.isArray(raw.copOver)?raw.copOver[mi]:null,1,20));}
   // v31 : températures des mois = celles du lieu (case vide) ; une ancienne valeur égale à la normale de Metz redevient « valeur du lieu »
@@ -1240,22 +1256,38 @@ function scopBase(mach,scop){if(!(scop>=1&&scop<=10))return null;var m=SIM_MACH[
   var k=scop/scopEN(SIM_CURVE);return SIM_CURVE.map(function(p){return {t:p.t,cop:Math.round(p.cop*k*100)/100};});}
 function machName(k){return SIM_MACH[k]?SIM_MACH[k].name:'';}
 // mesures personnelles : COP = débit × 0,335 × (sortie − entrée) ÷ watts ; moyenne par température
-var MEAS_Q=[350,390,420], AIR_C=0.335;
-function measCop(m){return m.q*AIR_C*(m.to-m.ti)/m.w;}
+// v40 : 370 (25 %) et 405 (75 %) interpolés linéairement entre 350 (mini), 390 (50 %) et 420 (100 %)
+var MEAS_Q=[350,370,390,405,420], MEAS_QP={350:'1 %',370:'25 %',390:'50 %',405:'75 %',420:'100 %'}, AIR_C=0.335;
+function measCop(m){return m.q*AIR_C*(m.to-m.ti)/m.w;} // COP brut, débit de la notice (inchangé)
+// v40 : COP corrigé de l'erreur de débit (débit réel = notice × (1 − e/100))
+function measCopE(m,e){return m.q*(1-(e||0)/100)*AIR_C*(m.to-m.ti)/m.w;}
+// v40 : contrôle de cohérence. Plafond physique : COP au débit notice ≤ 75 % du COP de Carnot = (sortie + 273,15) ÷ (sortie − dehors)
+var MEAS_CARNOT=0.75, MEAS_NB_DT=3, MEAS_NB_MIN=3, MEAS_NB_TOL=0.20;
+function measCarnotCap(m){var d=m.to-m.t;return d>0?MEAS_CARNOT*(m.to+273.15)/d:Infinity;}
+function measCarnotOk(m){return measCop(m)<=measCarnotCap(m)+1e-9;} // faux = valeur irréaliste, non comptée
+function measUse(a){return (a||[]).filter(measCarnotOk);}
+function measMed(a){var b=a.slice().sort(function(x,y){return x-y;}),n=b.length;return n%2?b[(n-1)/2]:(b[n/2-1]+b[n/2])/2;}
+// par mesure : {x:true,cap} si non comptée ; sinon {dev} (écart à la médiane des voisines comptées à ±3 °C, null si ≤ 20 % ou < 3 voisines)
+function measCheck(ms,e){var ok=ms.map(measCarnotOk);return ms.map(function(m,i){if(!ok[i])return {x:true,cap:measCarnotCap(m),dev:null};
+  var nb=[];ms.forEach(function(o,j){if(j!==i&&ok[j]&&Math.abs(o.t-m.t)<=MEAS_NB_DT+1e-9)nb.push(measCopE(o,e));});
+  if(nb.length<MEAS_NB_MIN)return {x:false,dev:null,n:nb.length};var med=measMed(nb),d=measCopE(m,e)/med-1;
+  return {x:false,dev:Math.abs(d)>MEAS_NB_TOL+1e-9?d:null,med:med,n:nb.length,raw:d};});}
+function measErrOf(s){return s&&typeof s.measErr==='number'&&isFinite(s.measErr)?s.measErr:MEAS_ERR_DEF;}
 function avgGroups(a){var g={};a.forEach(function(x){var c=x.cop;if(!(c>0)||!isFinite(c)||!isFinite(x.t))return;var k=String(x.t);if(!g[k])g[k]={t:x.t,s:0,n:0};g[k].s+=c;g[k].n++;});
   return Object.keys(g).map(function(k){return {t:g[k].t,cop:g[k].s/g[k].n,n:g[k].n};}).sort(function(a,b){return a.t-b.t;});}
 // tes points remplacent la courbe de base sur la plage mesurée (de ta température la plus froide à la plus chaude)
-function measGroups(meas){return avgGroups((meas||[]).map(function(m){return {t:m.t,cop:measCop(m)};}));}
+function measGroups(meas,e){return avgGroups(measUse(meas).map(function(m){return {t:m.t,cop:measCopE(m,e===undefined?MEAS_ERR_DEF:e)};}));}
 // v32 : valeurs perso = tes COP moyens (tableau) + tes mesures brutes, moyennées par température
-function custGroups(s){if(s.custOn===false)return [];return custAll(s);}
-function custAll(s){return avgGroups((s.copPts||[]).map(function(p){return {t:p.t,cop:p.cop};}).concat((s.meas||[]).map(function(m){return {t:m.t,cop:measCop(m)};})));}
+// v40 : kc (correction du scénario) ne touche que tes COP moyens ; tes mesures brutes ont seulement l'erreur de débit (pas de double correction)
+function custGroups(s,kc){if(s.custOn===false)return [];return custAll(s,kc);}
+function custAll(s,kc){var k=kc===undefined?1:kc,e=measErrOf(s);return avgGroups((s.copPts||[]).map(function(p){return {t:p.t,cop:p.cop*k};}).concat(measUse(s.meas).map(function(m){return {t:m.t,cop:measCopE(m,e)};})));}
 function mergeMeas(base,groups){if(!groups.length)return copPtsSorted(base);var lo=groups[0].t,hi=groups[groups.length-1].t;
   return copPtsSorted(base).filter(function(p){return p.t<lo||p.t>hi;}).concat(groups.map(function(x){return {t:x.t,cop:x.cop};})).sort(function(a,b){return a.t-b.t;});}
 function curveOf(s){if(!s||!s.copCurve)return null;if(s.copCurve==='scop'){var p=scopBase(s.mach,s.scop);return p?{name:'Machine : '+machName(s.mach)+' (SCOP '+nfN.format(s.scop)+')',pts:p}:null;}return COP_CURVES[s.copCurve]||null;}
 function basePts(s){var c=curveOf(s);return c?c.pts:[];}
 // la correction % s'applique à la courbe de base ; à tes valeurs perso seulement si « custCorr » (case cochée)
-function curvePts(s){var b=basePts(s),g=custGroups(s);if(!g.length)return b;var k=1-(s.copCorr||0)/100,kc=s.custCorr?k:1;
-  return mergeMeas(b.map(function(p){return {t:p.t,cop:p.cop*k};}),g.map(function(x){return {t:x.t,cop:x.cop*kc};}));}
+function curvePts(s){var b=basePts(s),k=1-(s.copCorr||0)/100,kc=s.custCorr?k:1,g=custGroups(s,kc);if(!g.length)return b;
+  return mergeMeas(b.map(function(p){return {t:p.t,cop:p.cop*k};}),g.map(function(x){return {t:x.t,cop:x.cop};}));}
 function curveCorr(s){return custGroups(s).length?0:s.copCorr;}
 function effPts(s){return custGroups(s).length?curvePts(s):basePts(s).map(function(p){return {t:p.t,cop:p.cop*(1-(s.copCorr||0)/100)};});}
 function tEff(s,m){return (s.tMonths&&s.tMonths[m]!==null&&s.tMonths[m]!==undefined)?s.tMonths[m]:METZ_TNORM[m];}
@@ -2204,7 +2236,7 @@ function setCopMode(m){copModeUI=m;$('copFixe').setAttribute('aria-pressed',m===
 function readPtsUI(){Array.prototype.forEach.call(document.querySelectorAll('#copPtsTbl tr[data-i]'),function(r){var i=+r.getAttribute('data-i');if(copPtsUI[i]){copPtsUI[i].tRaw=r.querySelector('.pT').value;copPtsUI[i].cRaw=r.querySelector('.pC').value;}});}
 function renderPtsUI(){
   $('copPtsTbl').innerHTML='<thead><tr><th>Temp. extérieure (°C)</th><th>COP</th><th></th></tr></thead><tbody>'+
-    (copPtsUI.length?copPtsUI.map(function(p,i){return '<tr data-i="'+i+'"><td><input type="text" inputmode="text" class="pT" aria-label="Température du point '+(i+1)+'" placeholder="ex. 7" value="'+esc(p.tRaw)+'"></td>'+
+    (copPtsUI.length?copPtsUI.map(function(p,i){return '<tr data-i="'+i+'"><td><span class="pm-w"><input type="text" inputmode="decimal" class="pT" aria-label="Température du point '+(i+1)+'" placeholder="ex. 7" value="'+esc(p.tRaw)+'">'+pmBtn('température du point '+(i+1))+'</span></td>'+
       '<td><input type="text" inputmode="decimal" class="pC" aria-label="COP du point '+(i+1)+'" placeholder="ex. 3,5" value="'+esc(p.cRaw)+'"></td>'+
       '<td><button class="icon-btn del pDel" type="button" aria-label="Supprimer le point '+(i+1)+'">🗑️</button></td></tr>';}).join('')
     :'<tr><td colspan="3" class="empty" style="text-align:left;white-space:normal">Aucun COP moyen saisi.</td></tr>')+'</tbody>';
@@ -2233,10 +2265,12 @@ $('tGrid').addEventListener('focusout',function(ev){var i=ev.target;if(i.classLi
 $('btnTReset').addEventListener('click',function(){tGridInputs().forEach(function(i){i.setAttribute('data-auto','1');i.value=numStr(r1(METZ_TNORM[+i.getAttribute('data-m')]));});tGridSum();updateCopPreview();scheduleSave(0);});
 function uiPts(){readPtsUI();var a=[];copPtsUI.forEach(function(p){var t=parseNum(p.tRaw),c=parseNum(p.cRaw);if(isFinite(t)&&c>0)a.push({t:t,cop:c});});return a;}
 function uiBase(){return copCurveUI?uiCurve(copCurveUI)||[]:[];}
-function uiCust(){return $('sCustOn').checked?uiCustAll():[];}
-function uiCustAll(){return avgGroups(uiPts().concat(measParse().ok.map(function(m){return {t:m.t,cop:measCop(m)};})));}
-function uiEffPts(){var b=uiBase(),g=uiCust(),k=1-uiCorr()/100,kc=$('sCustCorr').checked?k:1;
-  return g.length?{pts:mergeMeas(b.map(function(p){return {t:p.t,cop:p.cop*k};}),g.map(function(x){return {t:x.t,cop:x.cop*kc};})),corr:0}:{pts:b,corr:uiCorr()};}
+function uiCust(kc){return $('sCustOn').checked?uiCustAll(kc):[];}
+function uiMeasErr(){var r=$('sMeasErr').value.trim();if(r==='')return MEAS_ERR_DEF;var v=parseNum(r);return (isFinite(v)&&v>=0&&v<=50)?v:null;}
+function uiMeasErrSafe(){var e=uiMeasErr();return e===null?measErrOf(settings):e;}
+function uiCustAll(kc){var k=kc===undefined?1:kc,e=uiMeasErrSafe();return avgGroups(uiPts().map(function(p){return {t:p.t,cop:p.cop*k};}).concat(measUse(measParse().ok).map(function(m){return {t:m.t,cop:measCopE(m,e)};})));}
+function uiEffPts(){var b=uiBase(),k=1-uiCorr()/100,kc=$('sCustCorr').checked?k:1,g=uiCust(kc);
+  return g.length?{pts:mergeMeas(b.map(function(p){return {t:p.t,cop:p.cop*k};}),g.map(function(x){return {t:x.t,cop:x.cop};})),corr:0}:{pts:b,corr:uiCorr()};}
 function updateCopPreview(){
   if(!$('copMonthTbl').querySelector('tr'))return;
   var E=uiEffPts();
@@ -2289,43 +2323,52 @@ $('copPtsTbl').addEventListener('input',function(){updateCopPreview();});
 $('copMonthTbl').addEventListener('input',updateCopPreview);
 $('sCorr').addEventListener('input',updateCopPreview);
 // --- SCOP personnalisé : tes mesures (jamais corrigées) ---
-function measRowHtml(m,i){var q=String(m.q||350);
-  return '<div class="meas-row" data-i="'+i+'"><input type="text" inputmode="text" class="mx-t" aria-label="Température dehors, mesure '+(i+1)+'" placeholder="7" value="'+esc(m.t)+'">'+
-    '<input type="text" inputmode="decimal" class="mx-w" aria-label="Watts, mesure '+(i+1)+'" placeholder="450" value="'+esc(m.w)+'">'+
+function pmBtn(lab){return '<button class="pm-btn" type="button" tabindex="-1" aria-label="Changer le signe : '+lab+'">±</button>';}
+function measRowHtml(m,i){var q=String(m.q||390);
+  return '<div class="meas-row" data-i="'+i+'">'+
+    '<span class="pm-w">'+pmBtn('température dehors, mesure '+(i+1))+'<input type="text" inputmode="decimal" class="mx-t" aria-label="Température dehors, mesure '+(i+1)+'" placeholder="7" value="'+esc(m.t)+'"></span>'+
     '<input type="text" inputmode="decimal" class="mx-i" aria-label="Température d\'entrée de l\'air, mesure '+(i+1)+'" placeholder="20" value="'+esc(m.ti)+'">'+
     '<input type="text" inputmode="decimal" class="mx-o" aria-label="Température de sortie de l\'air, mesure '+(i+1)+'" placeholder="38" value="'+esc(m.to)+'">'+
-    '<select class="mx-q" aria-label="Vitesse du ventilateur, mesure '+(i+1)+'">'+MEAS_Q.map(function(v){return '<option value="'+v+'"'+(String(v)===q?' selected':'')+'>'+v+'</option>';}).join('')+'</select>'+
+    '<input type="text" inputmode="decimal" class="mx-w" aria-label="Watts, mesure '+(i+1)+'" placeholder="450" value="'+esc(m.w)+'">'+
+    '<select class="mx-q" aria-label="Vitesse du ventilateur (m³/h), mesure '+(i+1)+'">'+MEAS_Q.map(function(v){return '<option value="'+v+'"'+(String(v)===q?' selected':'')+'>'+v+' ('+MEAS_QP[v].replace(' ',' ')+')</option>';}).join('')+'</select>'+
     '<button class="icon-btn del mx-del" type="button" aria-label="Supprimer la mesure '+(i+1)+'">🗑️</button><div class="meas-cop" id="mcop'+i+'"></div></div>';}
 function renderMeasUI(){$('measList').innerHTML=measUI.map(measRowHtml).join('')||'<p class="hint">Aucune mesure.</p>';renderMeasOut();}
 function readMeasUI(){Array.prototype.forEach.call(document.querySelectorAll('#measList .meas-row'),function(r){var i=+r.getAttribute('data-i');if(!measUI[i])return;
   measUI[i]={t:r.querySelector('.mx-t').value,w:r.querySelector('.mx-w').value,ti:r.querySelector('.mx-i').value,to:r.querySelector('.mx-o').value,q:+r.querySelector('.mx-q').value};});}
-function measParse(){readMeasUI();var ok=[],bad=null,st=[];
+function measParse(){readMeasUI();var ok=[],idx=[],bad=null,st=[],e=uiMeasErrSafe();
   measUI.forEach(function(r,i){var raw=[r.t,r.w,r.ti,r.to].map(function(x){return String(x===null||x===undefined?'':x).trim();});
     if(raw.every(function(x){return x==='';})){st[i]='';return;}
     var t=parseNum(raw[0]),w=parseNum(raw[1]),ti=parseNum(raw[2]),to=parseNum(raw[3]),q=MEAS_Q.indexOf(+r.q)>=0?+r.q:350;
     if(!(isFinite(t)&&t>=-30&&t<=40)||!(w>=1&&w<=10000)||!(isFinite(ti)&&ti>=-20&&ti<=60)||!(isFinite(to)&&to<=80)){st[i]='⚠️ incomplet';if(bad===null)bad=i;return;}
     if(!(to>ti)){st[i]='⚠️ sortie ≤ entrée';if(bad===null)bad=i;return;}
-    var m={t:t,w:w,ti:ti,to:to,q:q};st[i]='COP '+nf2.format(measCop(m))+' = '+q+' × 0,335 × '+nf1.format(to-ti)+' ÷ '+nf0.format(w);ok.push(m);});
-  return {ok:ok,bad:bad,st:st};}
-function renderMeasOut(){if(!$('measOut'))return;var P=measParse();P.st.forEach(function(t,i){var c=$('mcop'+i);if(c)c.textContent=t;});
+    var m={t:t,w:w,ti:ti,to:to,q:q};st[i]='COP '+nf2.format(measCopE(m,e))+' = '+(e?nf1.format(q*(1-e/100))+' m³/h ('+q+' − '+nfN.format(e)+' %)':q+' m³/h (non corrigé)')+' × 0,335 × '+nf1.format(to-ti)+' ÷ '+nf0.format(w);ok.push(m);idx.push(i);});
+  return {ok:ok,idx:idx,bad:bad,st:st};}
+function renderMeasOut(){if(!$('measOut'))return;var P=measParse(),K=measCheck(P.ok,uiMeasErrSafe()),F={},nx=0,nw=0;P.idx.forEach(function(r,k){F[r]=K[k];});
+  Array.prototype.forEach.call(document.querySelectorAll('#measList .meas-row'),function(row){var i=+row.getAttribute('data-i'),f=F[i],x=!!(f&&f.x),w=!!(f&&!f.x&&f.dev!==null),c=$('mcop'+i);
+    row.classList.toggle('mx-bad',x);row.classList.toggle('mx-warn',w);nx+=x?1:0;nw+=w?1:0;if(!c)return;var s=P.st[i]||'',k=s.indexOf(' = ');
+    if(/^COP /.test(s)&&k>0){c.innerHTML='<b class="mx-cop">'+esc(s.slice(0,k))+'</b>';c.title=s;}else{c.textContent=s;c.removeAttribute('title');}if(!x&&!w)return; // v40 : ligne courte, calcul détaillé dans title
+    var d=document.createElement('span');d.className='mx-msg';
+    if(x){d.textContent='⛔ Non comptée : valeur irréaliste';d.title='COP au débit notice '+nf1.format(measCop(P.ok[P.idx.indexOf(i)]))+' > '+nf1.format(f.cap)+' (75 % du maximum physique) : vérifie la saisie.';}
+    else{d.textContent='⚠️ écart '+(f.dev>0?'+':'−')+nf0.format(Math.abs(f.dev*100))+' % voisines';d.title='Médiane des mesures voisines (±3 °C) : '+nf2.format(f.med)+'. Vitesse ou température mal saisie ?';}c.appendChild(d);});
+  var chk=(nx?'<div id="measExcl">⛔ '+nx+' mesure'+(nx>1?'s':'')+' non comptée'+(nx>1?'s':'')+' (valeur irréaliste au-delà de 75 % du maximum physique) : vérifie la saisie.</div>':'')+(nw?'<div id="measNbW">⚠️ '+nw+' mesure'+(nw>1?'s':'')+' à vérifier (écart de plus de 20 % avec les voisines à ±3 °C : vitesse ou température mal saisie ?), comptée'+(nw>1?'s':'')+' quand même.</div>':'');
   var on=custSwSync();$('sCustCorr').disabled=!on;
-  var g=uiCustAll(),o=$('measOut'),cc=$('sCustCorr').checked,co=uiCorr();o.classList.remove('warn');
-  if(!g.length){o.innerHTML='Saisis tes COP moyens (a) ou tes mesures brutes (b).';return;}
+  var g=uiCustAll(),o=$('measOut'),cc=$('sCustCorr').checked,co=uiCorr(),nMe=P.ok.length,eM=uiMeasErrSafe();o.classList.remove('warn');
+  if(!g.length){o.innerHTML=chk+'Saisis tes COP moyens (a) ou tes mesures brutes (b).';return;}
   var base=copPtsSorted(uiBase()),merged=mergeMeas(base,g),ind=scopEN(merged.length>=2?merged:g);
   var lab=null,ref=null;
   if(copCurveUI==='scop'&&uiScop()!==null){ref=uiScop();lab='SCOP de la machine';}
   else if(base.length>=2){ref=scopEN(base);lab='SCOP de la courbe';}
   var cov=enCover(g[0].t,g[g.length-1].t),h='<div><b>Tes valeurs</b> (moyenne par température) : '+g.map(function(x){return SGN(x.t)+' °C → <b>'+nf2.format(x.cop)+'</b>'+(x.n>1?' ('+x.n+')':'');}).join(' · ')+'</div>'+
     (!on?'<div id="measOff">⏸️ <b>Inactif</b> : valeurs gardées, mais pas utilisées. Calculs avec la courbe de la machine seule.</div>':
-    (cc?'<div>Correction du scénario appliquée à tes valeurs'+(co?' (−'+nfN.format(co)+' %)':' (0 % actuellement)')+'.</div>':'<div id="measNoCorr">✋ Valeurs mesurées par toi : aucune correction appliquée.</div>')+
+    (cc?'<div>Correction du scénario appliquée à tes COP moyens'+(co?' (−'+nfN.format(co)+' %)':' (0 % actuellement)')+(nMe?(eM?' ; tes mesures brutes : erreur de débit seule (−'+nfN.format(eM)+' %), pas de double correction':' ; tes mesures brutes : non corrigées (erreur de débit 0 %)'):'')+'.</div>':'<div id="measNoCorr">✋ Valeurs mesurées par toi : aucune correction du scénario appliquée'+(nMe&&eM?' (mesures brutes : erreur de débit −'+nfN.format(eM)+' %)':'')+'.</div>')+
     (base.length?'<div>Elles remplacent la courbe de '+SGN(g[0].t)+' à '+SGN(g[g.length-1].t)+' °C ; ailleurs, courbe de base'+(co?' −'+nfN.format(co)+' %':'')+'.</div>':(g.length<2?'<div>⚠️ Sans machine, il faut au moins 2 températures.</div>':'')))+
-    '<div style="margin-top:6px">SCOP indicatif avec tes valeurs (avant correction, pour comparer à la fiche) : <b id="measScop">'+nf2.format(ind)+'</b>'+(ref!==null?' · '+lab+' : '+nf2.format(ref):'')+'</div>';
+    '<div style="margin-top:6px">SCOP indicatif avec tes valeurs (avant correction du scénario'+(nMe?', débit corrigé':'')+', pour comparer à la fiche) : <b id="measScop">'+nf2.format(ind)+'</b>'+(ref!==null?' · '+lab+' : '+nf2.format(ref):'')+'</div>';
   if(ref!==null){var gap=ind/ref-1,gp=(gap>=0?'+':'−')+nf0.format(Math.abs(gap*100))+' %';
     if(Math.abs(gap)<=0.15)h+='<div id="measVerdict">✅ Écart '+gp+' : cohérent avec le '+lab+'.</div>';
     else{if(on)o.classList.add('warn');h+='<div id="measVerdict">⚠️ Écart '+gp+' avec le '+lab+'. Pas forcément une erreur : le SCOP vient du laboratoire, le débit d\'air réel est incertain et peu de températures sont mesurées. Tes valeurs sont gardées telles quelles.</div>';}}
   else h+='<div>Choisis une machine (ou une courbe) pour comparer.</div>';
   h+='<div>Tes valeurs couvrent <b id="measCov">'+nf0.format(cov*100)+' %</b> du besoin de chaleur de la saison (EN 14825)'+(on&&cov<0.5&&base.length?' ; le reste vient de la courbe de base':'')+'. Indicatif.</div>';
-  o.innerHTML=h;}
+  o.innerHTML=chk+h;}
 function custTab(t){t=t==='b'?'b':'a';$('custTabA').setAttribute('aria-pressed',String(t==='a'));$('custTabB').setAttribute('aria-pressed',String(t==='b'));
   $('custPaneA').classList.toggle('hidden',t!=='a');$('custPaneB').classList.toggle('hidden',t!=='b');}
 $('custTabA').addEventListener('click',function(){custTab('a');});$('custTabB').addEventListener('click',function(){custTab('b');});
@@ -2337,10 +2380,16 @@ function custSwSync(){var on=$('sCustOn').checked,n=settings.copPts.length+setti
   $('custBody').classList.toggle('cust-dis',!on);return on;}
 $('btnCustOn').addEventListener('click',function(){var c=$('sCustOn');c.checked=!c.checked;c.dispatchEvent(new Event('change',{bubbles:true}));toast(c.checked?'Mon SCOP personnalisé : actif':'Mon SCOP personnalisé : inactif (valeurs gardées)');});
 $('btnMeas').addEventListener('click',function(){measOpen($('measBox').classList.contains('hidden'));});
-$('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.length>=40){toast('40 mesures maximum');return;}measUI.push({t:'',w:'',ti:'',to:'',q:350});renderMeasUI();var r=document.querySelectorAll('#measList .mx-t');if(r.length)r[r.length-1].focus();});
+$('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.length>=40){toast('40 mesures maximum');return;}measUI.push({t:'',w:'',ti:'',to:'',q:390});renderMeasUI();var r=document.querySelectorAll('#measList .mx-t');if(r.length)r[r.length-1].focus();});
 $('measList').addEventListener('click',function(ev){var b=ev.target.closest('.mx-del');if(!b)return;readMeasUI();measUI.splice(+b.closest('.meas-row').getAttribute('data-i'),1);renderMeasUI();updateCopPreview();scheduleSave(0);});
 $('measList').addEventListener('input',function(){updateCopPreview();});
 $('measList').addEventListener('change',function(){updateCopPreview();});
+$('sMeasErr').addEventListener('input',function(){updateCopPreview();});
+// v40 : bouton ± (clavier décimal sans signe moins) : bascule le signe du champ voisin
+document.addEventListener('mousedown',function(ev){if(ev.target.closest&&ev.target.closest('.pm-btn'))ev.preventDefault();});
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('.pm-btn');if(!b)return;var i=b.parentNode.querySelector('input');if(!i)return;
+  var v=i.value.trim();i.value=/^[-−]/.test(v)?v.replace(/^[-−]\s*/,''):'-'+v;try{i.focus();var L=i.value.length;i.setSelectionRange(L,L);}catch(x){}
+  i.dispatchEvent(new Event('input',{bubbles:true}));});
 // --- électricité (bloc « s ») ---
 function renderSetEl(){var r=readEl('s');renderElInfo('s',r.el,r.bad);}
 $('sElBlock').addEventListener('click',function(ev){var b=ev.target.closest('[data-eltar],[data-eltm],#sPctBtn');if(!b)return;
@@ -2360,7 +2409,7 @@ function fillSettings(){
   setCopMode(settings.copMode);
   $('sScop').value=numStr(settings.scop);fillMachSel();$('sMach').value=settings.copCurve&&settings.copCurve!=='scop'?'cv:'+settings.copCurve:(settings.copCurve==='scop'?settings.mach:'');$('sSimUse').checked=settings.simUseSet;$('sCustCorr').checked=settings.custCorr;$('sCustOn').checked=settings.custOn;
   copPtsUI=settings.copPts.map(function(p){return {tRaw:numStr(p.t),cRaw:numStr(p.cop)};});
-  $('sCorr').value=numStr(settings.copCorr);
+  $('sCorr').value=numStr(settings.copCorr);$('sMeasErr').value=numStr(measErrOf(settings));
   measUI=settings.meas.map(function(m){return {t:numStr(m.t),w:numStr(m.w),ti:numStr(m.ti),to:numStr(m.to),q:m.q};});renderMeasUI();custTab(!settings.copPts.length&&settings.meas.length?'b':'a');
   renderTGrid();renderMonthUI();syncCurve();renderPtsUI();measOpen(settings.custOn!==false&&settings.meas.length+settings.copPts.length>0); // v35 : SCOP machine hors du menu ; inactif = menu replié au départ
   $('sTReal').checked=settings.tReal;$('sLat').value=numStr(settings.lat);$('sLon').value=numStr(settings.lon);showTReal();
@@ -2394,6 +2443,7 @@ function collectSettings(){ // mêmes règles qu'avant (bouton « Enregistrer »
   n.copCurve=copCurveUI;if(n.copCurve==='scop'&&(!n.mach||n.scop===null))n.copCurve=null;
   var MP=measParse();if(MP.bad!==null)return {err:'Mesure n° '+(MP.bad+1)+' incomplète ou invalide (watts > 0, sortie plus chaude que l\'entrée)'};
   n.meas=MP.ok;
+  var eRaw=uiMeasErr();if(eRaw===null){if(strict)return {err:'Erreur de débit invalide (0 à 50 %, ex. 15)',el:'sMeasErr'};eRaw=measErrOf(settings);}n.measErr=eRaw;
   if(strict&&badPt)return {err:'COP moyen invalide (ex. 7 °C → 3,5)'};
   if(strict&&dup)return {err:'Deux COP moyens ont la même température'};
   if(badPt||dup)pts=settings.copPts.slice();
@@ -3374,7 +3424,7 @@ function trySaveTank(){ // mêmes règles qu'avant (bouton « Enregistrer la cuv
 
 var tt;function toast(m,ms){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},ms||2400);}
 
-window.__pac={dju:function(){return DJU_METZ.join(',');},copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){$('sMach').value=k?'cv:'+k:'';syncCurve();updateCopPreview();},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
+window.__pac={measCheck:function(ms,e){return measCheck(ms,e);},measCarnotOk:function(m){return measCarnotOk(m);},dju:function(){return DJU_METZ.join(',');},copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){$('sMach').value=k?'cv:'+k:'';syncCurve();updateCopPreview();},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 window.__pac.ov=function(){return kwhOverlaps(entries);}; // v34 : test
 window.__pac.kpiC=function(){return kpiData().c;}; // v34 : test
 window.__pac.evol=function(){return evolLast?{unit:evolLast.unit,units:evolLast.ser.map(function(x){return x.unit;}),ser:evolLast.ser.map(function(x){return x.short;}),xc:(evolLast.xc||[]).map(function(x){return x.short;}),data:evolLast.data.map(function(d){return {k:d.k,v:d.v,x:d.x};})}:null;}; // v34 : test
