@@ -543,6 +543,12 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
 @media (prefers-color-scheme: dark){#viewMes .sess-seg .mx-cop,#viewMes #sessOut .sess-cop{color:#0e1419}}
 #viewMes .sess-fold .mx-cop.na{background:var(--line);color:var(--muted)}
 </style>
+<style id="v49">/* v49 : tri des mesures brutes, segment discret */
+.meas-sort{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;font-size:.82rem;color:var(--muted)}
+.meas-sort .seg{flex:0 0 auto;margin:0;padding:3px;gap:3px}
+#measList .meas-row{overflow-anchor:none} /* le navigateur ne s'ancre pas sur une ligne qui change de place (c'est le tri qui garde la ligne touchée en place) */
+.meas-sort .seg button{flex:0 0 auto;min-height:34px;padding:0 12px;font-size:.82rem}
+</style>
 <style id="v48">/* v48 : liste des sessions, une ligne repliée chacune */
 #sessItems{margin-top:8px;border-top:1px dashed var(--line)}
 #sessItems .sess-item{border-bottom:1px dashed var(--line)}
@@ -800,6 +806,7 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
     <h2>🧪 Mesures brutes</h2>
     <p class="hint mes-short" id="measHint">Relevés stabilisés. <button type="button" class="linkbtn" id="btnMesHow">ⓘ Détail des calculs</button></p>
     <div class="meas-err"><label for="sMeasErr">Erreur de débit (%)</label><input type="text" inputmode="decimal" id="sMeasErr" placeholder="15" autocomplete="off" aria-describedby="measHint"></div>
+    <div class="meas-sort"><span id="measSortLab">Trier</span><div class="seg seg-sm" id="measSort" role="group" aria-labelledby="measSortLab"><button type="button" data-ms="temp" aria-pressed="true">Température</button><button type="button" data-ms="date" aria-pressed="false">Date</button></div></div>
     <div class="meas-head"><span>Dehors °C</span><span>Entrée °C</span><span>Sortie °C</span><span>Watts</span><span>Vitesse m³/h</span><span></span></div>
     <div id="measList"></div>
     <div class="actions" style="margin-top:8px"><button class="btn small" type="button" id="btnMeasAdd">+ Ajouter une mesure</button></div>
@@ -2469,7 +2476,27 @@ function measRowHtml(m,i){var q=String(m.q||390);
     '<input type="text" inputmode="decimal" class="mx-w" aria-label="Watts, mesure '+(i+1)+'" placeholder="450" value="'+esc(m.w)+'">'+
     '<select class="mx-q" aria-label="Vitesse du ventilateur (m³/h), mesure '+(i+1)+'">'+MEAS_Q.map(function(v){return '<option value="'+v+'"'+(String(v)===q?' selected':'')+'>'+v+' ('+MEAS_QP[v].replace(' ',' ')+')</option>';}).join('')+'</select>'+
     '<button class="icon-btn del mx-del" type="button" aria-label="Supprimer la mesure '+(i+1)+'">🗑️</button><div class="meas-cop" id="mcop'+i+'"></div></div>';}
-function renderMeasUI(){$('measList').innerHTML=measUI.map(measRowHtml).join('')||'<p class="hint">Aucune mesure.</p>';renderMeasOut();}
+var measSort='temp',measPin=-1; // v49 : tri d'affichage, mémoire de session seulement (pas de clé de stockage) ; measPin = mesure qui vient d'être ajoutée, gardée en bas jusqu'à la fin de sa saisie
+function measOrder(){var L=measUI.map(function(m,i){return i;}),pin=measPin>=0&&measPin<measUI.length?measPin:-1,A=[],Z=[];
+  L.forEach(function(i){if(i===pin)return;var m=measUI[i];
+    if(measSort==='date'){var d=measDOk(m.d);(d?A:Z).push(i);}else{var t=parseNum(m.t);(isFinite(t)?A:Z).push(i);}});
+  if(measSort==='date')A.sort(function(a,b){var x=measDOk(measUI[a].d),y=measDOk(measUI[b].d);return x<y?1:x>y?-1:b-a;}); // plus récente en haut ; non datées en bas, dans leur ordre
+  else A.sort(function(a,b){return parseNum(measUI[a].t)-parseNum(measUI[b].t)||a-b;}); // Dehors croissant ; sans température en bas, dans leur ordre
+  A=A.concat(Z);if(pin>=0)A.push(pin);return A;}
+function renderMeasUI(keepPin){if(!keepPin)measPin=-1;$('measList').innerHTML=measOrder().map(function(i){return measRowHtml(measUI[i],i);}).join('')||'<p class="hint">Aucune mesure.</p>';renderMeasOut();}
+function measReflow(){var list=$('measList'),rows=Array.prototype.slice.call(list.querySelectorAll('.meas-row'));if(!rows.length)return;readMeasUI();
+  var o=measOrder(),cur=rows.map(function(r){return +r.getAttribute('data-i');});if(o.join()===cur.join())return;
+  var by={};rows.forEach(function(r){by[r.getAttribute('data-i')]=r;});var ae=document.activeElement,an=ae&&list.contains(ae)?ae.closest('.meas-row'):null,y0=an?an.getBoundingClientRect().top:0;
+  if(an){var p=o.indexOf(+an.getAttribute('data-i'));o.forEach(function(i,k){if(k<p)list.insertBefore(by[i],an);else if(k>p)list.appendChild(by[i]);});} // la ligne sous les doigts ne bouge pas dans le DOM (focus gardé)
+  else o.forEach(function(i){list.appendChild(by[i]);});
+  if(an){var dy=an.getBoundingClientRect().top-y0;if(dy)window.scrollBy(0,dy);}} // la ligne touchée reste au même endroit à l'écran ; sans ligne touchée, rien ne bouge hors de la liste
+$('measSort').addEventListener('click',function(ev){var b=ev.target.closest('button[data-ms]');if(!b)return;var v=b.getAttribute('data-ms');
+  Array.prototype.forEach.call(this.querySelectorAll('button'),function(x){x.setAttribute('aria-pressed',String(x===b));});if(v===measSort)return;readMeasUI();measSort=v;renderMeasUI();});
+$('measList').addEventListener('focusout',function(ev){var r=ev.target.closest&&ev.target.closest('.meas-row');if(!r)return;if(ev.relatedTarget&&r.contains(ev.relatedTarget))return;
+  if(+r.getAttribute('data-i')===measPin)measPin=-1;if(measPtr)measPend=true;else setTimeout(measReflow,0);}); // v49 : tri appliqué en fin de saisie de la ligne, jamais pendant la frappe
+var measPtr=false,measPend=false; // doigt posé : on attend qu'il se lève (et que le toucher aboutisse) avant de réordonner, pour ne rien déplacer sous le doigt
+document.addEventListener('pointerdown',function(){measPtr=true;},true);
+['pointerup','pointercancel'].forEach(function(e){document.addEventListener(e,function(){measPtr=false;if(measPend){measPend=false;setTimeout(measReflow,0);}},true);});
 function readMeasUI(){Array.prototype.forEach.call(document.querySelectorAll('#measList .meas-row'),function(r){var i=+r.getAttribute('data-i');if(!measUI[i])return;
   measUI[i]=measDSet({t:r.querySelector('.mx-t').value,w:r.querySelector('.mx-w').value,ti:r.querySelector('.mx-i').value,to:r.querySelector('.mx-o').value,q:+r.querySelector('.mx-q').value},measUI[i].d);});}
 function measParse(){readMeasUI();var ok=[],idx=[],bad=null,st=[],e=uiMeasErrSafe();
@@ -2528,7 +2555,7 @@ function custSwSync(){var on=$('sCustOn').checked,n=settings.copPts.length+setti
   $('custBody').classList.toggle('cust-dis',!on);return on;}
 $('btnCustOn').addEventListener('click',function(){var c=$('sCustOn');c.checked=!c.checked;c.dispatchEvent(new Event('change',{bubbles:true}));toast(c.checked?'Mon SCOP personnalisé : actif':'Mon SCOP personnalisé : inactif (valeurs gardées)');});
 $('btnMeas').addEventListener('click',function(){measOpen($('measBox').classList.contains('hidden'));});
-$('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.length>=40){toast('40 mesures maximum');return;}measUI.push({t:'',w:'',ti:'',to:'',q:390,d:sessNow()});renderMeasUI();var r=document.querySelectorAll('#measList .mx-t');if(r.length)r[r.length-1].focus();});
+$('btnMeasAdd').addEventListener('click',function(){readMeasUI();if(measUI.length>=40){toast('40 mesures maximum');return;}measUI.push({t:'',w:'',ti:'',to:'',q:390,d:sessNow()});measPin=measUI.length-1;renderMeasUI(true);var r=document.querySelector('#measList .meas-row[data-i="'+measPin+'"] .mx-t');if(r)r.focus();});
 $('measList').addEventListener('click',function(ev){var b=ev.target.closest('.mx-del');if(!b)return;readMeasUI();measUI.splice(+b.closest('.meas-row').getAttribute('data-i'),1);renderMeasUI();updateCopPreview();scheduleSave(0);});
 $('measList').addEventListener('input',function(){updateCopPreview();});
 $('measList').addEventListener('change',function(){updateCopPreview();});
