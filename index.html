@@ -560,7 +560,7 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
 /* v52 : import horaire (CSV Shelly) + vue Heure / Jour du Suivi */
 .hr-imp{display:block;margin:8px auto 0;background:transparent;border:0;color:var(--muted);font-size:.85rem;font-weight:600;min-height:32px;padding:4px 10px;cursor:pointer}
 .hr-imp:active{color:var(--accent)}
-#hrSel{margin-bottom:10px}
+#hrSel{margin-bottom:10px}#hrSel button{padding:0 2px;min-width:0}.hr-bars.pw{gap:6px}.hr-ax.pw{gap:6px}.hr-b[data-hz]{cursor:pointer}.hr-b[data-hz]:active .bar{filter:brightness(1.15)}
 .hr-on > :not(h2):not(#hrSel):not(#hrBox){display:none!important}
 .hr-bars{display:flex;align-items:flex-end;gap:2px;height:120px;margin:12px 0 2px}
 .hr-bars.d7{gap:8px}
@@ -578,7 +578,7 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
 .tp.w{background:#f4f6f8;border:1px solid #8a96a3}.tp.r{background:#e5484d}
 .tp.b{background:#3d7bf4}
 .hr-del{display:flex;gap:8px;margin-top:12px}
-#fiCard summary{gap:8px;min-height:44px}#fiCard .fi-n{margin-left:auto;color:var(--muted);font-size:.9rem}.fi-line{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto 12px;gap:6px}.fi-line .tag{margin-left:0}.fi-tg{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}.fi-est{color:var(--muted);font-size:.78rem}.fi-line .r-eur{color:var(--text)}.fi-line .r-chev{transform:none;width:12px}.hr-del .btn{flex:1 1 auto;padding:0 8px;font-size:.85rem;white-space:nowrap}
+#fiCard summary{gap:8px;min-height:44px}#fiSel{margin:2px 0 4px}#fiList .fi-tg{flex-wrap:wrap;row-gap:2px}#fiList .fi-tg>*{white-space:nowrap}#fiCard .fi-n{margin-left:auto;color:var(--muted);font-size:.9rem}.fi-line{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto 12px;gap:6px}.fi-line .tag{margin-left:0}.fi-tg{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}.fi-est{color:var(--muted);font-size:.78rem}.fi-line .r-eur{color:var(--text)}.fi-line .r-chev{transform:none;width:12px}.hr-del .btn{flex:1 1 auto;padding:0 8px;font-size:.85rem;white-space:nowrap}
 .hr-sum{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:10px;font-size:.86rem;color:var(--muted)}.hr-sum b{font-size:1.15rem;color:var(--accent)}
 .hr-fio{font-size:.84rem;color:var(--muted);margin-top:4px}
 .hr-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.78rem;color:var(--muted);margin-top:8px}.hr-leg i.k{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -652,7 +652,7 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
 
   <section class="card" id="evolCard">
     <h2>📈 Évolution</h2>
-    <div class="seg seg-sm hidden" id="hrSel" role="group" aria-label="Données affichées"><button type="button" data-hv="rel" aria-pressed="true">Relevés</button><button type="button" data-hv="h" aria-pressed="false">Heure</button><button type="button" data-hv="d" aria-pressed="false">Jour</button></div>
+    <div class="seg seg-sm hidden" id="hrSel" role="group" aria-label="Données affichées"><button type="button" data-hv="rel" aria-pressed="true">Relevés</button><button type="button" data-hv="h" aria-pressed="false">Heure</button><button type="button" data-hv="d" aria-pressed="false">Jour</button><button type="button" data-hv="w" aria-pressed="false">Semaine</button><button type="button" data-hv="m" aria-pressed="false">Mois</button></div>
     <div class="seg" role="group" aria-label="Type de graphique">
       <button type="button" data-view="cumul" aria-pressed="true">Cumul</button>
       <button type="button" data-view="week" aria-pressed="false">Semaine</button>
@@ -687,7 +687,7 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
   </section>
 
   <section class="card hidden" id="fiCard">
-    <details id="fiDet"><summary><h2>📄 Fichiers importés</h2><span class="fi-n" id="fiN"></span></summary><ul class="list rlist" id="fiList"></ul><p class="hint">Hors calcul des relevés.</p></details>
+    <details id="fiDet"><summary><h2>📄 Fichiers importés</h2><span class="fi-n" id="fiN"></span></summary><div class="seg seg-sm" id="fiSel" role="group" aria-label="Regrouper par"><button type="button" data-fg="d" aria-pressed="true">Jour</button><button type="button" data-fg="w" aria-pressed="false">Semaine</button><button type="button" data-fg="m" aria-pressed="false">Mois</button></div><ul class="list rlist" id="fiList"></ul><p class="hint">Hors calcul des relevés.</p></details>
   </section>
   </div>
 
@@ -2229,6 +2229,33 @@ function hrAllDays(){var s={};hrDays().forEach(function(d){s[d]=1;});Object.keys
 function hrDefDay(days){var L=days[days.length-1],n=0;for(var x=0;x<24;x++)if(hourly.c[L+'T'+pad(x)]!==undefined)n++;return n<12&&days.length>1&&L<hrNowKey().slice(0,10)?days[days.length-2]:L;}
 function hrDayLab(d){var x=parseIso(d);return DAYS_FR[x.getDay()]+' '+x.getDate()+' '+MONTHS[x.getMonth()];}
 function tpDot(c){return c===1?'<i class="tp b" title="Jour bleu"></i>':c===2?'<i class="tp w" title="Jour blanc"></i>':c===3?'<i class="tp r" title="Jour rouge"></i>':'';}
+// v54 : vues Semaine (8 semaines) et Mois (12 mois) ; fenêtre en mémoire seulement
+var hrWkEnd=null,hrMoEnd=null,HR_N={w:8,m:12};
+function hrPerKey(d,v){return v==='w'?iso(weekStart(parseIso(d))):d.slice(0,7);}
+function hrPerAdd(k,n,v){if(v==='w')return addDays(k,7*n);var y=+k.slice(0,4),m=+k.slice(5,7)-1+n;y+=Math.floor(m/12);m=((m%12)+12)%12;return y+'-'+pad(m+1);}
+function hrPerFirst(k,v){return v==='w'?k:k+'-01';}
+function hrPerLastDay(k,v){return v==='w'?addDays(k,6):addDays(hrPerAdd(k,1,'m')+'-01',-1);}
+function hrPerList(v){var a=[];hrAllDays().forEach(function(d){var k=hrPerKey(d,v);if(a[a.length-1]!==k)a.push(k);});return a;}
+function hrPerEnd(v){var L=hrPerList(v),e=v==='w'?hrWkEnd:hrMoEnd;if(!L.length)return null;if(!e||e>L[L.length-1]||e<L[0])e=L[L.length-1];if(v==='w')hrWkEnd=e;else hrMoEnd=e;return e;}
+function hrPerWin(v){var e=hrPerEnd(v),ks=[];for(var q=HR_N[v]-1;q>=0;q--)ks.push(hrPerAdd(e,-q,v));return ks;}
+function hrPerDays(ks,v){var a=hrPerFirst(ks[0],v),b=hrPerLastDay(ks[ks.length-1],v);return hrAllDays().filter(function(d){return d>=a&&d<=b;});}
+function hrDaySplit(d){var hp=0,hc=0,has=false;for(var x=0;x<24;x++){var k=d+'T'+pad(x),v=hourly.c[k];if(v!==undefined){has=true;if(hrIsHc(k))hc+=v;else hp+=v;}}
+  if(!has&&daily.c[d]!==undefined){var q=hrDayPrice(d);return {hp:daily.c[d]*(1-q.pc)/1000,hc:daily.c[d]*q.pc/1000,has:true,est:true};}return {hp:hp/1000,hc:hc/1000,has:has,est:false};}
+function hrPerLab(ks,v){if(v==='w'){var a=parseIso(ks[0]),b=parseIso(addDays(ks[ks.length-1],6));return a.getDate()+' '+MONTHS[a.getMonth()]+' → '+b.getDate()+' '+MONTHS[b.getMonth()];}
+  var f=function(k){var x=parseIso(k+'-01');return MONTHS[x.getMonth()]+' '+x.getFullYear();};return f(ks[0])+' → '+f(ks[ks.length-1]);}
+function hrPerNav(v,s){var L=hrPerList(v),e=hrPerEnd(v),st=hrPerAdd(e,-(HR_N[v]-1),v),p=null,i;
+  if(s<0){for(i=L.length-1;i>=0;i--)if(L[i]<st){p=L[i];break;}}else{for(i=0;i<L.length;i++)if(L[i]>e){p=hrPerAdd(L[i],HR_N[v]-1,v);if(p>L[L.length-1])p=L[L.length-1];break;}}
+  return p;}
+function hrPerHtml(v){var ks=hrPerWin(v),dd=hrPerDays(ks,v),keys=[],per={};ks.forEach(function(k){per[k]={k:k,hp:0,hc:0,has:false,est:false};});
+  dd.forEach(function(d){var p=per[hrPerKey(d,v)],x=hrDaySplit(d);if(!p||!x.has)return;p.hp+=x.hp;p.hc+=x.hc;p.has=true;if(x.est)p.est=true;for(var q=0;q<24;q++)keys.push(d+'T'+pad(q));});
+  var P=ks.map(function(k){return per[k];}),mx=Math.max.apply(null,P.map(function(p){return p.hp+p.hc;}))||1,INI='JFMAMJJASOND',
+    tl=function(p){var x=parseIso(hrPerFirst(p.k,v));return v==='w'?'Semaine du '+fDate(p.k):MONTHS[x.getMonth()]+' '+x.getFullYear();},
+    vl=function(t){return t>=1000&&v==='m'?nf1.format(t/1000)+'k':t>=10?nf0.format(t):nf1.format(t);};
+  var h='<div class="hr-bars d7 pw" id="hrBars">'+P.map(function(p){var t=p.hp+p.hc;
+    return '<div class="hr-b'+(p.has?'':' na')+(p.est?' est':'')+'"'+(p.has?' data-hz="'+p.k+'"':'')+' title="'+tl(p)+' : '+(p.has?nf2.format(t)+' kWh'+(p.est?' (HP/HC estimé)':''):'—')+'">'+(t>0?'<b>'+vl(t)+'</b>':'')+
+      (t>0?(p.hp>0?'<span class="bar hp" style="height:'+Math.round(p.hp/mx*85)+'%;border-radius:4px 4px '+(p.hc>0?'0 0':'1px 1px')+'"></span>':'')+(p.hc>0?'<span class="bar hc" style="height:'+Math.round(p.hc/mx*85)+'%;min-height:0;border-radius:'+(p.hp>0?'0 0 1px 1px':'4px 4px 1px 1px')+'"></span>':''):'<span class="bar" style="height:2px'+(p.has?'':';background:transparent')+'"></span>')+'</div>';}).join('')+'</div>'+
+    '<div class="hr-ax d7 pw">'+P.map(function(p){var x=parseIso(hrPerFirst(p.k,v));return '<span>'+(v==='w'?pad(x.getDate())+'/'+pad(x.getMonth()+1):INI[x.getMonth()])+'</span>';}).join('')+'</div>';
+  return {h:h,keys:keys,dd:dd,lab:hrPerLab(ks,v),prevOk:!!hrPerNav(v,-1),nextOk:!!hrPerNav(v,1)};}
 function renderHr(){renderFi();var sel=$('hrSel'),box=$('hrBox'),card=$('evolCard');if(!sel||!box||!card)return;
   var on=hrHas(),onH=hrHasH();sel.classList.toggle('hidden',!on);if(!on)hrView='rel';if(!onH&&hrView==='h')hrView='d';
   sel.querySelector('[data-hv="h"]').classList.toggle('hidden',!onH);
@@ -2244,6 +2271,8 @@ function renderHr(){renderFi();var sel=$('hrSel'),box=$('hrBox'),card=$('evolCar
       return '<div class="hr-b'+(hrIsHc(k)?' hc':'')+(v===undefined?' na':v===0?' z':'')+(k===now&&v!==undefined?' pt':'')+'" title="'+pad(j)+'h'+(k===now?' (en cours)':'')+' : '+(v===undefined?'—':nf0.format(v)+' Wh')+'">'+(j===pk&&v>0?'<b>'+nf2.format(v/1000)+'</b>':'')+'<span class="bar" style="height:'+(v>0?Math.max(1,Math.round(v/mx*85))+'%':'2px')+'"></span></div>';}).join('')+'</div>'+
       '<div class="hr-ax">'+keys.map(function(k,j){return '<span>'+(j%6===0?j+'h':'')+'</span>';}).join('')+'</div>';
     var st=hrStats(keys);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(pk>=0&&vals[pk]>0?'pic '+nf2.format(vals[pk]/1000)+' kWh · '+pk+'h':'')+'</span></div>'+hrFioul(st);}
+  else if(hrView==='w'||hrView==='m'){var R=hrPerHtml(hrView);h=R.h;lab=R.lab;prevOk=R.prevOk;nextOk=R.nextOk;keys=R.keys;
+    var st=hrStats(keys,R.dd);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(st.kwh>0?(st.est?'≈ ':'')+'HC '+nf0.format(st.hc/st.kwh*100)+' %':'')+'</span></div>'+hrFioul(st);}
   else{days=hrAllDays();var wk=function(d){return iso(weekStart(parseIso(d)));},weeks=[];days.forEach(function(d){var w=wk(d);if(weeks.indexOf(w)<0)weeks.push(w);});
     if(weeks.indexOf(hrWeek)<0)hrWeek=weeks[weeks.length-1];var wi=weeks.indexOf(hrWeek);prevOk=wi>0;nextOk=wi<weeks.length-1;
     var dd=[];for(var q=0;q<7;q++)dd.push(addDays(hrWeek,q));
@@ -2253,23 +2282,30 @@ function renderHr(){renderFi();var sel=$('hrSel'),box=$('hrBox'),card=$('evolCar
     var TP={};dd.forEach(function(d){TP[tempoCode(d)]=1;});var mxd=Math.max.apply(null,per.map(function(p){return p.hp+p.hc;}))||1,a=parseIso(dd[0]),b=parseIso(dd[6]);
     lab=a.getDate()+' '+MONTHS[a.getMonth()]+' → '+b.getDate()+' '+MONTHS[b.getMonth()];
     h+='<div class="hr-bars d7" id="hrBars" aria-hidden="true">'+per.map(function(p){var t=p.hp+p.hc;
-      return '<div class="hr-b'+(p.has?'':' na')+(p.est?' est':'')+'" title="'+fDate(p.d)+' : '+(p.has?nf2.format(t)+' kWh'+(p.est?' (HP/HC estimé)':''):'—')+'">'+(t>0?'<b>'+nf1.format(t)+'</b>':'')+
+      return '<div class="hr-b'+(p.has?'':' na')+(p.est?' est':'')+'"'+(p.has&&!p.est&&hrDayHasH(p.d)?' data-hz="'+p.d+'"':'')+' title="'+fDate(p.d)+' : '+(p.has?nf2.format(t)+' kWh'+(p.est?' (HP/HC estimé)':''):'—')+'">'+(t>0?'<b>'+nf1.format(t)+'</b>':'')+
         (t>0?(p.hp>0?'<span class="bar hp" style="height:'+Math.round(p.hp/mxd*85)+'%;border-radius:4px 4px '+(p.hc>0?'0 0':'1px 1px')+'"></span>':'')+(p.hc>0?'<span class="bar hc" style="height:'+Math.round(p.hc/mxd*85)+'%;min-height:0;border-radius:'+(p.hp>0?'0 0 1px 1px':'4px 4px 1px 1px')+'"></span>':''):'<span class="bar" style="height:2px'+(p.has?'':';background:transparent')+'"></span>')+'</div>';}).join('')+'</div>'+
       '<div class="hr-ax d7">'+per.map(function(p){var x=parseIso(p.d);return '<span>'+DAYS_FR[x.getDay()].slice(0,2)+' '+x.getDate()+tpDot(tempoCode(p.d))+'</span>';}).join('')+'</div>';
     var st=hrStats(keys,dd);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(st.kwh>0?(st.est?'≈ ':'')+'HC '+nf0.format(st.hc/st.kwh*100)+' %':'')+'</span></div>'+hrFioul(st);}
   h+='<div class="hr-leg"><span><i class="k" style="background:var(--accent)"></i>HP</span><span><i class="k" style="background:var(--accent2)"></i>HC 22h–6h</span>'+(hrView==='d'&&(TP[1]||TP[2]||TP[3])?'<span id="hrTpLeg"><i class="tp b"></i> bleu <i class="tp w"></i> blanc <i class="tp r"></i> rouge</span>':'')+(st.est?'<span id="hrEst"><i class="k est"></i>HP/HC estimé</span>':'')+'</div>'+
     (tm&&st.unk?'<div class="hr-fio" id="hrTempoNote">Couleur Tempo indisponible : prix bleu par défaut.</div>':'')+
-    '<div class="hr-del"><button class="btn small danger" type="button" data-hdel="p">🗑️ Supprimer '+(hrView==='h'?'ce jour':'la semaine')+'</button><button class="btn small danger" type="button" data-hdel="all">🗑️ Tout supprimer</button></div>';
+    '<div class="hr-del"><button class="btn small danger" type="button" data-hdel="p">🗑️ Supprimer '+(hrView==='h'?'ce jour':hrView==='d'?'la semaine':'la période')+'</button><button class="btn small danger" type="button" data-hdel="all">🗑️ Tout supprimer</button></div>';
   box.innerHTML='<div class="wnav"><button class="icon-btn" type="button" data-hn="-1" aria-label="Précédent"'+(prevOk?'':' disabled')+'>◀</button><div class="wlab"><b id="hrLab">'+lab+'</b><span>'+sub+'</span></div><button class="icon-btn" type="button" data-hn="1" aria-label="Suivant"'+(nextOk?'':' disabled')+'>▶</button></div>'+h;}
 // v52 : carte « Fichiers importés » : un jour par ligne, toucher = vue Heure (ou Jour) de ce jour ; repli en mémoire seulement (<details>)
 var nfK2=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
 function hrHasDayH(d){for(var x=0;x<24;x++)if(hourly.c[d+'T'+pad(x)]!==undefined)return true;return false;}
-function renderFi(){var card=$('fiCard');if(!card)return;var days=hrAllDays().slice().reverse();card.classList.toggle('hidden',!days.length);
+var fiG='d'; // v53 : regroupement Jour | Semaine | Mois (en mémoire seulement)
+function fiGroups(){var G={},order=[];hrAllDays().forEach(function(d){var k=fiG==='w'?iso(weekStart(parseIso(d))):fiG==='m'?d.slice(0,7):d;if(!G[k]){G[k]=[];order.push(k);}G[k].push(d);});
+  return order.reverse().map(function(k){return {k:k,days:G[k]};});}
+function fiLab(k){if(fiG==='w'){var e=addDays(k,6);return k.slice(8)+'/'+k.slice(5,7)+' → '+e.slice(8)+'/'+e.slice(5,7);}if(fiG==='m'){var x=parseIso(k+'-01');return MONTHS[x.getMonth()]+' '+x.getFullYear();}return fDate(k);}
+function renderFi(){var card=$('fiCard');if(!card)return;var days=hrAllDays();card.classList.toggle('hidden',!days.length);
   if(!days.length){$('fiList').innerHTML='';return;}$('fiN').textContent=days.length+' jour'+(days.length>1?'s':'');
-  $('fiList').innerHTML=days.map(function(d){var keys=[];for(var x=0;x<24;x++)keys.push(d+'T'+pad(x));var hH=hrHasDayH(d),st=hrStats(keys,[d]);
-    return '<li class="rrow"><button type="button" class="r-line fi-line" data-fi="'+d+'" aria-label="'+fDate(d)+' : ouvrir la vue '+(hH?'Heure':'Jour')+'"><span class="r-date">'+fDate(d)+'</span><span class="r-kwh">'+nfK2.format(st.kwh)+' kWh</span><span class="fi-tg"><span class="tag">Importé</span>'+(hH?'':'<span class="fi-est">estimé</span>')+'</span><span class="r-eur">'+fE(st.cost)+'</span><span class="r-chev" aria-hidden="true">›</span></button></li>';}).join('');}
-$('fiList').addEventListener('click',function(ev){var b=ev.target.closest('[data-fi]');if(!b)return;var d=b.getAttribute('data-fi');
-  hrView=hrHasDayH(d)?'h':'d';hrDay=d;hrWeek=iso(weekStart(parseIso(d)));renderHr();var c=$('evolCard');if(c){c.scrollIntoView({block:'start'});window.scrollBy(0,-12);}});
+  Array.prototype.forEach.call($('fiSel').querySelectorAll('button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-fg')===fiG));});
+  $('fiList').innerHTML=fiGroups().map(function(g){var keys=[];g.days.forEach(function(d){for(var x=0;x<24;x++)keys.push(d+'T'+pad(x));});
+    var st=hrStats(keys,g.days),est=g.days.some(function(d){return !hrHasDayH(d);}),last=g.days[g.days.length-1],v=fiG==='d'&&hrHasDayH(last)?'h':'d',lb=fiLab(g.k);
+    return '<li class="rrow"><button type="button" class="r-line fi-line" data-fi="'+g.k+'" data-fd="'+last+'" data-fv="'+v+'" aria-label="'+lb+' : ouvrir la vue '+(v==='h'?'Heure':'Jour')+'"><span class="r-date">'+lb+'</span><span class="r-kwh">'+nfK2.format(st.kwh)+' kWh</span><span class="fi-tg"><span class="tag">Importé</span>'+(est?'<span class="fi-est">estimé</span>':'')+'</span><span class="r-eur">'+fE(st.cost)+'</span><span class="r-chev" aria-hidden="true">›</span></button></li>';}).join('');}
+$('fiSel').addEventListener('click',function(ev){var b=ev.target.closest('[data-fg]');if(!b)return;fiG=b.getAttribute('data-fg');renderFi();});
+$('fiList').addEventListener('click',function(ev){var b=ev.target.closest('[data-fd]');if(!b)return;var d=b.getAttribute('data-fd');
+  hrView=b.getAttribute('data-fv');hrDay=d;hrWeek=iso(weekStart(parseIso(d)));renderHr();var c=$('evolCard');if(c){c.scrollIntoView({block:'start'});window.scrollBy(0,-12);}});
 // v52 : suppression des données importées (horaire + journalier) ; relevés PAC et autres clés jamais touchés
 function hrStore(k,D){if(hrCount(D))save(k,D);else{try{localStorage.removeItem(k);}catch(e){}}}
 function hrDelDays(dd){var n=0;dd.forEach(function(d){for(var x=0;x<24;x++){var k=d+'T'+pad(x);if(k in hourly.c){delete hourly.c[k];n++;}delete hourly.r[k];}
@@ -2277,15 +2313,22 @@ function hrDelDays(dd){var n=0;dd.forEach(function(d){for(var x=0;x<24;x++){var 
 function hrDelAll(){hourly={c:{},r:{}};daily={c:{},r:{}};hrStore(KEY_HOURLY,hourly);hrStore(KEY_DAILY,daily);}
 function hrDelAsk(w){var CF=' ? Tes relevés PAC ne sont pas touchés. Cette action est définitive.';
   if(w==='all'){if(!confirm('Supprimer toutes les données importées (fichiers Shelly)'+CF))return false;hrDelAll();}
-  else{var dd=[],m;if(hrView==='h'){dd=[hrDay];m='du '+hrDayLab(hrDay);}else{for(var q=0;q<7;q++)dd.push(addDays(hrWeek,q));var a=parseIso(dd[0]),b=parseIso(dd[6]);m='du '+a.getDate()+' '+MONTHS[a.getMonth()]+' au '+b.getDate()+' '+MONTHS[b.getMonth()];}
+  else{var dd=[],m;if(hrView==='h'){dd=[hrDay];m='du '+hrDayLab(hrDay);}else if(hrView==='w'||hrView==='m'){var ks=hrPerWin(hrView);dd=hrPerDays(ks,hrView);m=hrView==='w'?'du '+hrPerLab(ks,'w').replace(' → ',' au '):'de '+hrPerLab(ks,'m').replace(' → ',' à ');}else{for(var q=0;q<7;q++)dd.push(addDays(hrWeek,q));var a=parseIso(dd[0]),b=parseIso(dd[6]);m='du '+a.getDate()+' '+MONTHS[a.getMonth()]+' au '+b.getDate()+' '+MONTHS[b.getMonth()];}
     if(!confirm('Supprimer les données importées '+m+CF))return false;hrDelDays(dd);}
   renderHr();toast('Données importées supprimées');return true;}
 $('hrBox').addEventListener('click',function(ev){var b=ev.target.closest('[data-hdel]');if(b)hrDelAsk(b.getAttribute('data-hdel'));});
 $('hrSel').addEventListener('click',function(ev){var b=ev.target.closest('[data-hv]');if(!b)return;hrView=b.getAttribute('data-hv');renderHr();});
 $('hrBox').addEventListener('click',function(ev){var b=ev.target.closest('[data-hn]');if(!b||b.disabled)return;var s=+b.getAttribute('data-hn'),days=hrView==='h'?hrDays():hrAllDays();
   if(hrView==='h'){var i=days.indexOf(hrDay)+s;if(i>=0&&i<days.length)hrDay=days[i];}
+  else if(hrView==='w'||hrView==='m'){var e=hrPerNav(hrView,s);if(e){if(hrView==='w')hrWkEnd=e;else hrMoEnd=e;}}
   else{var ws=[];days.forEach(function(d){var w=iso(weekStart(parseIso(d)));if(ws.indexOf(w)<0)ws.push(w);});var j=ws.indexOf(hrWeek)+s;if(j>=0&&j<ws.length)hrWeek=ws[j];}
   renderHr();});
+// v54 : toucher une barre → vue plus fine (Mois → Semaine → Jour → Heure)
+$('hrBox').addEventListener('click',function(ev){var b=ev.target.closest('[data-hz]');if(!b)return;var k=b.getAttribute('data-hz');
+  if(hrView==='m'){var dd=hrAllDays().filter(function(d){return d.slice(0,7)===k;});if(!dd.length)return;hrView='w';hrWkEnd=hrPerKey(dd[dd.length-1],'w');}
+  else if(hrView==='w'){hrView='d';hrWeek=k;}
+  else if(hrView==='d'){if(!hrDayHasH(k))return;hrView='h';hrDay=k;}
+  else return;renderHr();});
 // import : fichier → feuille de validation → Importer / Annuler
 function hrSheetOpen(name,p){var S=hrSummary(p),hk=S.keys,mx=1,D=p.g==='d',T=D?function(k){return k.slice(8,10)+'/'+k.slice(5,7)+'/'+k.slice(2,4);}:hkTxt,u=D?'j':'h';hk.forEach(function(k){if(p.c[k]>mx)mx=p.c[k];});hrPending=p;
   $('hrSheetBody').innerHTML='<div class="hr-file"><span style="font-size:1.4rem">⚡</span><div><b id="hrGran">'+(D?p.n0+' jours · total par jour':p.n0+' h · heure par heure')+'</b><small>'+esc(name)+'</small></div></div>'+
