@@ -578,7 +578,7 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
 .tp.w{background:#f4f6f8;border:1px solid #8a96a3}.tp.r{background:#e5484d}
 .tp.b{background:#3d7bf4}
 .hr-del{display:flex;gap:8px;margin-top:12px}
-#fiCard summary{gap:8px;min-height:44px}#fiSel{margin:2px 0 4px}#fiList .fi-tg{flex-wrap:wrap;row-gap:2px}#fiList .fi-tg>*{white-space:nowrap}#fiCard .fi-n{margin-left:auto;color:var(--muted);font-size:.9rem}.fi-line{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto 12px;gap:6px}.fi-line .tag{margin-left:0}.fi-tg{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}.fi-est{color:var(--muted);font-size:.78rem}.fi-line .r-eur{color:var(--text)}.fi-line .r-chev{transform:none;width:12px}.hr-del .btn{flex:1 1 auto;padding:0 8px;font-size:.85rem;white-space:nowrap}
+#fiCard summary{gap:8px;min-height:44px;flex-wrap:wrap}#fiCard summary::after{order:1}.fi-au{order:2;flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;font-size:.84rem;color:var(--muted);margin-top:-4px}.fi-au.old #fiAuL{color:var(--accent2);font-weight:600}.fi-rf{margin-left:auto;background:none;border:0;color:var(--accent);font-weight:600;font-size:.84rem;min-height:32px;padding:0 2px;cursor:pointer}.fi-rf:disabled{opacity:.5}#fiAm{flex-basis:100%;font-size:.78rem}#fiAm:empty{display:none}#autoBox input{margin-bottom:6px}#auMsg.ok{color:var(--ok);font-weight:600}#auMsg.err{color:var(--danger);font-weight:600}#fiSel{margin:2px 0 4px}#fiList .fi-tg{flex-wrap:wrap;row-gap:2px}#fiList .fi-tg>*{white-space:nowrap}#fiCard .fi-n{margin-left:auto;color:var(--muted);font-size:.9rem}.fi-line{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto 12px;gap:6px}.fi-line .tag{margin-left:0}.fi-tg{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}.fi-est{color:var(--muted);font-size:.78rem}.po{display:inline-block;font-size:.68rem;font-weight:600;color:var(--muted);border:1px solid currentColor;border-radius:5px;padding:0 4px;line-height:1.35;white-space:nowrap;opacity:.9}.po.x{color:var(--ok)}.po.m{border-style:dashed}.fi-pk{display:block;font-size:.66rem;font-weight:400;color:var(--muted);text-align:right;line-height:1.2}.hr-po{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:.78rem;color:var(--muted);margin-top:4px}.hr-po .tp{margin-left:0}.hr-pk{display:flex;gap:2px;color:var(--muted);margin-top:1px}.hr-pk.d7{gap:8px}.hr-pk.pw{gap:6px}.hr-pk span{flex:1 1 0;text-align:center;white-space:nowrap;font-size:.6rem}.hr-pk span.x{color:var(--ok)}.hr-pk span.e{opacity:.75}.hr-pl{font-size:.74rem;color:var(--muted);margin-top:6px}.hr-pl summary{cursor:pointer;list-style:none;display:inline}.hr-pl summary::-webkit-details-marker{display:none}.hr-pl p{margin:4px 0 0;line-height:1.5}.fi-line .r-eur{color:var(--text)}.fi-line .r-chev{transform:none;width:12px}.hr-del .btn{flex:1 1 auto;padding:0 8px;font-size:.85rem;white-space:nowrap}
 .hr-sum{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:10px;font-size:.86rem;color:var(--muted)}.hr-sum b{font-size:1.15rem;color:var(--accent)}
 .hr-fio{font-size:.84rem;color:var(--muted);margin-top:4px}
 .hr-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.78rem;color:var(--muted);margin-top:8px}.hr-leg i.k{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -687,7 +687,7 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
   </section>
 
   <section class="card hidden" id="fiCard">
-    <details id="fiDet"><summary><h2>📄 Fichiers importés</h2><span class="fi-n" id="fiN"></span></summary><div class="seg seg-sm" id="fiSel" role="group" aria-label="Regrouper par"><button type="button" data-fg="d" aria-pressed="true">Jour</button><button type="button" data-fg="w" aria-pressed="false">Semaine</button><button type="button" data-fg="m" aria-pressed="false">Mois</button></div><ul class="list rlist" id="fiList"></ul><p class="hint">Hors calcul des relevés.</p></details>
+    <details id="fiDet"><summary><h2>📄 Fichiers importés</h2><span class="fi-n" id="fiN"></span><span class="fi-au hidden" id="fiAu"><span id="fiAuL"></span><button type="button" class="fi-rf" id="fiRf">↻ Actualiser</button><span id="fiAm"></span></span></summary><div class="seg seg-sm" id="fiSel" role="group" aria-label="Regrouper par"><button type="button" data-fg="d" aria-pressed="true">Jour</button><button type="button" data-fg="w" aria-pressed="false">Semaine</button><button type="button" data-fg="m" aria-pressed="false">Mois</button></div><ul class="list rlist" id="fiList"></ul><p class="hint">Hors calcul des relevés.</p></details>
   </section>
   </div>
 
@@ -1083,6 +1083,17 @@ h2:where(:not(#settingsPage *,#viewMes *)){font-size:1.06rem;font-weight:800;let
       <button type="button" data-tspread="uniform" aria-pressed="false">Uniforme</button>
     </div>
     <p class="hint">Climat : les litres entre deux relevés espacés sont répartis selon le froid habituel de chaque mois. Uniforme : à parts égales sur chaque jour.</p>
+  </details>
+
+  <details class="card sp-sec" id="secAuto">
+    <summary><span class="sp-hd"><h2>📡 Réception automatique (prise Shelly)</h2><span class="sp-line" id="sumAuto"></span></span></summary>
+    <div id="autoBox">
+      <label for="auUrl">Adresse du relais</label><input type="url" id="auUrl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="auTok">Mot de passe de lecture</label><input type="password" id="auTok" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="actions"><button class="btn small primary" type="button" id="auSave">Enregistrer</button><button class="btn small" type="button" id="auTest">Tester</button><button class="btn small danger" type="button" id="auClr">Effacer</button></div>
+      <p class="hint" id="auMsg" role="status"></p>
+      <p class="hint">Gardés seulement sur cet appareil, jamais dans la sauvegarde.</p>
+    </div>
   </details>
 
   <details class="card sp-sec" id="secSave">
@@ -1833,7 +1844,7 @@ function renderList(list){
       '<div class="li-sub">'+volText(c)+(typeof e.index==='number'?' <span class="tag">index</span>':'')+'</div>'+
       '<div class="li-sub">'+compactLine(c)+'</div>'+
       (e.start?'':'<div class="li-sub li-cop">🌡️ '+esc(copSrcText(e.copInfo))+'</div>')+
-      (e.kwh>0?'<div class="li-sub li-pe">⚡ '+(e.pe===null?'Prix de l\'électricité manquant':'Électricité '+nfN.format(Math.round(e.pe*10000)/10000)+' €/kWh'+(settings.peApplyAll?' (prix actuel, comparaison)':((histEntryAt(e.date)||{}).u?' (tarif mis à jour le '+fDate(histEntryAt(e.date).u)+')':' (prix en vigueur le '+fDate(e.date)+')')))+'</div>':'')+
+      (e.kwh>0?'<div class="li-sub li-pe">⚡ '+(e.pe===null?'Prix de l\'électricité manquant':'Électricité '+nfN.format(Math.round(e.pe*10000)/10000)+' €/kWh'+(settings.peApplyAll?' (prix actuel, comparaison)':((histEntryAt(e.date)||{}).u?' (tarif mis à jour le '+fDate(histEntryAt(e.date).u)+')':' (prix en vigueur le '+fDate(e.date)+')')))+(poOn()&&e.pe!==null?' '+poTag('m'):'')+'</div>':'')+
       (sub?'<div class="li-sub">'+esc(sub)+'</div>':'')+
       (e.note?'<div class="li-note">📝 '+esc(e.note)+'</div>':'')+
       '<div class="r-act"><button class="btn small" type="button" data-edit="'+e.id+'">✏️ Modifier</button>'+
@@ -2145,7 +2156,9 @@ var KEY_HOURLY='pacFioul.hourly.v1', KEY_DAILY='pacFioul.daily.v1', KEY_TEMPO='p
 var HK_RE=/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3])$/, DAYS_FR=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
 var DK_RE=/^\d{4}-\d{2}-\d{2}$/;
 function hrNorm(o,re){re=re||HK_RE;var r={c:{},r:{}};if(!o||typeof o!=='object')return r;
-  ['c','r'].forEach(function(k){var m=o[k];if(m&&typeof m==='object')Object.keys(m).forEach(function(h){var v=m[h];if(re.test(h)&&typeof v==='number'&&isFinite(v)&&v>=0&&v<=100000)r[k][h]=v;});});return r;}
+  ['c','r'].forEach(function(k){var m=o[k];if(m&&typeof m==='object')Object.keys(m).forEach(function(h){var v=m[h];if(re.test(h)&&typeof v==='number'&&isFinite(v)&&v>=0&&v<=100000)r[k][h]=v;});});
+  if(re===HK_RE&&o.a&&typeof o.a==='object'){var a={},na=0;Object.keys(o.a).forEach(function(h){if(r.c[h]!==undefined){a[h]=1;na++;}});if(na)r.a=a;} // v55 : heures reçues automatiquement
+  return r;}
 function hrCount(o){return o&&o.c?Object.keys(o.c).length:0;}
 function tempoNorm(o){var r={d:{},t:0};if(!o||typeof o!=='object')return r;
   if(o.d&&typeof o.d==='object')Object.keys(o.d).forEach(function(k){var v=o.d[k];if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&(v===1||v===2||v===3))r.d[k]=v;});
@@ -2186,7 +2199,7 @@ function hrSummary(p){var ks=Object.keys(p.c).sort(),wh=0,pres=0,rw=0,hk=0,today
   return {keys:ks,n:ks.length,wh:wh,present:pres,ret:rw,first:ks[0]||null,last:last,hkept:hk,partial:!!last&&last.slice(0,10)===today};} // jour (ou dernière heure) d'aujourd'hui : encore partiel
 // réimport : une heure déjà présente est remplacée (jamais comptée deux fois)
 // le total par jour est rangé à part : il ne remplace jamais l'horaire (à l'affichage, l'horaire d'un jour prime)
-function hrMerge(p){var D=p.g==='d'?daily:hourly;Object.keys(p.c).forEach(function(k){D.c[k]=p.c[k];});
+function hrMerge(p){var D=p.g==='d'?daily:hourly;Object.keys(p.c).forEach(function(k){D.c[k]=p.c[k];if(D.a)delete D.a[k];});if(D.a&&!Object.keys(D.a).length)delete D.a;
   Object.keys(p.r).forEach(function(k){if(p.r[k]>0)D.r[k]=p.r[k];else delete D.r[k];});save(p.g==='d'?KEY_DAILY:KEY_HOURLY,D);}
 function hkNext(k){var d=k.slice(0,10),h=+k.slice(11,13)+1;return h>23?addDays(d,1)+'T00':d+'T'+pad(h);}
 function hkTxt(k){return k.slice(8,10)+'/'+k.slice(5,7)+'/'+k.slice(2,4)+' '+k.slice(11,13)+'h';}
@@ -2216,11 +2229,20 @@ function hrDayPrice(d){var el=elAt(d),pc=elPc(el),P=function(v,dv){return okP(v)
   if(el.mode==='hphc')return {p:(1-pc)*P(el.hp,EDF.hp)+pc*P(el.hc,EDF.hc),pc:pc};
   return {p:P(el.base,EDF.base),pc:pc};}
 // période : kWh, coût réel heure par heure, et même comparaison que le Suivi (COP du jour, rendement et prix du combustible des Réglages)
-function hrStats(keys,days){var kwh=0,cost=0,hc=0,byDay={},unk=false,est=false,tm=settings.elecMode==='tempo';
-  keys.forEach(function(k){var v=hourly.c[k];if(v===undefined)return;v/=1000;kwh+=v;cost+=v*hrPrice(k);if(hrIsHc(k))hc+=v;var d=k.slice(0,10);byDay[d]=(byDay[d]||0)+v;if(tm&&v>0&&!tempoCode(tempoDayOf(k)))unk=true;});
+function hrStats(keys,days){var kwh=0,cost=0,hc=0,xk=0,byDay={},unk=false,est=false,tm=settings.elecMode==='tempo';
+  keys.forEach(function(k){var v=hourly.c[k];if(v===undefined)return;v/=1000;kwh+=v;cost+=v*hrPrice(k);if(!(elAt(k.slice(0,10)).mode==='tempo'&&!tempoCode(tempoDayOf(k))))xk+=v;if(hrIsHc(k))hc+=v;var d=k.slice(0,10);byDay[d]=(byDay[d]||0)+v;if(tm&&v>0&&!tempoCode(tempoDayOf(k)))unk=true;});
   (days||[]).forEach(function(d){var v=daily.c[d];if(v===undefined||hrDayHasH(d))return;v/=1000;var q=hrDayPrice(d);kwh+=v;cost+=v*q.p;hc+=v*q.pc;byDay[d]=(byDay[d]||0)+v;if(v>0)est=true;if(tm&&v>0&&(!tempoCode(d)||!tempoCode(addDays(d,-1))))unk=true;});
   var heat=0;Object.keys(byDay).forEach(function(d){heat+=byDay[d]*copFor(d,addDays(d,1)).cop;});
-  return {kwh:kwh,cost:cost,hc:hc,c:kwh>0?calc(kwh,null,heat/kwh,cost/kwh):null,unk:unk,est:est};}
+  return {kwh:kwh,cost:cost,hc:hc,xk:xk,c:kwh>0?calc(kwh,null,heat/kwh,cost/kwh):null,unk:unk,est:est};}
+// v55 : origine du prix. exact = heures reçues (Tempo : couleur du jour 6h→6h × HP/HC 22h–6h) ; estimé = total du jour seul (part HC des Réglages), ou couleur Tempo inconnue (bleu) ; moyen = relevés (prix moyen de saison)
+function poOn(){return true;}
+function poO(st){return st&&st.kwh>0?(st.xk>=st.kwh-1e-9?'x':'e'):'';}
+function poTag(o){return o?'<span class="po '+o+'">'+(o==='x'?'exact':o==='e'?'estimé':'moyen')+'</span>':'';}
+function poP(st,n){return st&&st.kwh>0?(st.cost/st.kwh).toFixed(n||3).replace('.',','):'';}
+function poLine(st,c){var o=poO(st);return o?'<div class="hr-po" id="hrPo">'+poTag(o)+(c?tpDot(c):'')+'<span>moy. '+poP(st)+' €/kWh</span></div>':'';}
+function poKeys(ds){var ks=[];ds.forEach(function(d){for(var x=0;x<24;x++)ks.push(d+'T'+pad(x));});return ks;}
+function poAx(list,cls){return '<div class="hr-pk d7'+cls+'" id="hrPk">'+list.map(function(st){var o=poO(st);return '<span'+(o?' class="'+o+'" title="'+(o==='x'?'exact':'estimé')+' · '+poP(st)+' €/kWh"':'')+'>'+(o?poP(st,2):'')+'</span>';}).join('')+'</div>';}
+function poLeg(){var m=settings.elecMode;return '<details class="hr-pl" id="hrPoLeg"><summary>ⓘ Origine du prix (€/kWh moyen)</summary><p><span class="po x">exact</span> heures reçues'+(m==='tempo'?' : couleur du jour (6h→6h) × HP/HC 22h–6h':m==='hphc'?' : HP/HC 22h–6h':'')+'<br><span class="po e">estimé</span> total du jour seul'+(m==='base'?' (HP/HC estimé)':' : part HC des Réglages'+(m==='tempo'?' ; couleur inconnue : bleu':''))+'<br><span class="po m">moyen</span> relevés : prix moyen de saison</p></details>';}
 function hrFioul(st){var c=st.c;if(!c||!c.sides.length)return '';var ms=mainSide(c),gz=c.hasGaz&&!c.hasFioul;
   return '<div class="hr-fio" id="hrFio">≈ '+(gz?fKwhG(c.kwhGaz):fL(c.litres)+' de fioul')+(ms&&ms.net!==null?' · économie '+fE(ms.net)+(c.sides.length>1?' ('+esc(ms.name)+')':''):'')+'</div>';}
 function hrDays(){var s={};Object.keys(hourly.c).forEach(function(k){s[k.slice(0,10)]=1;});return Object.keys(s).sort();}
@@ -2254,7 +2276,8 @@ function hrPerHtml(v){var ks=hrPerWin(v),dd=hrPerDays(ks,v),keys=[],per={};ks.fo
   var h='<div class="hr-bars d7 pw" id="hrBars">'+P.map(function(p){var t=p.hp+p.hc;
     return '<div class="hr-b'+(p.has?'':' na')+(p.est?' est':'')+'"'+(p.has?' data-hz="'+p.k+'"':'')+' title="'+tl(p)+' : '+(p.has?nf2.format(t)+' kWh'+(p.est?' (HP/HC estimé)':''):'—')+'">'+(t>0?'<b>'+vl(t)+'</b>':'')+
       (t>0?(p.hp>0?'<span class="bar hp" style="height:'+Math.round(p.hp/mx*85)+'%;border-radius:4px 4px '+(p.hc>0?'0 0':'1px 1px')+'"></span>':'')+(p.hc>0?'<span class="bar hc" style="height:'+Math.round(p.hc/mx*85)+'%;min-height:0;border-radius:'+(p.hp>0?'0 0 1px 1px':'4px 4px 1px 1px')+'"></span>':''):'<span class="bar" style="height:2px'+(p.has?'':';background:transparent')+'"></span>')+'</div>';}).join('')+'</div>'+
-    '<div class="hr-ax d7 pw">'+P.map(function(p){var x=parseIso(hrPerFirst(p.k,v));return '<span>'+(v==='w'?pad(x.getDate())+'/'+pad(x.getMonth()+1):INI[x.getMonth()])+'</span>';}).join('')+'</div>';
+    '<div class="hr-ax d7 pw">'+P.map(function(p){var x=parseIso(hrPerFirst(p.k,v));return '<span>'+(v==='w'?pad(x.getDate())+'/'+pad(x.getMonth()+1):INI[x.getMonth()])+'</span>';}).join('')+'</div>'+
+    poAx(P.map(function(p){if(!p.has)return null;var ds=dd.filter(function(d){return hrPerKey(d,v)===p.k;});return hrStats(poKeys(ds),ds);}),' pw');
   return {h:h,keys:keys,dd:dd,lab:hrPerLab(ks,v),prevOk:!!hrPerNav(v,-1),nextOk:!!hrPerNav(v,1)};}
 function renderHr(){renderFi();var sel=$('hrSel'),box=$('hrBox'),card=$('evolCard');if(!sel||!box||!card)return;
   var on=hrHas(),onH=hrHasH();sel.classList.toggle('hidden',!on);if(!on)hrView='rel';if(!onH&&hrView==='h')hrView='d';
@@ -2270,9 +2293,9 @@ function renderHr(){renderFi();var sel=$('hrSel'),box=$('hrBox'),card=$('evolCar
     h+='<div class="hr-bars" id="hrBars" aria-hidden="true">'+vals.map(function(v,j){var k=keys[j];
       return '<div class="hr-b'+(hrIsHc(k)?' hc':'')+(v===undefined?' na':v===0?' z':'')+(k===now&&v!==undefined?' pt':'')+'" title="'+pad(j)+'h'+(k===now?' (en cours)':'')+' : '+(v===undefined?'—':nf0.format(v)+' Wh')+'">'+(j===pk&&v>0?'<b>'+nf2.format(v/1000)+'</b>':'')+'<span class="bar" style="height:'+(v>0?Math.max(1,Math.round(v/mx*85))+'%':'2px')+'"></span></div>';}).join('')+'</div>'+
       '<div class="hr-ax">'+keys.map(function(k,j){return '<span>'+(j%6===0?j+'h':'')+'</span>';}).join('')+'</div>';
-    var st=hrStats(keys);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(pk>=0&&vals[pk]>0?'pic '+nf2.format(vals[pk]/1000)+' kWh · '+pk+'h':'')+'</span></div>'+hrFioul(st);}
+    var st=hrStats(keys);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(pk>=0&&vals[pk]>0?'pic '+nf2.format(vals[pk]/1000)+' kWh · '+pk+'h':'')+'</span></div>'+poLine(st,elAt(hrDay).mode==='tempo'?c0:0)+hrFioul(st);}
   else if(hrView==='w'||hrView==='m'){var R=hrPerHtml(hrView);h=R.h;lab=R.lab;prevOk=R.prevOk;nextOk=R.nextOk;keys=R.keys;
-    var st=hrStats(keys,R.dd);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(st.kwh>0?(st.est?'≈ ':'')+'HC '+nf0.format(st.hc/st.kwh*100)+' %':'')+'</span></div>'+hrFioul(st);}
+    var st=hrStats(keys,R.dd);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(st.kwh>0?(st.est?'≈ ':'')+'HC '+nf0.format(st.hc/st.kwh*100)+' %':'')+'</span></div>'+poLine(st,0)+hrFioul(st);}
   else{days=hrAllDays();var wk=function(d){return iso(weekStart(parseIso(d)));},weeks=[];days.forEach(function(d){var w=wk(d);if(weeks.indexOf(w)<0)weeks.push(w);});
     if(weeks.indexOf(hrWeek)<0)hrWeek=weeks[weeks.length-1];var wi=weeks.indexOf(hrWeek);prevOk=wi>0;nextOk=wi<weeks.length-1;
     var dd=[];for(var q=0;q<7;q++)dd.push(addDays(hrWeek,q));
@@ -2285,8 +2308,9 @@ function renderHr(){renderFi();var sel=$('hrSel'),box=$('hrBox'),card=$('evolCar
       return '<div class="hr-b'+(p.has?'':' na')+(p.est?' est':'')+'"'+(p.has&&!p.est&&hrDayHasH(p.d)?' data-hz="'+p.d+'"':'')+' title="'+fDate(p.d)+' : '+(p.has?nf2.format(t)+' kWh'+(p.est?' (HP/HC estimé)':''):'—')+'">'+(t>0?'<b>'+nf1.format(t)+'</b>':'')+
         (t>0?(p.hp>0?'<span class="bar hp" style="height:'+Math.round(p.hp/mxd*85)+'%;border-radius:4px 4px '+(p.hc>0?'0 0':'1px 1px')+'"></span>':'')+(p.hc>0?'<span class="bar hc" style="height:'+Math.round(p.hc/mxd*85)+'%;min-height:0;border-radius:'+(p.hp>0?'0 0 1px 1px':'4px 4px 1px 1px')+'"></span>':''):'<span class="bar" style="height:2px'+(p.has?'':';background:transparent')+'"></span>')+'</div>';}).join('')+'</div>'+
       '<div class="hr-ax d7">'+per.map(function(p){var x=parseIso(p.d);return '<span>'+DAYS_FR[x.getDay()].slice(0,2)+' '+x.getDate()+tpDot(tempoCode(p.d))+'</span>';}).join('')+'</div>';
-    var st=hrStats(keys,dd);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(st.kwh>0?(st.est?'≈ ':'')+'HC '+nf0.format(st.hc/st.kwh*100)+' %':'')+'</span></div>'+hrFioul(st);}
-  h+='<div class="hr-leg"><span><i class="k" style="background:var(--accent)"></i>HP</span><span><i class="k" style="background:var(--accent2)"></i>HC 22h–6h</span>'+(hrView==='d'&&(TP[1]||TP[2]||TP[3])?'<span id="hrTpLeg"><i class="tp b"></i> bleu <i class="tp w"></i> blanc <i class="tp r"></i> rouge</span>':'')+(st.est?'<span id="hrEst"><i class="k est"></i>HP/HC estimé</span>':'')+'</div>'+
+    h+=poAx(per.map(function(p){return p.has?hrStats(poKeys([p.d]),[p.d]):null;}),'');
+    var st=hrStats(keys,dd);h+='<div class="hr-sum"><span><b>'+nf2.format(st.kwh)+'</b> kWh · '+fE(st.cost)+'</span><span>'+(st.kwh>0?(st.est?'≈ ':'')+'HC '+nf0.format(st.hc/st.kwh*100)+' %':'')+'</span></div>'+poLine(st,0)+hrFioul(st);}
+  h+='<div class="hr-leg"><span><i class="k" style="background:var(--accent)"></i>HP</span><span><i class="k" style="background:var(--accent2)"></i>HC 22h–6h</span>'+(hrView==='d'&&(TP[1]||TP[2]||TP[3])?'<span id="hrTpLeg"><i class="tp b"></i> bleu <i class="tp w"></i> blanc <i class="tp r"></i> rouge</span>':'')+(st.est?'<span id="hrEst"><i class="k est"></i>HP/HC estimé</span>':'')+'</div>'+poLeg()+
     (tm&&st.unk?'<div class="hr-fio" id="hrTempoNote">Couleur Tempo indisponible : prix bleu par défaut.</div>':'')+
     '<div class="hr-del"><button class="btn small danger" type="button" data-hdel="p">🗑️ Supprimer '+(hrView==='h'?'ce jour':hrView==='d'?'la semaine':'la période')+'</button><button class="btn small danger" type="button" data-hdel="all">🗑️ Tout supprimer</button></div>';
   box.innerHTML='<div class="wnav"><button class="icon-btn" type="button" data-hn="-1" aria-label="Précédent"'+(prevOk?'':' disabled')+'>◀</button><div class="wlab"><b id="hrLab">'+lab+'</b><span>'+sub+'</span></div><button class="icon-btn" type="button" data-hn="1" aria-label="Suivant"'+(nextOk?'':' disabled')+'>▶</button></div>'+h;}
@@ -2297,19 +2321,60 @@ var fiG='d'; // v53 : regroupement Jour | Semaine | Mois (en mémoire seulement)
 function fiGroups(){var G={},order=[];hrAllDays().forEach(function(d){var k=fiG==='w'?iso(weekStart(parseIso(d))):fiG==='m'?d.slice(0,7):d;if(!G[k]){G[k]=[];order.push(k);}G[k].push(d);});
   return order.reverse().map(function(k){return {k:k,days:G[k]};});}
 function fiLab(k){if(fiG==='w'){var e=addDays(k,6);return k.slice(8)+'/'+k.slice(5,7)+' → '+e.slice(8)+'/'+e.slice(5,7);}if(fiG==='m'){var x=parseIso(k+'-01');return MONTHS[x.getMonth()]+' '+x.getFullYear();}return fDate(k);}
-function renderFi(){var card=$('fiCard');if(!card)return;var days=hrAllDays();card.classList.toggle('hidden',!days.length);
-  if(!days.length){$('fiList').innerHTML='';return;}$('fiN').textContent=days.length+' jour'+(days.length>1?'s':'');
+function renderFi(){var card=$('fiCard');if(!card)return;var days=hrAllDays();card.classList.toggle('hidden',!days.length&&!autoOn());autoLine();
+  if(!days.length){$('fiList').innerHTML='';$('fiN').textContent='';return;}$('fiN').textContent=days.length+' jour'+(days.length>1?'s':'');
   Array.prototype.forEach.call($('fiSel').querySelectorAll('button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-fg')===fiG));});
   $('fiList').innerHTML=fiGroups().map(function(g){var keys=[];g.days.forEach(function(d){for(var x=0;x<24;x++)keys.push(d+'T'+pad(x));});
     var st=hrStats(keys,g.days),est=g.days.some(function(d){return !hrHasDayH(d);}),last=g.days[g.days.length-1],v=fiG==='d'&&hrHasDayH(last)?'h':'d',lb=fiLab(g.k);
-    return '<li class="rrow"><button type="button" class="r-line fi-line" data-fi="'+g.k+'" data-fd="'+last+'" data-fv="'+v+'" aria-label="'+lb+' : ouvrir la vue '+(v==='h'?'Heure':'Jour')+'"><span class="r-date">'+lb+'</span><span class="r-kwh">'+nfK2.format(st.kwh)+' kWh</span><span class="fi-tg"><span class="tag">Importé</span>'+(est?'<span class="fi-est">estimé</span>':'')+'</span><span class="r-eur">'+fE(st.cost)+'</span><span class="r-chev" aria-hidden="true">›</span></button></li>';}).join('');}
+    return '<li class="rrow"><button type="button" class="r-line fi-line" data-fi="'+g.k+'" data-fd="'+last+'" data-fv="'+v+'" aria-label="'+lb+' : ouvrir la vue '+(v==='h'?'Heure':'Jour')+'"><span class="r-date">'+lb+(fiG==='d'&&settings.elecMode==='tempo'?tpDot(tempoCode(g.k)):'')+'</span><span class="r-kwh">'+nfK2.format(st.kwh)+' kWh</span><span class="fi-tg"><span class="tag">'+(fiIsAuto(g.days)?'Auto':'Importé')+'</span>'+(poO(st)==='e'?'<span class="po e fi-est">estimé</span>':poTag(poO(st)))+'</span><span class="r-eur">'+fE(st.cost)+(st.kwh>0?'<small class="fi-pk">'+poP(st)+' €/kWh</small>':'')+'</span><span class="r-chev" aria-hidden="true">›</span></button></li>';}).join('');}
 $('fiSel').addEventListener('click',function(ev){var b=ev.target.closest('[data-fg]');if(!b)return;fiG=b.getAttribute('data-fg');renderFi();});
 $('fiList').addEventListener('click',function(ev){var b=ev.target.closest('[data-fd]');if(!b)return;var d=b.getAttribute('data-fd');
   hrView=b.getAttribute('data-fv');hrDay=d;hrWeek=iso(weekStart(parseIso(d)));renderHr();var c=$('evolCard');if(c){c.scrollIntoView({block:'start'});window.scrollBy(0,-12);}});
+// v55 : réception automatique (relais Cloudflare de la prise Shelly). Adresse et mot de passe : localStorage seulement,
+// jamais dans la sauvegarde. Heures en Wh, clés AAAA-MM-JJTHH heure de Paris (02h du passage à l'heure d'hiver : une seule clé,
+// déjà additionnée par la prise) ; une heure reçue remplace la même heure (jamais comptée deux fois).
+var KEY_AURL='pacFioul.auto.url',KEY_AREAD='pacFioul.auto.read',AUTO_DEF='https://pac-releves.9trym2cdbn.workers.dev',autoBusy=false,autoMsg='',autoT=0;
+function lsGet(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+function autoUrlOk(u){return /^https:\/\/[^\s\/?#]+(\/[^\s?#]*)?$/.test(u);}
+function autoUrlN(u){return String(u||'').trim().replace(/\/+$/,'');}
+function autoUrl(){var u=autoUrlN(lsGet(KEY_AURL));return autoUrlOk(u)?u:'';}
+function autoTok(){return lsGet(KEY_AREAD);}
+function autoOn(){return !!(autoUrl()&&autoTok());}
+function autoLast(){var m='';if(hourly.a)for(var k in hourly.a)if(k>m)m=k;return m;}
+function autoSince(){var L=autoLast();return L?addDays(L.slice(0,10),-2)+L.slice(10):iso(new Date(hrNow().getTime()-31*864e5))+'T00';}
+function hkTime(k){return new Date(+k.slice(0,4),+k.slice(5,7)-1,+k.slice(8,10),+k.slice(11,13)).getTime();}
+function autoMerge(items){if(!Array.isArray(items))return 0;var now=hrNowKey(),n=0;if(!hourly.a)hourly.a={};
+  items.forEach(function(it){var h=it&&it.h,wh=it&&it.wh;if(typeof h!=='string'||!HK_RE.test(h)||h>now||typeof wh!=='number'||!isFinite(wh)||wh<0||wh>100000)return;
+    if(hourly.c[h]!==wh||!hourly.a[h]){hourly.c[h]=wh;hourly.a[h]=1;n++;}});
+  if(!Object.keys(hourly.a).length)delete hourly.a;if(n)save(KEY_HOURLY,hourly);return n;}
+function autoGet(path,url,tok){var ctl=typeof AbortController==='function'?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},15000);
+  return fetch(url+path,{headers:{Authorization:'Bearer '+tok,Accept:'application/json'},cache:'no-store',signal:ctl?ctl.signal:undefined})
+    .then(function(r){clearTimeout(tm);if(r.status===401||r.status===403)throw new Error('auth');if(!r.ok)throw new Error('http');return r.json();},function(e){clearTimeout(tm);throw e;});}
+function autoErrTxt(e){return e&&e.message==='auth'?'Mot de passe refusé':(typeof navigator!=='undefined'&&navigator.onLine===false)?'Hors ligne':'Relais injoignable';}
+function autoFetch(manual){if(!autoOn()||autoBusy||typeof fetch!=='function')return;autoBusy=true;autoT=Date.now();if(manual){autoMsg='Actualisation…';autoLine();}
+  autoGet('/hours?since='+encodeURIComponent(autoSince()),autoUrl(),autoTok()).then(function(j){if(!j||j.ok===false)throw new Error('http');var k=autoMerge(j.items);
+    autoMsg=manual?(k?k+' h reçue'+(k>1?'s':''):'À jour'):'';}).catch(function(e){autoMsg=autoErrTxt(e);}).then(function(){autoBusy=false;renderHr();});}
+function autoAgo(k){var d=k.slice(0,10),t=iso(hrNow()),h=(+k.slice(11,13))+'h';return d===t?'aujourd\'hui '+h:d===addDays(t,-1)?'hier '+h:d.slice(8,10)+'/'+d.slice(5,7)+' '+h;}
+function autoLine(){var el=$('fiAu');if(!el)return;var on=autoOn();el.classList.toggle('hidden',!on);if(!on)return;var L=autoLast();
+  $('fiAuL').textContent=L?'Dernière heure reçue : '+autoAgo(L):'Aucune heure reçue';el.classList.toggle('old',!L||hrNow().getTime()-(hkTime(L)+3600e3)>3*3600e3);
+  $('fiAm').textContent=autoMsg;$('fiRf').disabled=autoBusy;}
+function fiIsAuto(dd){if(!hourly.a)return false;return dd.every(function(d){var any=false;for(var x=0;x<24;x++){var k=d+'T'+pad(x);if(hourly.c[k]!==undefined){if(!hourly.a[k])return false;any=true;}}return any;});}
+$('fiRf').addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();autoFetch(true);});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&Date.now()-autoT>60000)autoFetch(false);});
+// Réglages
+function autoFill(){$('auUrl').value=lsGet(KEY_AURL)||AUTO_DEF;$('auTok').value='';$('auTok').placeholder=autoTok()?'Enregistré':'';$('sumAuto').textContent=autoOn()?'Activée':'';}
+function auSay(m,c){var e=$('auMsg');e.textContent=m;e.className='hint'+(c?' '+c:'');}
+function auForm(){var u=autoUrlN($('auUrl').value),t=$('auTok').value.trim()||autoTok();if(!autoUrlOk(u)){auSay('Adresse invalide (https://…)','err');return null;}if(!t){auSay('Mot de passe manquant','err');return null;}return {u:u,t:t};}
+$('auSave').addEventListener('click',function(){var f=auForm();if(!f)return;try{localStorage.setItem(KEY_AURL,f.u);localStorage.setItem(KEY_AREAD,f.t);}catch(e){auSay('Impossible d\'enregistrer','err');return;}
+  autoFill();auSay('Enregistré','ok');renderFi();autoFetch(true);});
+$('auTest').addEventListener('click',function(){var f=auForm();if(!f)return;auSay('Test…','');
+  autoGet('/ping',f.u,f.t).then(function(j){if(!j||j.ok!==true)throw new Error('http');auSay('OK'+(j.last?' · dernière heure '+autoAgo(j.last):''),'ok');}).catch(function(e){auSay('Erreur : '+autoErrTxt(e).toLowerCase(),'err');});});
+$('auClr').addEventListener('click',function(){try{localStorage.removeItem(KEY_AURL);localStorage.removeItem(KEY_AREAD);}catch(e){}autoMsg='';autoFill();auSay('Effacé (les heures déjà reçues sont gardées)','');renderFi();});
+autoFill();
 // v52 : suppression des données importées (horaire + journalier) ; relevés PAC et autres clés jamais touchés
 function hrStore(k,D){if(hrCount(D))save(k,D);else{try{localStorage.removeItem(k);}catch(e){}}}
-function hrDelDays(dd){var n=0;dd.forEach(function(d){for(var x=0;x<24;x++){var k=d+'T'+pad(x);if(k in hourly.c){delete hourly.c[k];n++;}delete hourly.r[k];}
-  if(d in daily.c){delete daily.c[d];n++;}delete daily.r[d];});hrStore(KEY_HOURLY,hourly);hrStore(KEY_DAILY,daily);return n;}
+function hrDelDays(dd){var n=0;dd.forEach(function(d){for(var x=0;x<24;x++){var k=d+'T'+pad(x);if(k in hourly.c){delete hourly.c[k];n++;}delete hourly.r[k];if(hourly.a)delete hourly.a[k];}
+  if(d in daily.c){delete daily.c[d];n++;}delete daily.r[d];});if(hourly.a&&!Object.keys(hourly.a).length)delete hourly.a;hrStore(KEY_HOURLY,hourly);hrStore(KEY_DAILY,daily);return n;}
 function hrDelAll(){hourly={c:{},r:{}};daily={c:{},r:{}};hrStore(KEY_HOURLY,hourly);hrStore(KEY_DAILY,daily);}
 function hrDelAsk(w){var CF=' ? Tes relevés PAC ne sont pas touchés. Cette action est définitive.';
   if(w==='all'){if(!confirm('Supprimer toutes les données importées (fichiers Shelly)'+CF))return false;hrDelAll();}
@@ -3495,7 +3560,7 @@ $('spChips').addEventListener('click',function(ev){var b=ev.target.closest('.sp-
 $('btnSpClose').addEventListener('click',closeSettings);
 document.addEventListener('keydown',function(ev){if(spOpen&&ev.key==='Escape')closeSettings();});
 // Enregistrement automatique : saisie (petit délai) ou changement (immédiat). Cuve et import à part.
-function autoTarget(t){return t&&t.closest&&!t.closest('#tankBox')&&!t.closest('#peUpdBox')&&t.id!=='fileImport'&&(t.closest('#settingsPage')||t.closest('#viewMes'));}
+function autoTarget(t){return t&&t.closest&&!t.closest('#autoBox')&&!t.closest('#tankBox')&&!t.closest('#peUpdBox')&&t.id!=='fileImport'&&(t.closest('#settingsPage')||t.closest('#viewMes'));}
 $('viewMes').addEventListener('input',function(ev){if(autoTarget(ev.target))scheduleSave(700);});
 $('viewMes').addEventListener('change',function(ev){if(autoTarget(ev.target))scheduleSave(0);});
 $('settingsPage').addEventListener('input',function(ev){if(ev.target.closest('#tankBox')){scheduleTank(700);return;}if(autoTarget(ev.target))scheduleSave(700);});
@@ -4014,12 +4079,14 @@ var tt;function toast(m,ms){var t=$('toast');t.textContent=m;t.classList.add('sh
 window.__pac={tBin:function(t){return tBin(t);},avgGroups:function(a){return avgGroups(a);},sessCalc:function(r,e){return sessCalc(r,e);},measCheck:function(ms,e){return measCheck(ms,e);},measCarnotOk:function(m){return measCarnotOk(m);},dju:function(){return DJU_METZ.join(',');},copCurves:function(){return COP_CURVES;},copAtT:function(T){return copAtT(T,settings);},setCurveUI:function(k){$('sMach').value=k?'cv:'+k:'';syncCurve();updateCopPreview();},kpiData:function(){var d=kpiData();delete d.c;return d;},openKpi:function(k){openKpi(k);},closeKpi:function(){closeKpi();},statRange:function(){return statRange();},statSide:function(){return statSide;},favId:function(){return favId();},simRun:simRun,simRedFrac:simRedFrac,simElecPrice:simElecPrice,simShape:function(){return simShape();},simMonthList:simMonthList,simState:function(){return simSt;},normSim:normSim,simMigrate:simMigrate,SIM_MACH:SIM_MACH,addDays:addDays,daysBetween:daysBetween,fioulPrice:function(){return fioulPrice();},showView:function(v){showView(v);},simCompute:simCompute,ecsYear:ecsYear,pacLimitT:pacLimitT,heatCalib:function(kwe){var l=resolved(),d0=settings.pacDate||(l.length?l[0].date:null);return heatCalib(d0?l.filter(function(e){return e.date>=d0;}):[],settings,kwe);},roiCompute:function(){return roiCompute(resolved());},simCop:function(){return simCop();},tempPeriod:function(a,b){return tempPeriod(a,b);},showTemp:function(){return showTemp;},chartSeries:function(){readColors();return chartSeries(calc(1)).map(function(x){return {key:x.key,unit:x.unit,col:x.col,name:x.name};});},evolState:function(){return {page:evolPage,unit:evolUnitSel,view:chartView};},copInterp:copInterp,copFor:function(a,b){return copFor(a,b);},monthCop:function(m){return monthCop(m);},fetchTemps:fetchTemps,tempCache:function(){return tempCache;},calcRange:function(f,t){return calcRange(resolved(),f,t);},consoByPeriod:function(v,m){return consoByPeriod(tankAnalyze(),v,m);},tankGeom:tankGeom,tankAnalyze:tankAnalyze,tank:function(){return tank;},tankReads:function(){return tankReads;},calc:calc,simCompute:simCompute,resolved:resolved,DEFAULTS:DEFAULTS,normalizeSettings:normalizeSettings,elecPrice:elecPrice,settings:function(){return settings;}};
 window.__pac.ov=function(){return kwhOverlaps(entries);}; // v34 : test
 window.__pac.kpiC=function(){return kpiData().c;}; // v34 : test
+window.__pac.auto={merge:autoMerge,fetch:autoFetch,since:autoSince,last:autoLast,on:autoOn}; // v55 : test
 window.__pac.hr={parse:hrParse,summary:hrSummary,price:hrPrice,stats:hrStats,tempoDayOf:tempoDayOf,data:function(){return hourly;},daily:function(){return daily;},prep:hrPrep,dayPrice:hrDayPrice,setNow:function(t){hrNowT=t;},tempo:function(){return tempoC;},view:function(v,d){if(v)hrView=v;if(d!==undefined){hrDay=d;hrWeek=d?iso(weekStart(parseIso(d))):null;}renderHr();return hrView;},calc:calc,copFor:function(a,b){return copFor(a,b);},el:function(d){return elAt(d,settings);},EDF:EDF}; // v52 : test
 window.__pac.evol=function(){return evolLast?{unit:evolLast.unit,units:evolLast.ser.map(function(x){return x.unit;}),ser:evolLast.ser.map(function(x){return x.short;}),xc:(evolLast.xc||[]).map(function(x){return x.short;}),data:evolLast.data.map(function(d){return {k:d.k,v:d.v,x:d.x};})}:null;}; // v34 : test
 
 fillSettings();setMode('kwh');resetForm();renderAll();setSimType(simSt.type);simReady=true;
 renderTempButtons();climSync();if((settings.copMode==='temp'&&settings.tReal)||showTemp)setTimeout(function(){fetchTemps(false);},300);
 fillTank();setTankMode('niveau');$('tkDate').value=todayIso();tankReady=true;renderTank();
+setTimeout(function(){autoFetch(false);},300); // v55
 })();
 </script>
 </body>
