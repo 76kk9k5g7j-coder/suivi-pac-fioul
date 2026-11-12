@@ -1,0 +1,3 @@
+Police Inter (Rasmus Andersson), sous-ensemble latin, téléchargée depuis Google Fonts.
+Licence : SIL Open Font License 1.1 — https://openfontlicense.org
+Copyright 2020 The Inter Project Authors (https://github.com/rsms/inter)
